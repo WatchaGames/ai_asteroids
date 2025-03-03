@@ -37,7 +37,7 @@ class EngineParticles {
             const emissionAngle = rotation + Math.PI + noise;
 
 
-            console.log(emissionAngle);
+//            console.log(emissionAngle);
 
 
             const rearX = x;

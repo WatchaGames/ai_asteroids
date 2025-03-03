@@ -3,6 +3,7 @@ import Spaceship from './spaceship.js';
 import Asteroid from './asteroid.js';
 import Starfield from './starfield.js';
 import EngineParticles from './engineParticles.js';
+import SoundManager from './soundManager.js';
 
 async function initGame() {
     // Initialize PixiJS Application
@@ -26,6 +27,7 @@ async function initGame() {
     // Create starfield before other game objects
     const starfield = new Starfield(app);
     const engineParticles = new EngineParticles(app);
+    const soundManager = new SoundManager();
 
     // Game State Variables
     const player = new Spaceship(app);
@@ -73,15 +75,17 @@ async function initGame() {
                 break;
             case 'ArrowUp':
                 player.isMovingForward = true;
+                soundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
                 const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                 bullets.push(bullet);
+                soundManager.playShoot();  // Play shoot sound
                 break;
             case 'd':
             case 'D':
-                debugMode = !debugMode;  // Toggle debug mode
-                debugText.visible = debugMode;  // Show/hide debug text
+                debugMode = !debugMode;
+                debugText.visible = debugMode;
                 break;
         }
     });
@@ -96,6 +100,7 @@ async function initGame() {
                 break;
             case 'ArrowUp':
                 player.isMovingForward = false;
+                soundManager.stopThrust();  // Stop engine sound
                 break;
         }
     });
@@ -116,6 +121,8 @@ async function initGame() {
     function destroyAsteroid(asteroid, index) {
         asteroid.destroy();
         asteroids.splice(index, 1);
+        
+        soundManager.playExplosion(asteroid.sizeLevel);  // Play explosion sound
         
         if (asteroid.sizeLevel === 'large') {
             score += 20;
@@ -161,6 +168,8 @@ async function initGame() {
                 livesText.text = 'Lives: ' + lives;
                 if (lives <= 0) {
                     gameOver = true;
+                    soundManager.stopAll();  // Stop all sounds
+                    soundManager.playGameOver();  // Play game over sound
                     const style = new PIXI.TextStyle({ fill: 0xFFFFFF, fontSize: 48 });
                     const gameOverText = new PIXI.Text('Game Over', style);
                     gameOverText.x = app.screen.width / 2 - gameOverText.width / 2;
