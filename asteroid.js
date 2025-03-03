@@ -6,7 +6,10 @@ class Asteroid {
         
         // Create the sprite
         this.sprite = new PIXI.Graphics();
-        this.sprite.beginFill(0xAAAAAA);
+        
+        // Set color based on size
+        const color = this.getColorForSize(sizeLevel);
+        this.sprite.beginFill(color);
         
         // Generate random polygon shape
         const vertices = Math.floor(Math.random() * 5) + 5; // 5 to 10 vertices
@@ -36,6 +39,19 @@ class Asteroid {
         
         this.radius = maxRadius;
         app.stage.addChild(this.sprite);
+    }
+
+    getColorForSize(sizeLevel) {
+        switch(sizeLevel) {
+            case 'large':
+                return 0xAA5500;  // Brown
+            case 'medium':
+                return 0x555555;  // Dark Gray
+            case 'small':
+                return 0xAAAAAA;  // Light Gray
+            default:
+                return 0xAAAAAA;  // Default to Light Gray
+        }
     }
 
     update() {

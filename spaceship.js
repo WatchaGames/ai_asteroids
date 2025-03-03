@@ -1,7 +1,7 @@
 class Spaceship {
     constructor(app) {
         this.sprite = new PIXI.Graphics();
-        this.sprite.beginFill(0xFFFFFF);
+        this.sprite.beginFill(0x55FFFF); // Light Cyan
         this.sprite.moveTo(0, -10);
         this.sprite.lineTo(5, 5);
         this.sprite.lineTo(-5, 5);

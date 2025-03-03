@@ -1,6 +1,8 @@
 import Bullet from './bullet.js';
 import Spaceship from './spaceship.js';
 import Asteroid from './asteroid.js';
+import Starfield from './starfield.js';
+import EngineParticles from './engineParticles.js';
 
 async function initGame() {
     // Initialize PixiJS Application
@@ -21,6 +23,10 @@ async function initGame() {
     await app.init();
     document.body.appendChild(app.canvas);
 
+    // Create starfield before other game objects
+    const starfield = new Starfield(app);
+    const engineParticles = new EngineParticles(app);
+
     // Game State Variables
     const player = new Spaceship(app);
     const asteroids = [];
@@ -28,6 +34,7 @@ async function initGame() {
     let score = 0;
     let lives = 3;
     let gameOver = false;
+    let debugMode = false;  // Debug mode state
 
     // UI Elements
     const scoreText = new PIXI.Text('Score: 0', { fill: 0xFFFFFF });
@@ -39,6 +46,16 @@ async function initGame() {
     livesText.x = app.screen.width - 100;
     livesText.y = 10;
     app.stage.addChild(livesText);
+
+    // Add debug text for rotation and position (using CGA bright green)
+    const debugText = new PIXI.Text('Debug Info', { 
+        fill: 0x55FF55,  // CGA bright green
+        fontSize: 14
+    });
+    debugText.x = 10;
+    debugText.y = 40;  // Position below score
+    debugText.visible = debugMode;  // Initially hidden
+    app.stage.addChild(debugText);
 
     // Initialize Asteroids
     for (let i = 0; i < 5; i++) {
@@ -60,6 +77,11 @@ async function initGame() {
             case ' ':
                 const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                 bullets.push(bullet);
+                break;
+            case 'd':
+            case 'D':
+                debugMode = !debugMode;  // Toggle debug mode
+                debugText.visible = debugMode;  // Show/hide debug text
                 break;
         }
     });
@@ -167,6 +189,22 @@ async function initGame() {
     app.ticker.add(() => {
         if (!gameOver) {
             player.update();
+            starfield.update(player.velocity);
+            
+            // Update debug display only when debug mode is on
+            if (debugMode) {
+                const rotationDegrees = (player.sprite.rotation * 180 / Math.PI).toFixed(1);
+                const posX = player.sprite.x.toFixed(1);
+                const posY = player.sprite.y.toFixed(1);
+                debugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
+            }
+            
+            // Update engine particles
+            if (player.isMovingForward) {
+                engineParticles.emit(player.sprite.x, player.sprite.y, player.sprite.rotation);
+            }
+            engineParticles.update();
+            
             updateAsteroids();
             updateBullets();
             checkCollisions();
