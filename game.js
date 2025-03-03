@@ -5,6 +5,17 @@ import Starfield from './starfield.js';
 import EngineParticles from './engineParticles.js';
 import SoundManager from './soundManager.js';
 
+// Sound configuration
+const SOUND_CONFIG = {
+    thrust: 0.2,        // Reduced from 0.5
+    shoot: 0.3,
+    explosionLarge: 0.4,
+    explosionMedium: 0.4,
+    explosionSmall: 0.4,
+    gameOver: 0.6,
+    teleport: 0.3    // Add teleport sound
+};
+
 async function initGame() {
     // Initialize PixiJS Application
     const app = new PIXI.Application({
@@ -27,7 +38,7 @@ async function initGame() {
     // Create starfield before other game objects
     const starfield = new Starfield(app);
     const engineParticles = new EngineParticles(app);
-    const soundManager = new SoundManager();
+    const soundManager = new SoundManager(SOUND_CONFIG);  // Pass sound configuration
 
     // Game State Variables
     const player = new Spaceship(app);
@@ -81,6 +92,14 @@ async function initGame() {
                 const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                 bullets.push(bullet);
                 soundManager.playShoot();  // Play shoot sound
+                break;
+            case 'Shift':
+                // Get random position within screen bounds (with padding)
+                const padding = 50;  // Keep away from edges
+                const newX = padding + Math.random() * (app.screen.width - 2 * padding);
+                const newY = padding + Math.random() * (app.screen.height - 2 * padding);
+                player.teleport(newX, newY);
+                soundManager.playTeleport();
                 break;
             case 'd':
             case 'D':

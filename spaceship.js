@@ -41,6 +41,47 @@ class Spaceship {
         if (this.sprite.y < 0) this.sprite.y = this.app.screen.height;
         if (this.sprite.y > this.app.screen.height) this.sprite.y = 0;
     }
+
+    teleport(x, y) {
+        // Create a quick flash effect
+        const flash = new PIXI.Graphics();
+        flash.beginFill(0xFFFFFF);
+        flash.drawCircle(this.sprite.x, this.sprite.y, this.radius * 2);
+        flash.endFill();
+        this.app.stage.addChild(flash);
+
+        // Set new position
+        this.sprite.x = x;
+        this.sprite.y = y;
+        
+        // Velocity is maintained (removed velocity reset)
+
+        // Create arrival flash effect
+        const arrivalFlash = new PIXI.Graphics();
+        arrivalFlash.beginFill(0xFFFFFF);
+        arrivalFlash.drawCircle(x, y, this.radius * 2);
+        arrivalFlash.endFill();
+        this.app.stage.addChild(arrivalFlash);
+
+        // Fade out and remove both flash effects
+        const fadeOut = (flash) => {
+            let alpha = 1;
+            const fade = () => {
+                alpha -= 0.1;
+                flash.alpha = alpha;
+                
+                if (alpha <= 0) {
+                    this.app.stage.removeChild(flash);
+                } else {
+                    requestAnimationFrame(fade);
+                }
+            };
+            fade();
+        };
+
+        fadeOut(flash);
+        fadeOut(arrivalFlash);
+    }
 }
 
 export default Spaceship; 
