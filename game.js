@@ -5,6 +5,7 @@ import Starfield from './starfield.js';
 import EngineParticles from './engineParticles.js';
 import ExplosionParticles from './explosionParticles.js';
 import SoundManager from './soundManager.js';
+import Bonus from './bonus.js';
 
 // Sound configuration
 const SOUND_CONFIG = {
@@ -15,7 +16,8 @@ const SOUND_CONFIG = {
     explosionSmall: 0.4,
     gameOver: 0.6,
     teleport: 0.3,    // Add teleport sound
-    spaceshipExplode: 0.5  // Add spaceship explosion sound
+    spaceshipExplode: 0.5,  // Add spaceship explosion sound
+    bonus: 0.5  // Add bonus sound
 };
 
 async function initGame() {
@@ -45,10 +47,13 @@ async function initGame() {
     const player = new Spaceship(app);
     const asteroids = [];
     const bullets = [];
+    const bonuses = [];
     let score = 0;
     let lives = 3;
     let gameOver = false;
     let debugMode = false;
+    let lastBonusSpawn = 0;
+    const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -79,6 +84,21 @@ async function initGame() {
     debugText.y = 40;
     debugText.visible = debugMode;
     app.stage.addChild(debugText);
+
+    // Add bonus text for multiplier
+    const bonusText = new PIXI.Text({
+        text: '',
+        style: { 
+            fill: 0xFFFF00,
+            fontSize: 24,
+            fontWeight: 'bold'
+        }
+    });
+    bonusText.x = app.screen.width / 2;
+    bonusText.y = 50;
+    bonusText.anchor.set(0.5);
+    bonusText.visible = false;
+    app.stage.addChild(bonusText);
 
     // Initialize Asteroids
     for (let i = 0; i < 5; i++) {
@@ -155,6 +175,14 @@ async function initGame() {
         }
     }
 
+    function updateBonuses() {
+        for (let i = bonuses.length - 1; i >= 0; i--) {
+            if (bonuses[i].update()) {
+                bonuses.splice(i, 1);
+            }
+        }
+    }
+
     function destroyAsteroid(asteroid, index) {
         // Create explosion based on asteroid size
         const explosionColors = {
@@ -218,6 +246,58 @@ async function initGame() {
         }
     }
 
+    function checkBonusCollisions() {
+        for (let i = bullets.length - 1; i >= 0; i--) {
+            const bullet = bullets[i];
+            for (let j = bonuses.length - 1; j >= 0; j--) {
+                const bonus = bonuses[j];
+                const dx = bullet.sprite.x - bonus.sprite.x;
+                const dy = bullet.sprite.y - bonus.sprite.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 15) { // Collision radius for bonus
+                    // Remove bullet and bonus
+                    app.stage.removeChild(bullet.sprite);
+                    bullets.splice(i, 1);
+                    
+                    // Store bonus position before destroying
+                    const bonusX = bonus.sprite.x;
+                    const bonusY = bonus.sprite.y;
+                    bonus.destroy();
+                    bonuses.splice(j, 1);
+                    
+                    // Double the score
+                    score *= 2;
+                    scoreText.text = 'Score: ' + score;
+                    
+                    // Play bonus sound
+                    soundManager.play('bonus');
+                    
+                    // Show bonus text at bonus location
+                    bonusText.text = 'x2!';
+                    bonusText.x = bonusX;
+                    bonusText.y = bonusY;
+                    bonusText.visible = true;
+                    bonusText.alpha = 1;
+                    
+                    // Fade out over 1 second
+                    let startTime = Date.now();
+                    const fadeOut = () => {
+                        const elapsed = Date.now() - startTime;
+                        if (elapsed < 1000) {
+                            bonusText.alpha = 1 - (elapsed / 1000);
+                            requestAnimationFrame(fadeOut);
+                        } else {
+                            bonusText.visible = false;
+                        }
+                    };
+                    fadeOut();
+                    
+                    break; // Bullet can only hit one bonus
+                }
+            }
+        }
+    }
+
     function checkPlayerCollisions() {
         if (gameOver) return;
         for (let asteroid of asteroids) {
@@ -269,6 +349,13 @@ async function initGame() {
             player.update();
             starfield.update(player.velocity);
             
+            // Spawn bonus periodically
+            const currentTime = Date.now();
+            if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
+                bonuses.push(new Bonus(app));
+                lastBonusSpawn = currentTime;
+            }
+            
             // Update debug display only when debug mode is on
             if (debugMode) {
                 const rotationDegrees = (player.sprite.rotation * 180 / Math.PI).toFixed(1);
@@ -286,7 +373,9 @@ async function initGame() {
             
             updateAsteroids();
             updateBullets();
+            updateBonuses();
             checkCollisions();
+            checkBonusCollisions();
             checkPlayerCollisions();
             checkWave();
         }
