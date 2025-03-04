@@ -91,7 +91,7 @@ async function initGame() {
             case ' ':
                 const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                 bullets.push(bullet);
-                soundManager.playShoot();  // Play shoot sound
+                soundManager.play('shoot');  // Use generic play function
                 break;
             case 'Shift':
                 // Get random position within screen bounds (with padding)
@@ -99,7 +99,7 @@ async function initGame() {
                 const newX = padding + Math.random() * (app.screen.width - 2 * padding);
                 const newY = padding + Math.random() * (app.screen.height - 2 * padding);
                 player.teleport(newX, newY);
-                soundManager.playTeleport();
+                soundManager.play('teleport');  // Use generic play function
                 break;
             case 'd':
             case 'D':
@@ -188,7 +188,7 @@ async function initGame() {
                 if (lives <= 0) {
                     gameOver = true;
                     soundManager.stopAll();  // Stop all sounds
-                    soundManager.playGameOver();  // Play game over sound
+                    soundManager.play('gameOver');  // Use generic play function
                     const style = new PIXI.TextStyle({ fill: 0xFFFFFF, fontSize: 48 });
                     const gameOverText = new PIXI.Text('Game Over', style);
                     gameOverText.x = app.screen.width / 2 - gameOverText.width / 2;

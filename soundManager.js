@@ -55,6 +55,13 @@ class SoundManager {
         });
     }
 
+    // Generic play function for simple sounds
+    play(soundId) {
+        if (this.sounds[soundId]) {
+            this.sounds[soundId].play();
+        }
+    }
+
     // Engine sound methods
     startThrust() {
         if (!this.isThrustPlaying) {
@@ -70,12 +77,7 @@ class SoundManager {
         }
     }
 
-    // Weapon sound
-    playShoot() {
-        this.sounds.shoot.play();
-    }
-
-    // Explosion sounds based on asteroid size
+    // Explosion sounds based on asteroid size (special case)
     playExplosion(asteroidSize) {
         switch (asteroidSize) {
             case 'large':
@@ -88,16 +90,6 @@ class SoundManager {
                 this.sounds.explosionSmall.play();
                 break;
         }
-    }
-
-    // Game over sound
-    playGameOver() {
-        this.sounds.gameOver.play();
-    }
-
-    // Teleport sound
-    playTeleport() {
-        this.sounds.teleport.play();
     }
 
     // Stop all sounds (useful when game ends)
