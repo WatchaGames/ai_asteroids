@@ -8,7 +8,8 @@ class SoundManager {
             explosionMedium: 0.4,
             explosionSmall: 0.4,
             gameOver: 0.6,
-            teleport: 0.3
+            teleport: 0.3,
+            spaceshipExplode: 0.5
         };
 
         // Initialize all game sounds
@@ -41,6 +42,10 @@ class SoundManager {
             teleport: new Howl({
                 src: ['sounds/teleport.wav'],
                 volume: this.config.teleport
+            }),
+            spaceshipExplode: new Howl({
+                src: ['sounds/spaceship_explode.wav'],
+                volume: this.config.spaceshipExplode
             })
         };
 

@@ -3,6 +3,7 @@ import Spaceship from './spaceship.js';
 import Asteroid from './asteroid.js';
 import Starfield from './starfield.js';
 import EngineParticles from './engineParticles.js';
+import ExplosionParticles from './explosionParticles.js';
 import SoundManager from './soundManager.js';
 
 // Sound configuration
@@ -13,32 +14,32 @@ const SOUND_CONFIG = {
     explosionMedium: 0.4,
     explosionSmall: 0.4,
     gameOver: 0.6,
-    teleport: 0.3    // Add teleport sound
+    teleport: 0.3,    // Add teleport sound
+    spaceshipExplode: 0.5  // Add spaceship explosion sound
 };
 
 async function initGame() {
     // Initialize PixiJS Application
-    const app = new PIXI.Application({
+    const app = new PIXI.Application();
+    await app.init({
         width: 800,
         height: 600,
-        backgroundColor: 0x000000,
+        background: 0x000000,
         antialias: true,
         resolution: window.devicePixelRatio || 1,
         autoDensity: true,
         backgroundAlpha: 1,
-        powerPreference: "high-performance",
-        hello: true,
-        forceCanvas: false
+        powerPreference: "high-performance"
     });
 
     // Initialize PixiJS
-    await app.init();
     document.body.appendChild(app.canvas);
 
     // Create starfield before other game objects
     const starfield = new Starfield(app);
     const engineParticles = new EngineParticles(app);
-    const soundManager = new SoundManager(SOUND_CONFIG);  // Pass sound configuration
+    const explosionParticles = new ExplosionParticles(app);
+    const soundManager = new SoundManager(SOUND_CONFIG);
 
     // Game State Variables
     const player = new Spaceship(app);
@@ -47,27 +48,36 @@ async function initGame() {
     let score = 0;
     let lives = 3;
     let gameOver = false;
-    let debugMode = false;  // Debug mode state
+    let debugMode = false;
 
     // UI Elements
-    const scoreText = new PIXI.Text('Score: 0', { fill: 0xFFFFFF });
+    const scoreText = new PIXI.Text({
+        text: 'Score: 0',
+        style: { fill: 0xFFFFFF }
+    });
     scoreText.x = 10;
     scoreText.y = 10;
     app.stage.addChild(scoreText);
 
-    const livesText = new PIXI.Text('Lives: 3', { fill: 0xFFFFFF });
+    const livesText = new PIXI.Text({
+        text: 'Lives: 3',
+        style: { fill: 0xFFFFFF }
+    });
     livesText.x = app.screen.width - 100;
     livesText.y = 10;
     app.stage.addChild(livesText);
 
     // Add debug text for rotation and position (using CGA bright green)
-    const debugText = new PIXI.Text('Debug Info', { 
-        fill: 0x55FF55,  // CGA bright green
-        fontSize: 14
+    const debugText = new PIXI.Text({
+        text: 'Debug Info',
+        style: { 
+            fill: 0x55FF55,  // CGA bright green
+            fontSize: 14
+        }
     });
     debugText.x = 10;
-    debugText.y = 40;  // Position below score
-    debugText.visible = debugMode;  // Initially hidden
+    debugText.y = 40;
+    debugText.visible = debugMode;
     app.stage.addChild(debugText);
 
     // Initialize Asteroids
@@ -138,10 +148,34 @@ async function initGame() {
     }
 
     function destroyAsteroid(asteroid, index) {
+        // Create explosion based on asteroid size
+        const explosionColors = {
+            large: 0xAA5500,  // Brown for large asteroids
+            medium: 0x555555, // Dark gray for medium asteroids
+            small: 0xAAAAAA   // Light gray for small asteroids
+        };
+
+        // Create explosion with size-dependent parameters
+        const explosionSize = {
+            large: 30,    // Larger explosion for big asteroids
+            medium: 20,   // Medium explosion
+            small: 10     // Smaller explosion
+        };
+
+        // Create the explosion effect with size
+        explosionParticles.createExplosion(
+            asteroid.sprite.x,
+            asteroid.sprite.y,
+            explosionColors[asteroid.sizeLevel],
+            explosionSize[asteroid.sizeLevel]
+        );
+
+        // Play explosion sound
+        soundManager.playExplosion(asteroid.sizeLevel);
+        
+        // Remove asteroid and update score
         asteroid.destroy();
         asteroids.splice(index, 1);
-        
-        soundManager.playExplosion(asteroid.sizeLevel);  // Play explosion sound
         
         if (asteroid.sizeLevel === 'large') {
             score += 20;
@@ -187,14 +221,22 @@ async function initGame() {
                 livesText.text = 'Lives: ' + lives;
                 if (lives <= 0) {
                     gameOver = true;
-                    soundManager.stopAll();  // Stop all sounds
-                    soundManager.play('gameOver');  // Use generic play function
-                    const style = new PIXI.TextStyle({ fill: 0xFFFFFF, fontSize: 48 });
-                    const gameOverText = new PIXI.Text('Game Over', style);
+                    soundManager.stopAll();
+                    soundManager.play('spaceshipExplode');
+                    soundManager.play('gameOver');
+                    // Create cyan explosion at ship's position
+                    explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
+                    const gameOverText = new PIXI.Text({
+                        text: 'Game Over',
+                        style: { fill: 0xFFFFFF, fontSize: 48 }
+                    });
                     gameOverText.x = app.screen.width / 2 - gameOverText.width / 2;
                     gameOverText.y = app.screen.height / 2 - gameOverText.height / 2;
                     app.stage.addChild(gameOverText);
                 } else {
+                    // Create cyan explosion at ship's position before respawning
+                    explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
+                    soundManager.play('spaceshipExplode');
                     player.sprite.x = app.screen.width / 2;
                     player.sprite.y = app.screen.height / 2;
                     player.velocity = { x: 0, y: 0 };
@@ -232,6 +274,7 @@ async function initGame() {
                 engineParticles.emit(player.sprite.x, player.sprite.y, player.sprite.rotation);
             }
             engineParticles.update();
+            explosionParticles.update();  // Update explosion particles
             
             updateAsteroids();
             updateBullets();
