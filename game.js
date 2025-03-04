@@ -87,6 +87,9 @@ async function initGame() {
 
     // Keyboard Input Handling
     document.addEventListener('keydown', (event) => {
+        // Don't process input if player is teleporting
+        if (player.isTeleporting) return;
+
         switch (event.key) {
             case 'ArrowLeft':
                 player.isRotatingLeft = true;
@@ -104,12 +107,14 @@ async function initGame() {
                 soundManager.play('shoot');  // Use generic play function
                 break;
             case 'Shift':
-                // Get random position within screen bounds (with padding)
-                const padding = 50;  // Keep away from edges
-                const newX = padding + Math.random() * (app.screen.width - 2 * padding);
-                const newY = padding + Math.random() * (app.screen.height - 2 * padding);
-                player.teleport(newX, newY);
-                soundManager.play('teleport');  // Use generic play function
+                if(!player.isTeleporting) {
+                    // Get random position within screen bounds (with padding)
+                    const padding = 50;  // Keep away from edges
+                    const newX = padding + Math.random() * (app.screen.width - 2 * padding);
+                    const newY = padding + Math.random() * (app.screen.height - 2 * padding);
+                    player.teleport(newX, newY);
+                    soundManager.play('teleport');  // Use generic play function
+                }
                 break;
             case 'd':
             case 'D':
@@ -120,6 +125,9 @@ async function initGame() {
     });
 
     document.addEventListener('keyup', (event) => {
+        // Don't process input if player is teleporting
+        if (player.isTeleporting) return;
+
         switch (event.key) {
             case 'ArrowLeft':
                 player.isRotatingLeft = false;
