@@ -22,15 +22,15 @@ export default class PowerUp {
                 this.sprite.endFill();
                 break;
             case 'quadFire':
-                // Draw a red cross shape
-                this.sprite.beginFill(0xFF0000);
+                // Draw a green cross shape
+                this.sprite.beginFill(0x00FF00);
                 // Vertical line
                 this.sprite.drawRect(-2, -20, 4, 40);  // x, y, width, height
                 // Horizontal line
                 this.sprite.drawRect(-20, -2, 40, 4);  // x, y, width, height
                 this.sprite.endFill();
                 // Add collision circle (semi-transparent)
-                this.sprite.beginFill(0xFF0000, 0.2);
+                this.sprite.beginFill(0x00FF00, 0.2);
                 this.sprite.drawCircle(0, 0, this.radius);
                 this.sprite.endFill();
                 break;
