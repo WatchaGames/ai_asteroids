@@ -143,10 +143,8 @@ async function initGame() {
     bonusText.visible = false;
     app.stage.addChild(bonusText);
 
-    // Initialize Asteroids
-    for (let i = 0; i < 5; i++) {
-        asteroids.push(new Asteroid(app, 30, 'large'));
-    }
+
+    spawnAsteroidsForWave(score, currentWave);
 
     // Keyboard Input Handling
     document.addEventListener('keydown', (event) => {
@@ -195,9 +193,7 @@ async function initGame() {
             player.sprite.rotation = 0;
             
             // Initialize new asteroids
-            for (let i = 0; i < 5; i++) {
-                asteroids.push(new Asteroid(app, 30, 'large'));
-            }
+            spawnAsteroidsForWave(score, currentWave);
             
             return;
         }
@@ -260,6 +256,20 @@ async function initGame() {
             case 'D':
                 debugMode = !debugMode;
                 debugText.visible = debugMode;
+                break;
+            case 'g':
+            case 'G':
+                if (debugMode) {
+                    gameOver = true;
+                    soundManager.stopAll();
+                    soundManager.play('spaceshipExplode');
+                    soundManager.play('gameOver');
+                    // Create cyan explosion at ship's position
+                    explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
+                    
+                    // Show game over screen
+                    showGameOver(app, score);
+                }
                 break;
         }
     });
@@ -485,10 +495,14 @@ async function initGame() {
         if (asteroids.length === 0) {
             currentWave++;
             waveText.text = 'Wave ' + currentWave;
-            const numAsteroids = 5 + Math.floor(score / 1000); // Increase difficulty
-            for (let i = 0; i < numAsteroids; i++) {
-                asteroids.push(new Asteroid(app, 30, 'large'));
-            }
+            spawnAsteroidsForWave(score, currentWave);
+        }
+    }
+
+    function spawnAsteroidsForWave(score, waveIndex) {
+        const numAsteroids = 5 + Math.floor(score / 1000); // Increase difficulty
+        for (let i = 0; i < numAsteroids; i++) {
+            asteroids.push(new Asteroid(app, 30, 'large'));
         }
     }
 
