@@ -19,7 +19,9 @@ const SOUND_CONFIG = {
     teleport: 0.3,    // Add teleport sound
     spaceshipExplode: 0.5,  // Add spaceship explosion sound
     bonus: 0.5,  // Add bonus sound
-    powerUp: 0.5  // Add power-up sound
+    powerUp: 0.5,  // Add power-up sound
+    powerDouble: 0.5,  // Add rear bullet power-up sound
+    powerQuad: 0.5     // Add quad fire power-up sound
 };
 
 async function initGame() {
@@ -346,7 +348,7 @@ async function initGame() {
                     }, 10000);
                     
                     // Play bonus sound
-                    soundManager.play('bonus');
+                    soundManager.play('bonus_double');
                     
                     // Show bonus text at bonus location
                     bonusText.text = 'x2!';
@@ -446,6 +448,8 @@ async function initGame() {
                         rearBulletTimer = setTimeout(() => {
                             rearBulletActive = false;
                         }, 10000);
+                        // Play rear bullet power-up sound
+                        soundManager.play('power_double');
                         break;
                     case 'quadFire':
                         // Clear any existing timer
@@ -458,11 +462,10 @@ async function initGame() {
                         quadFireTimer = setTimeout(() => {
                             quadFireActive = false;
                         }, 10000);
+                        // Play quad fire power-up sound
+                        soundManager.play('power_quad');
                         break;
                 }
-                
-                // Play power-up sound
-                soundManager.play('powerUp');
                 
                 // Remove power-up
                 powerUp.destroy();

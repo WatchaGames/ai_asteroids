@@ -9,7 +9,10 @@ class SoundManager {
             explosionSmall: 0.4,
             gameOver: 0.6,
             teleport: 0.3,
-            spaceshipExplode: 0.5
+            spaceshipExplode: 0.5,
+            powerDouble: 0.5,
+            powerQuad: 0.5,
+            bonusDouble: 0.5
         };
 
         // Initialize all game sounds
@@ -46,6 +49,18 @@ class SoundManager {
             spaceshipExplode: new Howl({
                 src: ['sounds/spaceship_explode.wav'],
                 volume: this.config.spaceshipExplode
+            }),
+            power_double: new Howl({
+                src: ['sounds/power_double.wav'],
+                volume: this.config.powerDouble
+            }),
+            power_quad: new Howl({
+                src: ['sounds/power_quad.wav'],
+                volume: this.config.powerQuad
+            }),
+            bonus_double: new Howl({
+                src: ['sounds/bonus_double.wav'],
+                volume: this.config.bonusDouble
             })
         };
 
@@ -64,6 +79,8 @@ class SoundManager {
     play(soundId) {
         if (this.sounds[soundId]) {
             this.sounds[soundId].play();
+        }else{
+            console.error('Sound not found:', soundId);
         }
     }
 
