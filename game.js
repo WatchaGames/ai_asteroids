@@ -7,6 +7,7 @@ import ExplosionParticles from './explosionParticles.js';
 import SoundManager from './soundManager.js';
 import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
+import { showGameOver, hideGameOver } from './game_over_screen.js';
 
 // Sound configuration
 const SOUND_CONFIG = {
@@ -67,6 +68,7 @@ async function initGame() {
     let quadFireTimer = null;
     let scoreMultiplier = 1;
     let scoreMultiplierTimer = null;
+    let currentWave = 1; // Track current wave number
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -84,6 +86,20 @@ async function initGame() {
     livesText.x = app.screen.width - 100;
     livesText.y = 10;
     app.stage.addChild(livesText);
+
+    // Add wave counter text
+    const waveText = new PIXI.Text({
+        text: 'Wave 1',
+        style: { 
+            fill: 0xFFFFFF,
+            fontSize: 20,
+            fontWeight: 'bold'
+        }
+    });
+    waveText.x = app.screen.width / 2;
+    waveText.y = 10;
+    waveText.anchor.set(0.5); // Center the text
+    app.stage.addChild(waveText);
 
     // Add debug text for rotation and position (using CGA bright green)
     const debugText = new PIXI.Text({
@@ -134,8 +150,60 @@ async function initGame() {
 
     // Keyboard Input Handling
     document.addEventListener('keydown', (event) => {
-        // Don't process input if player is teleporting
-        if (player.isTeleporting) return;
+        // Handle game restart if game is over
+        if (gameOver && event.key === ' ') {
+            // Reset game state
+            gameOver = false;
+            score = 0;
+            lives = 3;
+            currentWave = 1;
+            scoreText.text = 'Score: 0';
+            livesText.text = 'Lives: 3';
+            waveText.text = 'Wave 1';
+            
+            // Clear existing game elements
+            // Remove all asteroids from the PIXI stage
+            asteroids.forEach(asteroid => {
+                app.stage.removeChild(asteroid.sprite);
+            });
+
+            asteroids.length = 0;
+
+            bullets.forEach(bullet => {
+                app.stage.removeChild(bullet.sprite);
+            });
+            bullets.length = 0;
+
+            bonuses.forEach(bonus => {
+                app.stage.removeChild(bonus.sprite);
+            });
+            bonuses.length = 0;
+
+
+            powerUps.forEach(powerup => {
+                app.stage.removeChild(powerup.sprite);
+            });
+            powerUps.length = 0;
+            
+            // Remove game over screen
+            hideGameOver(app);
+            
+            // Reset player position
+            player.sprite.x = app.screen.width / 2;
+            player.sprite.y = app.screen.height / 2;
+            player.velocity = { x: 0, y: 0 };
+            player.sprite.rotation = 0;
+            
+            // Initialize new asteroids
+            for (let i = 0; i < 5; i++) {
+                asteroids.push(new Asteroid(app, 30, 'large'));
+            }
+            
+            return;
+        }
+        
+        // Don't process input if player is teleporting or game is over
+        if (player.isTeleporting || gameOver) return;
 
         switch (event.key) {
             case 'ArrowLeft':
@@ -161,13 +229,12 @@ async function initGame() {
                     angles.forEach(angle => {
                         const bullet = new Bullet(app, player.sprite.x, player.sprite.y, angle);
                         bullets.push(bullet);
-                        soundManager.play('shoot');
                     });
+                    soundManager.play('shoot');
                 } else if (rearBulletActive) {
                     // Shoot forward and backward
                     const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                     bullets.push(bullet);
-                    soundManager.play('shoot');
                     
                     const rearBullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
                     bullets.push(rearBullet);
@@ -398,13 +465,9 @@ async function initGame() {
                     soundManager.play('gameOver');
                     // Create cyan explosion at ship's position
                     explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
-                    const gameOverText = new PIXI.Text({
-                        text: 'Game Over',
-                        style: { fill: 0xFFFFFF, fontSize: 48 }
-                    });
-                    gameOverText.x = app.screen.width / 2 - gameOverText.width / 2;
-                    gameOverText.y = app.screen.height / 2 - gameOverText.height / 2;
-                    app.stage.addChild(gameOverText);
+                    
+                    // Show game over screen
+                    showGameOver(app, score);
                 } else {
                     // Create cyan explosion at ship's position before respawning
                     explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
@@ -420,6 +483,8 @@ async function initGame() {
 
     function checkWave() {
         if (asteroids.length === 0) {
+            currentWave++;
+            waveText.text = 'Wave ' + currentWave;
             const numAsteroids = 5 + Math.floor(score / 1000); // Increase difficulty
             for (let i = 0; i < numAsteroids; i++) {
                 asteroids.push(new Asteroid(app, 30, 'large'));
