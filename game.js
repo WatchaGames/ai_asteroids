@@ -401,7 +401,7 @@ async function initGame() {
             const dy = player.sprite.y - powerUp.sprite.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
-            if (distance < player.radius + 15) { // Collision radius for power-up
+            if (distance < player.radius + powerUp.radius) { // Use power-up's radius
                 // Handle power-up collection
                 switch(powerUp.type) {
                     case 'rearBullet':

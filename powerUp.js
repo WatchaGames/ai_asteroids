@@ -2,6 +2,7 @@ export default class PowerUp {
     constructor(app, type) {
         this.app = app;
         this.type = type;
+        this.radius = 30; // Collision radius
         console.log('Creating power-up of type:', type); // Debug log
         this.sprite = new PIXI.Graphics();
         
@@ -15,6 +16,10 @@ export default class PowerUp {
                 this.sprite.lineTo(0, 20);   // Doubled from 10
                 this.sprite.lineTo(-20, 0);  // Doubled from -10
                 this.sprite.endFill();
+                // Add collision circle (semi-transparent)
+                this.sprite.beginFill(0x00FFFF, 0.2);
+                this.sprite.drawCircle(0, 0, this.radius);
+                this.sprite.endFill();
                 break;
             case 'quadFire':
                 // Draw a red cross shape
@@ -23,6 +28,10 @@ export default class PowerUp {
                 this.sprite.drawRect(-2, -20, 4, 40);  // x, y, width, height
                 // Horizontal line
                 this.sprite.drawRect(-20, -2, 40, 4);  // x, y, width, height
+                this.sprite.endFill();
+                // Add collision circle (semi-transparent)
+                this.sprite.beginFill(0xFF0000, 0.2);
+                this.sprite.drawCircle(0, 0, this.radius);
                 this.sprite.endFill();
                 break;
             default:
