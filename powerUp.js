@@ -2,6 +2,7 @@ export default class PowerUp {
     constructor(app, type) {
         this.app = app;
         this.type = type;
+        console.log('Creating power-up of type:', type); // Debug log
         this.sprite = new PIXI.Graphics();
         
         // Create power-up appearance based on type
@@ -15,7 +16,18 @@ export default class PowerUp {
                 this.sprite.lineTo(-20, 0);  // Doubled from -10
                 this.sprite.endFill();
                 break;
-            // Add more power-up types here later
+            case 'quadFire':
+                // Draw a red cross shape
+                this.sprite.beginFill(0xFF0000);
+                // Vertical line
+                this.sprite.drawRect(-2, -20, 4, 40);  // x, y, width, height
+                // Horizontal line
+                this.sprite.drawRect(-20, -2, 40, 4);  // x, y, width, height
+                this.sprite.endFill();
+                break;
+            default:
+                console.error('Unknown power-up type:', type); // Debug log
+                break;
         }
         
         // Randomly choose top or bottom spawn

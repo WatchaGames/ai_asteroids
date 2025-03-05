@@ -61,6 +61,8 @@ async function initGame() {
     const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
     let rearBulletActive = false;
     let rearBulletTimer = null;
+    let quadFireActive = false;
+    let quadFireTimer = null;
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -129,15 +131,33 @@ async function initGame() {
                 soundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
-                // Shoot forward
-                const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
-                bullets.push(bullet);
-                soundManager.play('shoot');
-                
-                // If rear bullet power-up is active, shoot backward
-                if (rearBulletActive) {
+                if (quadFireActive) {
+                    // Shoot in all four directions
+                    const angles = [
+                        player.sprite.rotation,           // Forward
+                        player.sprite.rotation + Math.PI, // Backward
+                        player.sprite.rotation + Math.PI/2, // Right
+                        player.sprite.rotation - Math.PI/2  // Left
+                    ];
+                    
+                    angles.forEach(angle => {
+                        const bullet = new Bullet(app, player.sprite.x, player.sprite.y, angle);
+                        bullets.push(bullet);
+                        soundManager.play('shoot');
+                    });
+                } else if (rearBulletActive) {
+                    // Shoot forward and backward
+                    const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
+                    bullets.push(bullet);
+                    soundManager.play('shoot');
+                    
                     const rearBullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
                     bullets.push(rearBullet);
+                    soundManager.play('shoot');
+                } else {
+                    // Normal forward shot
+                    const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
+                    bullets.push(bullet);
                     soundManager.play('shoot');
                 }
                 break;
@@ -396,6 +416,18 @@ async function initGame() {
                             rearBulletActive = false;
                         }, 10000);
                         break;
+                    case 'quadFire':
+                        // Clear any existing timer
+                        if (quadFireTimer) {
+                            clearTimeout(quadFireTimer);
+                        }
+                        // Activate quad fire power-up
+                        quadFireActive = true;
+                        // Set timer to deactivate after 10 seconds
+                        quadFireTimer = setTimeout(() => {
+                            quadFireActive = false;
+                        }, 10000);
+                        break;
                 }
                 
                 // Play power-up sound
@@ -422,7 +454,10 @@ async function initGame() {
             }
             
             if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
-                powerUps.push(new PowerUp(app, 'rearBullet'));
+                // Randomly choose between power-up types
+                const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
+                console.log('Spawning power-up:', powerUpType); // Debug log
+                powerUps.push(new PowerUp(app, powerUpType));
                 lastPowerUpSpawn = currentTime;
             }
             
