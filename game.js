@@ -63,6 +63,8 @@ async function initGame() {
     let rearBulletTimer = null;
     let quadFireActive = false;
     let quadFireTimer = null;
+    let scoreMultiplier = 1;
+    let scoreMultiplierTimer = null;
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -93,6 +95,20 @@ async function initGame() {
     debugText.y = 40;
     debugText.visible = debugMode;
     app.stage.addChild(debugText);
+
+    // Add multiplier text
+    const multiplierText = new PIXI.Text({
+        text: '',
+        style: { 
+            fill: 0xFFFF00,
+            fontSize: 16,
+            fontWeight: 'bold'
+        }
+    });
+    multiplierText.x = 10;
+    multiplierText.y = 35;
+    multiplierText.visible = false;
+    app.stage.addChild(multiplierText);
 
     // Add bonus text for multiplier
     const bonusText = new PIXI.Text({
@@ -256,18 +272,21 @@ async function initGame() {
         asteroid.destroy();
         asteroids.splice(index, 1);
         
+        let points = 0;
         if (asteroid.sizeLevel === 'large') {
-            score += 20;
+            points = 20;
             const newAsteroids = asteroid.split();
             asteroids.push(...newAsteroids);
         } else if (asteroid.sizeLevel === 'medium') {
-            score += 50;
+            points = 50;
             const newAsteroids = asteroid.split();
             asteroids.push(...newAsteroids);
         } else if (asteroid.sizeLevel === 'small') {
-            score += 100;
+            points = 100;
         }
         
+        // Apply score multiplier
+        score += points * scoreMultiplier;
         scoreText.text = 'Score: ' + score;
     }
 
@@ -298,7 +317,7 @@ async function initGame() {
                 const dy = bullet.sprite.y - bonus.sprite.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < 15) { // Collision radius for bonus
-                    // Remove bullet and bonus
+                    // Remove bullet and bonus without adding points
                     app.stage.removeChild(bullet.sprite);
                     bullets.splice(i, 1);
                     
@@ -310,9 +329,21 @@ async function initGame() {
                     bonus.destroy();
                     bonuses.splice(j, 1);
                     
-                    // Double the score
-                    score *= 2;
-                    scoreText.text = 'Score: ' + score;
+                    // Clear any existing multiplier timer
+                    if (scoreMultiplierTimer) {
+                        clearTimeout(scoreMultiplierTimer);
+                    }
+                    
+                    // Activate score multiplier
+                    scoreMultiplier = 2;
+                    multiplierText.text = 'Score x2!';
+                    multiplierText.visible = true;
+                    
+                    // Set timer to deactivate after 10 seconds
+                    scoreMultiplierTimer = setTimeout(() => {
+                        scoreMultiplier = 1;
+                        multiplierText.visible = false;
+                    }, 10000);
                     
                     // Play bonus sound
                     soundManager.play('bonus');
@@ -343,7 +374,7 @@ async function initGame() {
                     };
                     flyToScore();
                     
-                    break; // Bullet can only hit one bonus
+                    return; // Exit the function to prevent further collision checks
                 }
             }
         }
