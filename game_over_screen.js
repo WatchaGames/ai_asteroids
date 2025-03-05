@@ -1,4 +1,3 @@
-
 let gameOverContainer = null;
 
 export function showGameOver(app, score) {
@@ -23,42 +22,40 @@ export function showGameOver(app, score) {
     const centerX = app.screen.width / 2;
     const centerY = app.screen.height / 2;
     
-    // Draw main text box
-    gameOverBorder.lineStyle(4, 0xFFFF00);
-    gameOverBorder.beginFill(0x000000);
-    gameOverBorder.moveTo(centerX - 150, centerY - 40);
-    gameOverBorder.lineTo(centerX + 150, centerY - 40);
-    gameOverBorder.lineTo(centerX + 150, centerY + 40);
-    gameOverBorder.lineTo(centerX - 150, centerY + 40);
-    gameOverBorder.lineTo(centerX - 150, centerY - 40);
-    gameOverBorder.endFill();
+    // Draw main text box with white border
+    const textBox = new PIXI.Graphics();
+    textBox.lineStyle(2, 0xFFFFFF);  // White border
+    textBox.beginFill(0x000000);
+    textBox.drawRect(0, 0, 400, 200);
+    textBox.endFill();
+    textBox.x = (app.screen.width - 400) / 2;
+    textBox.y = (app.screen.height - 200) / 2;
+    gameOverContainer.addChild(textBox);
 
-    gameOverContainer.addChild(gameOverBorder);
-    
-    // Add GAME OVER text
-    const gameOverLabel = new PIXI.Text({
+    // Add "GAME OVER" text in white
+    const gameOverText = new PIXI.Text({
         text: 'GAME OVER',
         style: { 
-            fill: 0xFFFF00,
-            fontSize: 32,
+            fill: 0xFFFFFF,
+            fontSize: 48,
             fontWeight: 'bold'
         }
     });
-    gameOverLabel.x = centerX - gameOverLabel.width / 2;
-    gameOverLabel.y = centerY - gameOverLabel.height / 2;
-    gameOverContainer.addChild(gameOverLabel);
-    
-    // Add final score
+    gameOverText.x = (app.screen.width - gameOverText.width) / 2;
+    gameOverText.y = (app.screen.height - gameOverText.height) / 2;
+    gameOverContainer.addChild(gameOverText);
+
+    // Add final score text in cyan
     const finalScoreText = new PIXI.Text({
         text: `Final Score: ${score}`,
         style: { 
-            fill: 0xFF0000,
+            fill: 0x00FFFF,  // Cyan color
             fontSize: 24,
             fontWeight: 'bold'
         }
     });
-    finalScoreText.x = centerX - finalScoreText.width / 2;
-    finalScoreText.y = centerY + 60;
+    finalScoreText.x = (app.screen.width - finalScoreText.width) / 2;
+    finalScoreText.y = (app.screen.height - finalScoreText.height) / 2 + 60;
     gameOverContainer.addChild(finalScoreText);
     
     app.stage.addChild(gameOverContainer);
