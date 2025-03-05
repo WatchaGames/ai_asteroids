@@ -260,8 +260,10 @@ async function initGame() {
                     bullets.splice(i, 1);
                     
                     // Store bonus position before destroying
-                    const bonusX = bonus.sprite.x;
-                    const bonusY = bonus.sprite.y;
+                    const startX = bonus.sprite.x;
+                    const startY = bonus.sprite.y;
+                    const targetX = 10; // Score text X position
+                    const targetY = 10; // Score text Y position
                     bonus.destroy();
                     bonuses.splice(j, 1);
                     
@@ -274,23 +276,29 @@ async function initGame() {
                     
                     // Show bonus text at bonus location
                     bonusText.text = 'x2!';
-                    bonusText.x = bonusX;
-                    bonusText.y = bonusY;
+                    bonusText.x = startX;
+                    bonusText.y = startY;
                     bonusText.visible = true;
                     bonusText.alpha = 1;
                     
-                    // Fade out over 1 second
+                    // Animate text flying to score
                     let startTime = Date.now();
-                    const fadeOut = () => {
+                    const flyToScore = () => {
                         const elapsed = Date.now() - startTime;
-                        if (elapsed < 1000) {
-                            bonusText.alpha = 1 - (elapsed / 1000);
-                            requestAnimationFrame(fadeOut);
+                        if (elapsed < 1000) { // Animation duration increased to 1 second
+                            // Calculate progress (0 to 1)
+                            const progress = elapsed / 1000;
+                            // Move position
+                            bonusText.x = startX + (targetX - startX) * progress;
+                            bonusText.y = startY + (targetY - startY) * progress;
+                            // Fade out
+                            bonusText.alpha = 1 - progress;
+                            requestAnimationFrame(flyToScore);
                         } else {
                             bonusText.visible = false;
                         }
                     };
-                    fadeOut();
+                    flyToScore();
                     
                     break; // Bullet can only hit one bonus
                 }
