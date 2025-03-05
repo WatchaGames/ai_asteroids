@@ -6,6 +6,7 @@ import EngineParticles from './engineParticles.js';
 import ExplosionParticles from './explosionParticles.js';
 import SoundManager from './soundManager.js';
 import Bonus from './bonus.js';
+import PowerUp from './powerUp.js';
 
 // Sound configuration
 const SOUND_CONFIG = {
@@ -17,7 +18,8 @@ const SOUND_CONFIG = {
     gameOver: 0.6,
     teleport: 0.3,    // Add teleport sound
     spaceshipExplode: 0.5,  // Add spaceship explosion sound
-    bonus: 0.5  // Add bonus sound
+    bonus: 0.5,  // Add bonus sound
+    powerUp: 0.5  // Add power-up sound
 };
 
 async function initGame() {
@@ -48,12 +50,17 @@ async function initGame() {
     const asteroids = [];
     const bullets = [];
     const bonuses = [];
+    const powerUps = [];
     let score = 0;
     let lives = 3;
     let gameOver = false;
     let debugMode = false;
     let lastBonusSpawn = 0;
+    let lastPowerUpSpawn = 0;
     const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
+    const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
+    let rearBulletActive = false;
+    let rearBulletTimer = null;
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -122,9 +129,17 @@ async function initGame() {
                 soundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
+                // Shoot forward
                 const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                 bullets.push(bullet);
-                soundManager.play('shoot');  // Use generic play function
+                soundManager.play('shoot');
+                
+                // If rear bullet power-up is active, shoot backward
+                if (rearBulletActive) {
+                    const rearBullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
+                    bullets.push(rearBullet);
+                    soundManager.play('shoot');
+                }
                 break;
             case 'Shift':
                 if(!player.isTeleporting) {
@@ -179,6 +194,14 @@ async function initGame() {
         for (let i = bonuses.length - 1; i >= 0; i--) {
             if (bonuses[i].update()) {
                 bonuses.splice(i, 1);
+            }
+        }
+    }
+
+    function updatePowerUps() {
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            if (powerUps[i].update()) {
+                powerUps.splice(i, 1);
             }
         }
     }
@@ -351,17 +374,56 @@ async function initGame() {
         }
     }
 
+    function checkPowerUpCollisions() {
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            const powerUp = powerUps[i];
+            const dx = player.sprite.x - powerUp.sprite.x;
+            const dy = player.sprite.y - powerUp.sprite.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < player.radius + 15) { // Collision radius for power-up
+                // Handle power-up collection
+                switch(powerUp.type) {
+                    case 'rearBullet':
+                        // Clear any existing timer
+                        if (rearBulletTimer) {
+                            clearTimeout(rearBulletTimer);
+                        }
+                        // Activate rear bullet power-up
+                        rearBulletActive = true;
+                        // Set timer to deactivate after 10 seconds
+                        rearBulletTimer = setTimeout(() => {
+                            rearBulletActive = false;
+                        }, 10000);
+                        break;
+                }
+                
+                // Play power-up sound
+                soundManager.play('powerUp');
+                
+                // Remove power-up
+                powerUp.destroy();
+                powerUps.splice(i, 1);
+            }
+        }
+    }
+
     // Game Loop
     app.ticker.add(() => {
         if (!gameOver) {
             player.update();
             starfield.update(player.velocity);
             
-            // Spawn bonus periodically
+            // Spawn bonus and power-up periodically
             const currentTime = Date.now();
             if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
                 bonuses.push(new Bonus(app));
                 lastBonusSpawn = currentTime;
+            }
+            
+            if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
+                powerUps.push(new PowerUp(app, 'rearBullet'));
+                lastPowerUpSpawn = currentTime;
             }
             
             // Update debug display only when debug mode is on
@@ -382,10 +444,12 @@ async function initGame() {
             updateAsteroids();
             updateBullets();
             updateBonuses();
+            updatePowerUps();
             checkCollisions();
             checkBonusCollisions();
             checkPlayerCollisions();
             checkWave();
+            checkPowerUpCollisions();
         }
     });
 }
