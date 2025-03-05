@@ -1,0 +1,12 @@
+---
+description: This is the project Tech Stack
+globs: 
+alwaysApply: false
+---
+
+# Those are the technologies used for that project
+
+- Javascript for all code
+- HTML5 in a browser to run the game 
+- PixiJs for graphics and interactions
+- Howl for sound

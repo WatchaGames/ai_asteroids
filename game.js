@@ -8,6 +8,7 @@ import SoundManager from './soundManager.js';
 import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
+import { palette10 } from './palette.js';
 
 // Sound configuration
 const SOUND_CONFIG = {
@@ -322,13 +323,6 @@ async function initGame() {
     }
 
     function destroyAsteroid(asteroid, index) {
-        // Create explosion based on asteroid size
-        const explosionColors = {
-            large: 0xAA5500,  // Brown for large asteroids
-            medium: 0x555555, // Dark gray for medium asteroids
-            small: 0xAAAAAA   // Light gray for small asteroids
-        };
-
         // Create explosion with size-dependent parameters
         const explosionSize = {
             large: 30,    // Larger explosion for big asteroids
@@ -340,7 +334,7 @@ async function initGame() {
         explosionParticles.createExplosion(
             asteroid.sprite.x,
             asteroid.sprite.y,
-            explosionColors[asteroid.sizeLevel],
+            asteroid.getColorForSize(),
             explosionSize[asteroid.sizeLevel]
         );
 
@@ -501,8 +495,30 @@ async function initGame() {
 
     function spawnAsteroidsForWave(score, waveIndex) {
         const numAsteroids = 5 + Math.floor(score / 1000); // Increase difficulty
+        const centerX = app.screen.width / 2;
+        const centerY = app.screen.height / 2;
+        const minDistanceFromCenter = Math.min(app.screen.width, app.screen.height) * 0.33; // 33% of screen size
+
         for (let i = 0; i < numAsteroids; i++) {
-            asteroids.push(new Asteroid(app, 30, 'large'));
+            let asteroid;
+            let validPosition = false;
+            
+            // Keep trying until we find a valid position
+            while (!validPosition) {
+                asteroid = new Asteroid(app, 30, 'large');
+                const dx = asteroid.sprite.x - centerX;
+                const dy = asteroid.sprite.y - centerY;
+                const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distanceFromCenter >= minDistanceFromCenter) {
+                    validPosition = true;
+                } else {
+                    // Remove the asteroid if position is invalid
+                    app.stage.removeChild(asteroid.sprite);
+                }
+            }
+            
+            asteroids.push(asteroid);
         }
     }
 

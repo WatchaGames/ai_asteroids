@@ -1,3 +1,5 @@
+import { palette10 } from './palette.js';
+
 class Asteroid {
     constructor(app, size, sizeLevel, x, y) {
         this.app = app;
@@ -8,7 +10,7 @@ class Asteroid {
         this.sprite = new PIXI.Graphics();
         
         // Set color based on size
-        const color = this.getColorForSize(sizeLevel);
+        const color = this.getColorForSize();
         this.sprite.beginFill(color);
         
         // Generate random polygon shape
@@ -41,16 +43,16 @@ class Asteroid {
         app.stage.addChild(this.sprite);
     }
 
-    getColorForSize(sizeLevel) {
-        switch(sizeLevel) {
+    getColorForSize() {
+        switch(this.sizeLevel) {
             case 'large':
-                return 0xAA5500;  // Brown
+                return palette10.blue_1;
             case 'medium':
-                return 0x555555;  // Dark Gray
+                return palette10.blue_2;
             case 'small':
-                return 0xAAAAAA;  // Light Gray
+                return palette10.blue_3;
             default:
-                return 0xAAAAAA;  // Default to Light Gray
+                return palette10.white;
         }
     }
 
