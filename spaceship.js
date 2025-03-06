@@ -52,6 +52,25 @@ class Spaceship {
         // Reset velocity
         this.velocity = { x: 0, y: 0 };
     }
+
+    tryTeleport(app, soundManager) {
+        if (!this.isTeleporting) {
+            // Get random position within screen bounds (with padding)
+            const padding = 50;  // Keep away from edges
+            const newX = padding + Math.random() * (app.screen.width - 2 * padding);
+            const newY = padding + Math.random() * (app.screen.height - 2 * padding);
+            this.teleport(newX, newY);
+            soundManager.play('teleport');
+        }
+    }
+
+    resetLocation() {
+        this.sprite.x = this.app.screen.width / 2;
+        this.sprite.y = this.app.screen.height / 2;
+        this.velocity = { x: 0, y: 0 };
+        this.sprite.rotation = 0;
+    }
+
     actionFire(soundManager) {
         console.log('actionFire');
         if (getQuadFireActive()) {

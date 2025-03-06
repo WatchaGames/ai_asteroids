@@ -2,6 +2,7 @@ import Asteroid from './asteroid.js';
 import Bullet from './bullet.js';
 import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
+import { gSoundManager } from './soundManager.js';
 
 // Battle state
 let asteroids = [];
@@ -17,6 +18,86 @@ let quadFireActive = false;
 let quadFireTimer = null;
 let scoreMultiplier = 1;
 let scoreMultiplierTimer = null;
+
+// UI Elements
+let scoreText = null;
+let multiplierText = null;
+let bonusText = null;
+
+export function initUI(app) {
+    // Score text
+    scoreText = new PIXI.Text({
+        text: 'Score: 0',
+        style: { fill: 0xFFFFFF }
+    });
+    scoreText.x = 10;
+    scoreText.y = 10;
+    app.stage.addChild(scoreText);
+
+    // Multiplier text
+    multiplierText = new PIXI.Text({
+        text: '',
+        style: { 
+            fill: 0xFFFF00,
+            fontSize: 16,
+            fontWeight: 'bold'
+        }
+    });
+    multiplierText.x = 10;
+    multiplierText.y = 35;
+    multiplierText.visible = false;
+    app.stage.addChild(multiplierText);
+
+    // Bonus text
+    bonusText = new PIXI.Text({
+        text: '',
+        style: { 
+            fill: 0xFFFF00,
+            fontSize: 24,
+            fontWeight: 'bold'
+        }
+    });
+    bonusText.x = app.screen.width / 2;
+    bonusText.y = 50;
+    bonusText.anchor.set(0.5);
+    bonusText.visible = false;
+    app.stage.addChild(bonusText);
+}
+
+export function getScoreText() {
+    return scoreText;
+}
+
+export function getMultiplierText() {
+    return multiplierText;
+}
+
+export function getBonusText() {
+    return bonusText;
+}
+
+export function updateScoreText() {
+    if (scoreText) {
+        scoreText.text = 'Score: ' + score;
+    }
+}
+
+export function updateMultiplierText(text, visible) {
+    if (multiplierText) {
+        multiplierText.text = text;
+        multiplierText.visible = visible;
+    }
+}
+
+export function updateBonusText(text, x, y, visible, alpha) {
+    if (bonusText) {
+        bonusText.text = text;
+        bonusText.x = x;
+        bonusText.y = y;
+        bonusText.visible = visible;
+        bonusText.alpha = alpha;
+    }
+}
 
 export function getAsteroids() {
     return asteroids;
@@ -161,7 +242,8 @@ export function addPowerUp(app, type) {
     powerUps.push(powerUp);
 }
 
-export function destroyAsteroid(app, asteroid, index, explosionParticles, soundManager, scoreMultiplier, scoreText) {
+
+export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -178,7 +260,9 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles, soundM
     );
 
     // Play explosion sound
-    soundManager.playExplosion(asteroid.sizeLevel);
+    if (gSoundManager) {
+        gSoundManager.playExplosion(asteroid.sizeLevel);
+    }
     
     // Remove asteroid and update score
     asteroid.destroy();
@@ -199,11 +283,11 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles, soundM
     
     // Apply score multiplier
     score += (points * scoreMultiplier);
-    scoreText.text = 'Score: ' + score;
+    updateScoreText();
     return score;
 }
 
-export function checkPlayerCollisions(app, player, gameOver, soundManager, explosionParticles, showGameOver) {
+export function checkPlayerCollisions(app, player, gameOver, explosionParticles, showGameOver) {
     if (gameOver) return { lives, gameOver };
     
     for (let asteroid of asteroids) {
@@ -213,9 +297,11 @@ export function checkPlayerCollisions(app, player, gameOver, soundManager, explo
         if (distance < player.radius + asteroid.radius) {
             lives--;
             if (lives <= 0) {
-                soundManager.stopAll();
-                soundManager.play('spaceshipExplode');
-                soundManager.play('gameOver');
+                if (gSoundManager) {
+                    gSoundManager.stopAll();
+                    gSoundManager.play('spaceshipExplode');
+                    gSoundManager.play('gameOver');
+                }
                 // Create cyan explosion at ship's position
                 explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
                 
@@ -225,7 +311,9 @@ export function checkPlayerCollisions(app, player, gameOver, soundManager, explo
             } else {
                 // Create cyan explosion at ship's position before respawning
                 explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
-                soundManager.play('spaceshipExplode');
+                if (gSoundManager) {
+                    gSoundManager.play('spaceshipExplode');
+                }
                 player.sprite.x = app.screen.width / 2;
                 player.sprite.y = app.screen.height / 2;
                 player.velocity = { x: 0, y: 0 };
@@ -236,7 +324,7 @@ export function checkPlayerCollisions(app, player, gameOver, soundManager, explo
     return { lives, gameOver };
 }
 
-export function checkPowerUpCollisions(app, player, soundManager) {
+export function checkPowerUpCollisions(app, player) {
     for (let i = powerUps.length - 1; i >= 0; i--) {
         const powerUp = powerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
@@ -258,7 +346,9 @@ export function checkPowerUpCollisions(app, player, soundManager) {
                         rearBulletActive = false;
                     }, 10000);
                     // Play rear bullet power-up sound
-                    soundManager.play('power_double');
+                    if (gSoundManager) {
+                        gSoundManager.play('power_double');
+                    }
                     break;
                 case 'quadFire':
                     // Clear any existing timer
@@ -272,7 +362,9 @@ export function checkPowerUpCollisions(app, player, soundManager) {
                         quadFireActive = false;
                     }, 10000);
                     // Play quad fire power-up sound
-                    soundManager.play('power_quad');
+                    if (gSoundManager) {
+                        gSoundManager.play('power_quad');
+                    }
                     break;
             }
             
@@ -325,7 +417,7 @@ export function spawnAsteroidsForWave(app, waveIndex) {
     return asteroids;
 }
 
-export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText) {
+export function checkBonusCollisions(app) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = bonuses.length - 1; j >= 0; j--) {
@@ -353,23 +445,20 @@ export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMu
                 
                 // Activate score multiplier
                 scoreMultiplier = 2;
-                multiplierText.text = 'Score x2!';
-                multiplierText.visible = true;
+                updateMultiplierText('Score x2!', true);
                 
                 // Set timer to deactivate after 10 seconds
                 scoreMultiplierTimer = setTimeout(() => {
-                    multiplierText.visible = false;
+                    updateMultiplierText('', false);
                 }, 10000);
                 
                 // Play bonus sound
-                soundManager.play('bonus_double');
+                if (gSoundManager) {
+                    gSoundManager.play('bonus_double');
+                }
                 
                 // Show bonus text at bonus location
-                bonusText.text = 'x2!';
-                bonusText.x = startX;
-                bonusText.y = startY;
-                bonusText.visible = true;
-                bonusText.alpha = 1;
+                updateBonusText('x2!', startX, startY, true, 1);
                 
                 // Animate text flying to score
                 let startTime = Date.now();
@@ -379,23 +468,22 @@ export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMu
                         // Calculate progress (0 to 1)
                         const progress = elapsed / 1000;
                         // Move position
-                        bonusText.x = startX + (targetX - startX) * progress;
-                        bonusText.y = startY + (targetY - startY) * progress;
-                        // Fade out
-                        bonusText.alpha = 1 - progress;
+                        const currentX = startX + (targetX - startX) * progress;
+                        const currentY = startY + (targetY - startY) * progress;
+                        // Update position and fade out
+                        updateBonusText('x2!', currentX, currentY, true, 1 - progress);
                         requestAnimationFrame(flyToScore);
                     } else {
-                        bonusText.visible = false;
+                        updateBonusText('', 0, 0, false, 0);
                     }
                 };
                 flyToScore();
-                
             }
         }
     }
 }
 
-export function checkCollisions(app, explosionParticles, soundManager, scoreMultiplier, scoreText) {
+export function checkCollisions(app, explosionParticles) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = asteroids.length - 1; j >= 0; j--) {
@@ -406,7 +494,7 @@ export function checkCollisions(app, explosionParticles, soundManager, scoreMult
             if (distance < bullet.radius + asteroid.radius) {
                 app.stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                score = destroyAsteroid(app, asteroid, j, explosionParticles, soundManager, scoreMultiplier, scoreText);
+                score = destroyAsteroid(app, asteroid, j, explosionParticles);
                 break; // Bullet can only hit one asteroid
             }
         }

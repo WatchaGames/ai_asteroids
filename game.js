@@ -4,7 +4,7 @@ import Asteroid from './asteroid.js';
 import Starfield from './starfield.js';
 import EngineParticles from './engineParticles.js';
 import ExplosionParticles from './explosionParticles.js';
-import SoundManager from './soundManager.js';
+import { InitSoundManager, gSoundManager } from './soundManager.js';
 import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
@@ -42,7 +42,11 @@ import {
     setScoreMultiplier,
     getScoreMultiplierTimer,
     setScoreMultiplierTimer,
-    clearScoreMultiplier
+    clearScoreMultiplier,
+    initUI,
+    updateScoreText,
+    updateMultiplierText,
+    updateBonusText
 } from './battle.js';
 
 // Sound configuration
@@ -63,8 +67,8 @@ const SOUND_CONFIG = {
 
 async function initGame() {
     // Initialize PixiJS Application
-    const app = new PIXI.Application();
-    await app.init({
+    const pixiApp = new PIXI.Application();
+    await pixiApp.init({
         width: 800,
         height: 600,
         background: 0x000000,
@@ -76,16 +80,20 @@ async function initGame() {
     });
 
     // Initialize PixiJS
-    document.body.appendChild(app.canvas);
+    document.body.appendChild(pixiApp.canvas);
 
     // Create starfield before other game objects
-    const starfield = new Starfield(app);
-    const engineParticles = new EngineParticles(app);
-    const explosionParticles = new ExplosionParticles(app);
-    const soundManager = new SoundManager(SOUND_CONFIG);
+    const starfield = new Starfield(pixiApp);
+    const engineParticles = new EngineParticles(pixiApp);
+    const explosionParticles = new ExplosionParticles(pixiApp);
+
+    InitSoundManager(SOUND_CONFIG);
+
+    // Initialize battle UI
+    initUI(pixiApp);
 
     // Game State Variables
-    const player = new Spaceship(app);
+    const player = new Spaceship(pixiApp);
     let gameOver = false;
     let debugMode = false;
     let lastBonusSpawn = 0;
@@ -94,21 +102,13 @@ async function initGame() {
     const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 
     // UI Elements
-    const scoreText = new PIXI.Text({
-        text: 'Score: 0',
-        style: { fill: 0xFFFFFF }
-    });
-    scoreText.x = 10;
-    scoreText.y = 10;
-    app.stage.addChild(scoreText);
-
     const livesText = new PIXI.Text({
         text: 'Lives: 3',
         style: { fill: 0xFFFFFF }
     });
-    livesText.x = app.screen.width - 100;
+    livesText.x = pixiApp.screen.width - 100;
     livesText.y = 10;
-    app.stage.addChild(livesText);
+    pixiApp.stage.addChild(livesText);
 
     // Add wave counter text
     const waveText = new PIXI.Text({
@@ -119,10 +119,10 @@ async function initGame() {
             fontWeight: 'bold'
         }
     });
-    waveText.x = app.screen.width / 2;
+    waveText.x = pixiApp.screen.width / 2;
     waveText.y = 10;
     waveText.anchor.set(0.5); // Center the text
-    app.stage.addChild(waveText);
+    pixiApp.stage.addChild(waveText);
 
     // Add debug text for rotation and position (using CGA bright green)
     const debugText = new PIXI.Text({
@@ -135,37 +135,7 @@ async function initGame() {
     debugText.x = 10;
     debugText.y = 40;
     debugText.visible = debugMode;
-    app.stage.addChild(debugText);
-
-    // Add multiplier text
-    const multiplierText = new PIXI.Text({
-        text: '',
-        style: { 
-            fill: 0xFFFF00,
-            fontSize: 16,
-            fontWeight: 'bold'
-        }
-    });
-    multiplierText.x = 10;
-    multiplierText.y = 35;
-    multiplierText.visible = false;
-    app.stage.addChild(multiplierText);
-
-    // Add bonus text for multiplier
-    const bonusText = new PIXI.Text({
-        text: '',
-        style: { 
-            fill: 0xFFFF00,
-            fontSize: 24,
-            fontWeight: 'bold'
-        }
-    });
-    bonusText.x = app.screen.width / 2;
-    bonusText.y = 50;
-    bonusText.anchor.set(0.5);
-    bonusText.visible = false;
-    app.stage.addChild(bonusText);
-
+    pixiApp.stage.addChild(debugText);
 
     function restartGame() {
         // Reset game state
@@ -175,23 +145,20 @@ async function initGame() {
         setLives(3);
         setCurrentWave(0);
         clearScoreMultiplier();
-        scoreText.text = 'Score: 0';
+        updateScoreText();
         livesText.text = 'Lives: 3';
         waveText.text = 'Wave 1';
         
         // Clear existing game elements
-        destroyAllGameObjects(app);
+        destroyAllGameObjects(pixiApp);
         
         // Remove game over screen
-        hideGameOver(app);
+        hideGameOver(pixiApp);
         
         // Reset player position
-        player.sprite.x = app.screen.width / 2;
-        player.sprite.y = app.screen.height / 2;
-        player.velocity = { x: 0, y: 0 };
-        player.sprite.rotation = 0;
+        player.resetLocation();
 
-        startNextWave(app);
+        startNextWave(pixiApp);
     }
 
     // Keyboard Input Handling
@@ -214,23 +181,13 @@ async function initGame() {
                 break;
             case 'ArrowUp':
                 player.isMovingForward = true;
-                soundManager.startThrust();  // Start engine sound
+                gSoundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
-                console.log('Space pressed, calling actionFire');
-                console.log('Player object:', player);
-                console.log('actionFire method:', player.actionFire);
-                player.actionFire(soundManager);
+                player.actionFire(gSoundManager);
                 break;
             case 'Shift':
-                if(!player.isTeleporting) {
-                    // Get random position within screen bounds (with padding)
-                    const padding = 50;  // Keep away from edges
-                    const newX = padding + Math.random() * (app.screen.width - 2 * padding);
-                    const newY = padding + Math.random() * (app.screen.height - 2 * padding);
-                    player.teleport(newX, newY);
-                    soundManager.play('teleport');  // Use generic play function
-                }
+                player.tryTeleport(pixiApp, gSoundManager);
                 break;
             case 'd':
             case 'D':
@@ -242,21 +199,21 @@ async function initGame() {
                 if (debugMode) {
                     console.log('CHEAT:Goto Game Over');
                     gameOver = true;
-                    soundManager.stopAll();
-                    soundManager.play('spaceshipExplode');
-                    soundManager.play('gameOver');
+                    gSoundManager.stopAll();
+                    gSoundManager.play('spaceshipExplode');
+                    gSoundManager.play('gameOver');
                     // Create cyan explosion at ship's position
                     explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
                     
                     // Show game over screen
-                    showGameOver(app, getScore());
+                    showGameOver(pixiApp, getScore());
                 }
                 break;
             case 'b':
             case 'B':
                 if (debugMode) {
                     console.log('CHEAT:Destroy all game objects');
-                    destroyAllGameObjects(app);
+                    destroyAllGameObjects(pixiApp);
                 }
                 break;
         }
@@ -275,7 +232,7 @@ async function initGame() {
                 break;
             case 'ArrowUp':
                 player.isMovingForward = false;
-                soundManager.stopThrust();  // Stop engine sound
+                gSoundManager.stopThrust();  // Stop engine sound
                 break;
         }
     });
@@ -284,13 +241,13 @@ async function initGame() {
     function checkWave() {
         const asteroids = getAsteroids();
         if (asteroids.length === 0) {
-            const newWaveIndex = startNextWave(app);
+            const newWaveIndex = startNextWave(pixiApp);
             waveText.text = 'Wave ' + newWaveIndex;
         }
     }
 
     // Game Loop
-    app.ticker.add(() => {
+    pixiApp.ticker.add(() => {
         if (!gameOver) {
             player.update();
             starfield.update(player.velocity);
@@ -298,7 +255,7 @@ async function initGame() {
             // Spawn bonus and power-up periodically
             const currentTime = Date.now();
             if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-                addBonus(app);
+                addBonus(pixiApp);
                 lastBonusSpawn = currentTime;
             }
             
@@ -306,7 +263,7 @@ async function initGame() {
                 // Randomly choose between power-up types
                 const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
                 console.log('Spawning power-up:', powerUpType); // Debug log
-                addPowerUp(app, powerUpType);
+                addPowerUp(pixiApp, powerUpType);
                 lastPowerUpSpawn = currentTime;
             }
             
@@ -329,13 +286,13 @@ async function initGame() {
             updateBullets();
             updateBonuses();
             updatePowerUps();
-            checkCollisions(app, explosionParticles, soundManager, getScoreMultiplier(), scoreText);
-            checkBonusCollisions(app, soundManager, getScoreMultiplier(), getScoreMultiplierTimer(), multiplierText, bonusText);
-            const playerState = checkPlayerCollisions(app, player, gameOver, soundManager, explosionParticles, showGameOver);
+            checkCollisions(pixiApp, explosionParticles);
+            checkBonusCollisions(pixiApp);
+            const playerState = checkPlayerCollisions(pixiApp, player, gameOver, explosionParticles, showGameOver);
             livesText.text = 'Lives: ' + getLives();
             gameOver = playerState.gameOver;
             checkWave();
-            const powerUpState = checkPowerUpCollisions(app, player, soundManager);
+            const powerUpState = checkPowerUpCollisions(pixiApp, player);
             checkWave();
         }
     });

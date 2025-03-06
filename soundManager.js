@@ -1,3 +1,11 @@
+
+
+let gSoundManager = null;
+
+function InitSoundManager(config){
+    gSoundManager = new SoundManager(config);
+}
+
 class SoundManager {
     constructor(config) {
         // Use provided config or default values
@@ -122,3 +130,4 @@ class SoundManager {
 }
 
 export default SoundManager; 
+export { InitSoundManager, gSoundManager };
