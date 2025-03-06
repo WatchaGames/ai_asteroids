@@ -84,7 +84,6 @@ async function initGame() {
 
     // Create starfield before other game objects
     const starfield = new Starfield(pixiApp);
-    const engineParticles = new EngineParticles(pixiApp);
     const explosionParticles = new ExplosionParticles(pixiApp);
 
     InitSoundManager(SOUND_CONFIG);
@@ -220,8 +219,6 @@ async function initGame() {
     });
 
     document.addEventListener('keyup', (event) => {
-        // Don't process input if player is teleporting
-        if (player.isTeleporting) return;
 
         switch (event.key) {
             case 'ArrowLeft':
@@ -275,12 +272,8 @@ async function initGame() {
                 debugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
             }
             
-            // Update engine particles
-            if (player.isMovingForward) {
-                engineParticles.emit(player.sprite.x, player.sprite.y, player.sprite.rotation);
-            }
-            engineParticles.update();
-            explosionParticles.update();  // Update explosion particles
+            // Update explosion particles
+            explosionParticles.update();
             
             updateAsteroids();
             updateBullets();

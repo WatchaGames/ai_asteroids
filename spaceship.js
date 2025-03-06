@@ -1,5 +1,6 @@
 import { palette10 } from './palette.js';
 import { addBullet, getQuadFireActive, getRearBulletActive } from './battle.js';
+import EngineParticles from './engineParticles.js';
 
 class Spaceship {
     constructor(app) {
@@ -32,6 +33,9 @@ class Spaceship {
         this.teleportStartTime = 0;
         this.teleportTargetX = 0;
         this.teleportTargetY = 0;
+
+        // Initialize engine particles
+        this.engineParticles = new EngineParticles(app);
         
         app.stage.addChild(this.sprite);
     }
@@ -158,6 +162,9 @@ class Spaceship {
                 this.velocity.x = (this.velocity.x / speed) * this.maxSpeed;
                 this.velocity.y = (this.velocity.y / speed) * this.maxSpeed;
             }
+
+            // Emit engine particles
+            this.engineParticles.emit(this.sprite.x, this.sprite.y, this.sprite.rotation);
         }
         
         // Update position
@@ -169,6 +176,9 @@ class Spaceship {
         if (this.sprite.x > this.app.screen.width) this.sprite.x = 0;
         if (this.sprite.y < 0) this.sprite.y = this.app.screen.height;
         if (this.sprite.y > this.app.screen.height) this.sprite.y = 0;
+
+        // Update engine particles
+        this.engineParticles.update();
     }
 
     // Helper method to check if ship is in any teleportation state
