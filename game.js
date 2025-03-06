@@ -217,29 +217,10 @@ async function initGame() {
                 soundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
-                if (getQuadFireActive()) {
-                    // Shoot in all four directions
-                    const angles = [
-                        player.sprite.rotation,           // Forward
-                        player.sprite.rotation + Math.PI, // Backward
-                        player.sprite.rotation + Math.PI/2, // Right
-                        player.sprite.rotation - Math.PI/2  // Left
-                    ];
-                    
-                    angles.forEach(angle => {
-                        addBullet(app, player.sprite.x, player.sprite.y, angle);
-                    });
-                    soundManager.play('shoot');
-                } else if (getRearBulletActive()) {
-                    // Shoot forward and backward
-                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
-                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
-                    soundManager.play('shoot');
-                } else {
-                    // Normal forward shot
-                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
-                    soundManager.play('shoot');
-                }
+                console.log('Space pressed, calling actionFire');
+                console.log('Player object:', player);
+                console.log('actionFire method:', player.actionFire);
+                player.actionFire(soundManager);
                 break;
             case 'Shift':
                 if(!player.isTeleporting) {

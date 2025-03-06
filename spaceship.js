@@ -1,4 +1,5 @@
 import { palette10 } from './palette.js';
+import { addBullet, getQuadFireActive, getRearBulletActive } from './battle.js';
 
 class Spaceship {
     constructor(app) {
@@ -51,7 +52,32 @@ class Spaceship {
         // Reset velocity
         this.velocity = { x: 0, y: 0 };
     }
-
+    actionFire(soundManager) {
+        console.log('actionFire');
+        if (getQuadFireActive()) {
+            // Shoot in all four directions
+            const angles = [
+                this.sprite.rotation,           // Forward
+                this.sprite.rotation + Math.PI, // Backward
+                this.sprite.rotation + Math.PI/2, // Right
+                this.sprite.rotation - Math.PI/2  // Left
+            ];
+            
+            angles.forEach(angle => {
+                addBullet(this.app, this.sprite.x, this.sprite.y, angle);
+            });
+            soundManager.play('shoot');
+        } else if (getRearBulletActive()) {
+            // Shoot forward and backward
+            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation);
+            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation + Math.PI);
+            soundManager.play('shoot');
+        } else {
+            // Normal forward shot
+            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation);
+            soundManager.play('shoot');
+        }
+    }
     update() {
         // Handle teleportation states
         if (this.isDisappearing || this.isDisappeared || this.isAppearing) {
@@ -130,6 +156,8 @@ class Spaceship {
     get isTeleporting() {
         return this.isDisappearing || this.isDisappeared || this.isAppearing;
     }
+
+
 }
 
 export default Spaceship; 
