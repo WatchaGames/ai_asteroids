@@ -1,6 +1,78 @@
 import Asteroid from './asteroid.js';
+import Bullet from './bullet.js';
+import Bonus from './bonus.js';
+import PowerUp from './powerUp.js';
 
-export function destroyAsteroid(app, asteroid, index, asteroids, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
+// Battle state
+let asteroids = [];
+let bullets = [];
+let bonuses = [];
+let powerUps = [];
+
+export function getAsteroids() {
+    return asteroids;
+}
+
+export function getBullets() {
+    return bullets;
+}
+
+export function getBonuses() {
+    return bonuses;
+}
+
+export function getPowerUps() {
+    return powerUps;
+}
+
+export function clearAsteroids(app) {
+    asteroids.forEach(asteroid => {
+        app.stage.removeChild(asteroid.sprite);
+    });
+    asteroids = [];
+}
+
+export function clearBullets(app) {
+    bullets.forEach(bullet => {
+        app.stage.removeChild(bullet.sprite);
+    });
+    bullets = [];
+}
+
+export function clearBonuses(app) {
+    bonuses.forEach(bonus => {
+        app.stage.removeChild(bonus.sprite);
+    });
+    bonuses = [];
+}
+
+export function clearPowerUps(app) {
+    powerUps.forEach(powerUp => {
+        app.stage.removeChild(powerUp.sprite);
+    });
+    powerUps = [];
+}
+
+export function addAsteroids(newAsteroids) {
+    asteroids.push(...newAsteroids);
+}
+
+export function addBullet(app, x, y, angle) {
+    const bullet = new Bullet(app, x, y, angle);
+    bullets.push(bullet);
+}
+
+export function addBonus(app) {
+    const bonus = new Bonus(app);
+    bonuses.push(bonus);
+}
+
+export function addPowerUp(app, type) {
+    const powerUp = new PowerUp(app, type);
+    powerUps.push(powerUp);
+}
+
+export function destroyAsteroid(app, asteroid, index, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -42,7 +114,7 @@ export function destroyAsteroid(app, asteroid, index, asteroids, explosionPartic
     return newScore;
 }
 
-export function checkPlayerCollisions(app, player, asteroids, lives, gameOver, soundManager, explosionParticles, showGameOver, score) {
+export function checkPlayerCollisions(app, player, lives, gameOver, soundManager, explosionParticles, showGameOver, score) {
     if (gameOver) return { lives, gameOver };
     
     for (let asteroid of asteroids) {
@@ -75,7 +147,7 @@ export function checkPlayerCollisions(app, player, asteroids, lives, gameOver, s
     return { lives, gameOver };
 }
 
-export function checkPowerUpCollisions(app, player, powerUps, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer) {
+export function checkPowerUpCollisions(app, player, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer) {
     for (let i = powerUps.length - 1; i >= 0; i--) {
         const powerUp = powerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
@@ -123,30 +195,12 @@ export function checkPowerUpCollisions(app, player, powerUps, soundManager, rear
     return { rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer };
 }
 
-export function destroyAllGameObjects(app, asteroids, bullets, bonuses, powerUps) {
-    // Remove all asteroids from the PIXI stage
-    asteroids.forEach(asteroid => {
-        app.stage.removeChild(asteroid.sprite);
-    });
-    asteroids.length = 0;
-
-    // Remove all bullets
-    bullets.forEach(bullet => {
-        app.stage.removeChild(bullet.sprite);
-    });
-    bullets.length = 0;
-
-    // Remove all bonuses
-    bonuses.forEach(bonus => {
-        app.stage.removeChild(bonus.sprite);
-    });
-    bonuses.length = 0;
-
-    // Remove all power-ups
-    powerUps.forEach(powerup => {
-        app.stage.removeChild(powerup.sprite);
-    });
-    powerUps.length = 0;
+export function destroyAllGameObjects(app) {
+    // Remove all game objects from the PIXI stage
+    clearAsteroids(app);
+    clearBullets(app);
+    clearBonuses(app);
+    clearPowerUps(app);
 }
 
 export function spawnAsteroidsForWave(app, score, waveIndex) {
@@ -180,7 +234,7 @@ export function spawnAsteroidsForWave(app, score, waveIndex) {
     return asteroids;
 }
 
-export function checkBonusCollisions(app, bullets, bonuses, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText) {
+export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = bonuses.length - 1; j >= 0; j--) {
@@ -252,7 +306,7 @@ export function checkBonusCollisions(app, bullets, bonuses, soundManager, scoreM
     return { scoreMultiplier, scoreMultiplierTimer };
 }
 
-export function checkCollisions(app, bullets, asteroids, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
+export function checkCollisions(app, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = asteroids.length - 1; j >= 0; j--) {
@@ -263,7 +317,7 @@ export function checkCollisions(app, bullets, asteroids, explosionParticles, sou
             if (distance < bullet.radius + asteroid.radius) {
                 app.stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                score = destroyAsteroid(app, asteroid, j, asteroids, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
+                score = destroyAsteroid(app, asteroid, j, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
                 break; // Bullet can only hit one asteroid
             }
         }
@@ -271,11 +325,11 @@ export function checkCollisions(app, bullets, asteroids, explosionParticles, sou
     return score;
 }
 
-export function updateAsteroids(asteroids) {
+export function updateAsteroids() {
     asteroids.forEach(asteroid => asteroid.update());
 }
 
-export function updateBullets(bullets) {
+export function updateBullets() {
     for (let i = bullets.length - 1; i >= 0; i--) {
         if (bullets[i].update()) {
             bullets.splice(i, 1);
@@ -283,7 +337,7 @@ export function updateBullets(bullets) {
     }
 }
 
-export function updateBonuses(bonuses) {
+export function updateBonuses() {
     for (let i = bonuses.length - 1; i >= 0; i--) {
         if (bonuses[i].update()) {
             bonuses.splice(i, 1);
@@ -291,7 +345,7 @@ export function updateBonuses(bonuses) {
     }
 }
 
-export function updatePowerUps(powerUps) {
+export function updatePowerUps() {
     for (let i = powerUps.length - 1; i >= 0; i--) {
         if (powerUps[i].update()) {
             powerUps.splice(i, 1);

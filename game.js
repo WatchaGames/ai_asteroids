@@ -20,7 +20,13 @@ import {
     updateAsteroids,
     updateBullets,
     updateBonuses,
-    updatePowerUps
+    updatePowerUps,
+    getAsteroids,
+    addAsteroids,
+    clearAsteroids,
+    addBullet,
+    addBonus,
+    addPowerUp
 } from './battle.js';
 
 // Sound configuration
@@ -64,10 +70,6 @@ async function initGame() {
 
     // Game State Variables
     const player = new Spaceship(app);
-    const asteroids = [];
-    const bullets = [];
-    const bonuses = [];
-    const powerUps = [];
     let score = 0;
     let lives = 3;
     let gameOver = false;
@@ -171,7 +173,7 @@ async function initGame() {
         waveText.text = 'Wave 1';
         
         // Clear existing game elements
-        destroyAllGameObjects(app, asteroids, bullets, bonuses, powerUps);
+        destroyAllGameObjects(app);
         
         // Remove game over screen
         hideGameOver(app);
@@ -184,7 +186,7 @@ async function initGame() {
         
         // Initialize new asteroids
         const newAsteroids = spawnAsteroidsForWave(app, score, currentWave);
-        asteroids.push(...newAsteroids);
+        addAsteroids(newAsteroids);
     }
 
     // Keyboard Input Handling
@@ -220,22 +222,17 @@ async function initGame() {
                     ];
                     
                     angles.forEach(angle => {
-                        const bullet = new Bullet(app, player.sprite.x, player.sprite.y, angle);
-                        bullets.push(bullet);
+                        addBullet(app, player.sprite.x, player.sprite.y, angle);
                     });
                     soundManager.play('shoot');
                 } else if (rearBulletActive) {
                     // Shoot forward and backward
-                    const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
-                    bullets.push(bullet);
-                    
-                    const rearBullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
-                    bullets.push(rearBullet);
+                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
+                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
                     soundManager.play('shoot');
                 } else {
                     // Normal forward shot
-                    const bullet = new Bullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
-                    bullets.push(bullet);
+                    addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                     soundManager.play('shoot');
                 }
                 break;
@@ -291,11 +288,12 @@ async function initGame() {
 
     // Update Functions
     function checkWave() {
+        const asteroids = getAsteroids();
         if (asteroids.length === 0) {
             currentWave++;
             waveText.text = 'Wave ' + currentWave;
             const newAsteroids = spawnAsteroidsForWave(app, score, currentWave);
-            asteroids.push(...newAsteroids);
+            addAsteroids(newAsteroids);
         }
     }
 
@@ -308,7 +306,7 @@ async function initGame() {
             // Spawn bonus and power-up periodically
             const currentTime = Date.now();
             if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-                bonuses.push(new Bonus(app));
+                addBonus(app);
                 lastBonusSpawn = currentTime;
             }
             
@@ -316,7 +314,7 @@ async function initGame() {
                 // Randomly choose between power-up types
                 const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
                 console.log('Spawning power-up:', powerUpType); // Debug log
-                powerUps.push(new PowerUp(app, powerUpType));
+                addPowerUp(app, powerUpType);
                 lastPowerUpSpawn = currentTime;
             }
             
@@ -335,20 +333,20 @@ async function initGame() {
             engineParticles.update();
             explosionParticles.update();  // Update explosion particles
             
-            updateAsteroids(asteroids);
-            updateBullets(bullets);
-            updateBonuses(bonuses);
-            updatePowerUps(powerUps);
-            score = checkCollisions(app, bullets, asteroids, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
-            const bonusState = checkBonusCollisions(app, bullets, bonuses, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText);
+            updateAsteroids();
+            updateBullets();
+            updateBonuses();
+            updatePowerUps();
+            score = checkCollisions(app, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
+            const bonusState = checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText);
             scoreMultiplier = bonusState.scoreMultiplier;
             scoreMultiplierTimer = bonusState.scoreMultiplierTimer;
-            const playerState = checkPlayerCollisions(app, player, asteroids, lives, gameOver, soundManager, explosionParticles, showGameOver, score);
+            const playerState = checkPlayerCollisions(app, player, lives, gameOver, soundManager, explosionParticles, showGameOver, score);
             lives = playerState.lives;
             gameOver = playerState.gameOver;
             livesText.text = 'Lives: ' + lives;
             checkWave();
-            const powerUpState = checkPowerUpCollisions(app, player, powerUps, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer);
+            const powerUpState = checkPowerUpCollisions(app, player, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer);
             rearBulletActive = powerUpState.rearBulletActive;
             quadFireActive = powerUpState.quadFireActive;
             rearBulletTimer = powerUpState.rearBulletTimer;
