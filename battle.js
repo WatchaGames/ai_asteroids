@@ -8,6 +8,9 @@ let asteroids = [];
 let bullets = [];
 let bonuses = [];
 let powerUps = [];
+let score = 0;
+let lives = 3;
+let currentWave = 1;
 
 export function getAsteroids() {
     return asteroids;
@@ -23,6 +26,41 @@ export function getBonuses() {
 
 export function getPowerUps() {
     return powerUps;
+}
+
+export function getScore() {
+    return score;
+}
+
+export function setScore(newScore) {
+    score = newScore;
+}
+
+export function getLives() {
+    return lives;
+}
+
+export function setLives(newLives) {
+    lives = newLives;
+}
+
+export function getCurrentWave() {
+    return currentWave;
+}
+
+export function setCurrentWave(wave) {
+    currentWave = wave;
+}
+
+export function incrementWave() {
+    currentWave++;
+}
+
+export function startNextWave(app) {
+    incrementWave();
+    const newAsteroids = spawnAsteroidsForWave(app, getCurrentWave());
+    addAsteroids(newAsteroids);
+    return getCurrentWave();
 }
 
 export function clearAsteroids(app) {
@@ -72,7 +110,7 @@ export function addPowerUp(app, type) {
     powerUps.push(powerUp);
 }
 
-export function destroyAsteroid(app, asteroid, index, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
+export function destroyAsteroid(app, asteroid, index, explosionParticles, soundManager, scoreMultiplier, scoreText) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -109,12 +147,12 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles, soundM
     }
     
     // Apply score multiplier
-    const newScore = score + (points * scoreMultiplier);
-    scoreText.text = 'Score: ' + newScore;
-    return newScore;
+    score += (points * scoreMultiplier);
+    scoreText.text = 'Score: ' + score;
+    return score;
 }
 
-export function checkPlayerCollisions(app, player, lives, gameOver, soundManager, explosionParticles, showGameOver, score) {
+export function checkPlayerCollisions(app, player, gameOver, soundManager, explosionParticles, showGameOver) {
     if (gameOver) return { lives, gameOver };
     
     for (let asteroid of asteroids) {
@@ -122,8 +160,8 @@ export function checkPlayerCollisions(app, player, lives, gameOver, soundManager
         const dy = player.sprite.y - asteroid.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < player.radius + asteroid.radius) {
-            const newLives = lives - 1;
-            if (newLives <= 0) {
+            lives--;
+            if (lives <= 0) {
                 soundManager.stopAll();
                 soundManager.play('spaceshipExplode');
                 soundManager.play('gameOver');
@@ -132,7 +170,7 @@ export function checkPlayerCollisions(app, player, lives, gameOver, soundManager
                 
                 // Show game over screen
                 showGameOver(app, score);
-                return { lives: newLives, gameOver: true };
+                return { lives, gameOver: true };
             } else {
                 // Create cyan explosion at ship's position before respawning
                 explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
@@ -140,7 +178,7 @@ export function checkPlayerCollisions(app, player, lives, gameOver, soundManager
                 player.sprite.x = app.screen.width / 2;
                 player.sprite.y = app.screen.height / 2;
                 player.velocity = { x: 0, y: 0 };
-                return { lives: newLives, gameOver: false };
+                return { lives, gameOver: false };
             }
         }
     }
@@ -201,10 +239,13 @@ export function destroyAllGameObjects(app) {
     clearBullets(app);
     clearBonuses(app);
     clearPowerUps(app);
+    score = 0; // Reset score
+    lives = 3; // Reset lives
 }
 
-export function spawnAsteroidsForWave(app, score, waveIndex) {
-    const numAsteroids = 5 + Math.floor(score / 1000); // Increase difficulty
+export function spawnAsteroidsForWave(app, waveIndex) {
+    const numAsteroids = 5 + waveIndex  * 2; // Increase difficulty
+    console.log(`spawnAsteroidsForWave:${waveIndex} with:${numAsteroids}`);
     const centerX = app.screen.width / 2;
     const centerY = app.screen.height / 2;
     const minDistanceFromCenter = Math.min(app.screen.width, app.screen.height) * 0.33; // 33% of screen size
@@ -306,7 +347,7 @@ export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMu
     return { scoreMultiplier, scoreMultiplierTimer };
 }
 
-export function checkCollisions(app, explosionParticles, soundManager, score, scoreMultiplier, scoreText) {
+export function checkCollisions(app, explosionParticles, soundManager, scoreMultiplier, scoreText) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = asteroids.length - 1; j >= 0; j--) {
@@ -317,7 +358,7 @@ export function checkCollisions(app, explosionParticles, soundManager, score, sc
             if (distance < bullet.radius + asteroid.radius) {
                 app.stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                score = destroyAsteroid(app, asteroid, j, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
+                score = destroyAsteroid(app, asteroid, j, explosionParticles, soundManager, scoreMultiplier, scoreText);
                 break; // Bullet can only hit one asteroid
             }
         }

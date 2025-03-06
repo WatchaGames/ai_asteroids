@@ -26,7 +26,15 @@ import {
     clearAsteroids,
     addBullet,
     addBonus,
-    addPowerUp
+    addPowerUp,
+    getScore,
+    setScore,
+    getLives,
+    setLives,
+    getCurrentWave,
+    setCurrentWave,
+    incrementWave,
+    startNextWave
 } from './battle.js';
 
 // Sound configuration
@@ -70,8 +78,6 @@ async function initGame() {
 
     // Game State Variables
     const player = new Spaceship(app);
-    let score = 0;
-    let lives = 3;
     let gameOver = false;
     let debugMode = false;
     let lastBonusSpawn = 0;
@@ -84,7 +90,6 @@ async function initGame() {
     let quadFireTimer = null;
     let scoreMultiplier = 1;
     let scoreMultiplierTimer = null;
-    let currentWave = 1; // Track current wave number
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -160,14 +165,12 @@ async function initGame() {
     app.stage.addChild(bonusText);
 
 
-    spawnAsteroidsForWave(score, currentWave);
-
     function restartGame() {
         // Reset game state
         gameOver = false;
-        score = 0;
-        lives = 3;
-        currentWave = 1;
+        setScore(0);
+        setLives(3);
+        setCurrentWave(0);
         scoreText.text = 'Score: 0';
         livesText.text = 'Lives: 3';
         waveText.text = 'Wave 1';
@@ -183,10 +186,9 @@ async function initGame() {
         player.sprite.y = app.screen.height / 2;
         player.velocity = { x: 0, y: 0 };
         player.sprite.rotation = 0;
-        
-        // Initialize new asteroids
-        const newAsteroids = spawnAsteroidsForWave(app, score, currentWave);
-        addAsteroids(newAsteroids);
+
+        startNextWave(app);
+
     }
 
     // Keyboard Input Handling
@@ -254,6 +256,7 @@ async function initGame() {
             case 'g':
             case 'G':
                 if (debugMode) {
+                    console.log('CHEAT:Goto Game Over');
                     gameOver = true;
                     soundManager.stopAll();
                     soundManager.play('spaceshipExplode');
@@ -262,7 +265,15 @@ async function initGame() {
                     explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
                     
                     // Show game over screen
-                    showGameOver(app, score);
+                    showGameOver(app, getScore());
+                }
+                break;
+            case 'b':
+            case 'B':
+                console.log('CHEAT:Destroy all game objects');
+                if (debugMode) {
+                    console.log('CHEAT:Destroy all game objects');
+                    destroyAllGameObjects(app);
                 }
                 break;
         }
@@ -290,10 +301,8 @@ async function initGame() {
     function checkWave() {
         const asteroids = getAsteroids();
         if (asteroids.length === 0) {
-            currentWave++;
-            waveText.text = 'Wave ' + currentWave;
-            const newAsteroids = spawnAsteroidsForWave(app, score, currentWave);
-            addAsteroids(newAsteroids);
+            const newWaveIndex = startNextWave(app);
+            waveText.text = 'Wave ' + newWaveIndex;
         }
     }
 
@@ -337,14 +346,13 @@ async function initGame() {
             updateBullets();
             updateBonuses();
             updatePowerUps();
-            score = checkCollisions(app, explosionParticles, soundManager, score, scoreMultiplier, scoreText);
+            checkCollisions(app, explosionParticles, soundManager, scoreMultiplier, scoreText);
             const bonusState = checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText);
             scoreMultiplier = bonusState.scoreMultiplier;
             scoreMultiplierTimer = bonusState.scoreMultiplierTimer;
-            const playerState = checkPlayerCollisions(app, player, lives, gameOver, soundManager, explosionParticles, showGameOver, score);
-            lives = playerState.lives;
+            const playerState = checkPlayerCollisions(app, player, gameOver, soundManager, explosionParticles, showGameOver);
+            livesText.text = 'Lives: ' + getLives();
             gameOver = playerState.gameOver;
-            livesText.text = 'Lives: ' + lives;
             checkWave();
             const powerUpState = checkPowerUpCollisions(app, player, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer);
             rearBulletActive = powerUpState.rearBulletActive;
