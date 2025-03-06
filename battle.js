@@ -11,6 +11,12 @@ let powerUps = [];
 let score = 0;
 let lives = 3;
 let currentWave = 1;
+let rearBulletActive = false;
+let rearBulletTimer = null;
+let quadFireActive = false;
+let quadFireTimer = null;
+let scoreMultiplier = 1;
+let scoreMultiplierTimer = null;
 
 export function getAsteroids() {
     return asteroids;
@@ -54,6 +60,51 @@ export function setCurrentWave(wave) {
 
 export function incrementWave() {
     currentWave++;
+}
+
+export function getRearBulletActive() {
+    return rearBulletActive;
+}
+
+export function setRearBulletActive(active) {
+    rearBulletActive = active;
+}
+
+export function getRearBulletTimer() {
+    return rearBulletTimer;
+}
+
+export function setRearBulletTimer(timer) {
+    rearBulletTimer = timer;
+}
+
+export function getQuadFireActive() {
+    return quadFireActive;
+}
+
+export function setQuadFireActive(active) {
+    quadFireActive = active;
+}
+
+export function getQuadFireTimer() {
+    return quadFireTimer;
+}
+
+export function setQuadFireTimer(timer) {
+    quadFireTimer = timer;
+}
+
+export function stopAllPowerUps() {
+    rearBulletActive = false;
+    quadFireActive = false;
+    if (rearBulletTimer) {
+        clearTimeout(rearBulletTimer);
+        rearBulletTimer = null;
+    }
+    if (quadFireTimer) {
+        clearTimeout(quadFireTimer);
+        quadFireTimer = null;
+    }
 }
 
 export function startNextWave(app) {
@@ -185,7 +236,7 @@ export function checkPlayerCollisions(app, player, gameOver, soundManager, explo
     return { lives, gameOver };
 }
 
-export function checkPowerUpCollisions(app, player, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer) {
+export function checkPowerUpCollisions(app, player, soundManager) {
     for (let i = powerUps.length - 1; i >= 0; i--) {
         const powerUp = powerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
@@ -230,7 +281,6 @@ export function checkPowerUpCollisions(app, player, soundManager, rearBulletActi
             powerUps.splice(i, 1);
         }
     }
-    return { rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer };
 }
 
 export function destroyAllGameObjects(app) {
@@ -302,12 +352,12 @@ export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMu
                 }
                 
                 // Activate score multiplier
-                const newMultiplier = 2;
+                scoreMultiplier = 2;
                 multiplierText.text = 'Score x2!';
                 multiplierText.visible = true;
                 
                 // Set timer to deactivate after 10 seconds
-                const newTimer = setTimeout(() => {
+                scoreMultiplierTimer = setTimeout(() => {
                     multiplierText.visible = false;
                 }, 10000);
                 
@@ -340,11 +390,9 @@ export function checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMu
                 };
                 flyToScore();
                 
-                return { scoreMultiplier: newMultiplier, scoreMultiplierTimer: newTimer };
             }
         }
     }
-    return { scoreMultiplier, scoreMultiplierTimer };
 }
 
 export function checkCollisions(app, explosionParticles, soundManager, scoreMultiplier, scoreText) {
@@ -391,5 +439,29 @@ export function updatePowerUps() {
         if (powerUps[i].update()) {
             powerUps.splice(i, 1);
         }
+    }
+}
+
+export function getScoreMultiplier() {
+    return scoreMultiplier;
+}
+
+export function setScoreMultiplier(multiplier) {
+    scoreMultiplier = multiplier;
+}
+
+export function getScoreMultiplierTimer() {
+    return scoreMultiplierTimer;
+}
+
+export function setScoreMultiplierTimer(timer) {
+    scoreMultiplierTimer = timer;
+}
+
+export function clearScoreMultiplier() {
+    scoreMultiplier = 1;
+    if (scoreMultiplierTimer) {
+        clearTimeout(scoreMultiplierTimer);
+        scoreMultiplierTimer = null;
     }
 }

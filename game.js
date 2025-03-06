@@ -34,7 +34,15 @@ import {
     getCurrentWave,
     setCurrentWave,
     incrementWave,
-    startNextWave
+    startNextWave,
+    getRearBulletActive,
+    getQuadFireActive,
+    stopAllPowerUps,
+    getScoreMultiplier,
+    setScoreMultiplier,
+    getScoreMultiplierTimer,
+    setScoreMultiplierTimer,
+    clearScoreMultiplier
 } from './battle.js';
 
 // Sound configuration
@@ -84,12 +92,6 @@ async function initGame() {
     let lastPowerUpSpawn = 0;
     const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
     const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
-    let rearBulletActive = false;
-    let rearBulletTimer = null;
-    let quadFireActive = false;
-    let quadFireTimer = null;
-    let scoreMultiplier = 1;
-    let scoreMultiplierTimer = null;
 
     // UI Elements
     const scoreText = new PIXI.Text({
@@ -168,9 +170,11 @@ async function initGame() {
     function restartGame() {
         // Reset game state
         gameOver = false;
+        stopAllPowerUps();
         setScore(0);
         setLives(3);
         setCurrentWave(0);
+        clearScoreMultiplier();
         scoreText.text = 'Score: 0';
         livesText.text = 'Lives: 3';
         waveText.text = 'Wave 1';
@@ -188,7 +192,6 @@ async function initGame() {
         player.sprite.rotation = 0;
 
         startNextWave(app);
-
     }
 
     // Keyboard Input Handling
@@ -214,7 +217,7 @@ async function initGame() {
                 soundManager.startThrust();  // Start engine sound
                 break;
             case ' ':
-                if (quadFireActive) {
+                if (getQuadFireActive()) {
                     // Shoot in all four directions
                     const angles = [
                         player.sprite.rotation,           // Forward
@@ -227,7 +230,7 @@ async function initGame() {
                         addBullet(app, player.sprite.x, player.sprite.y, angle);
                     });
                     soundManager.play('shoot');
-                } else if (rearBulletActive) {
+                } else if (getRearBulletActive()) {
                     // Shoot forward and backward
                     addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation);
                     addBullet(app, player.sprite.x, player.sprite.y, player.sprite.rotation + Math.PI);
@@ -270,7 +273,6 @@ async function initGame() {
                 break;
             case 'b':
             case 'B':
-                console.log('CHEAT:Destroy all game objects');
                 if (debugMode) {
                     console.log('CHEAT:Destroy all game objects');
                     destroyAllGameObjects(app);
@@ -346,19 +348,14 @@ async function initGame() {
             updateBullets();
             updateBonuses();
             updatePowerUps();
-            checkCollisions(app, explosionParticles, soundManager, scoreMultiplier, scoreText);
-            const bonusState = checkBonusCollisions(app, soundManager, scoreMultiplier, scoreMultiplierTimer, multiplierText, bonusText);
-            scoreMultiplier = bonusState.scoreMultiplier;
-            scoreMultiplierTimer = bonusState.scoreMultiplierTimer;
+            checkCollisions(app, explosionParticles, soundManager, getScoreMultiplier(), scoreText);
+            checkBonusCollisions(app, soundManager, getScoreMultiplier(), getScoreMultiplierTimer(), multiplierText, bonusText);
             const playerState = checkPlayerCollisions(app, player, gameOver, soundManager, explosionParticles, showGameOver);
             livesText.text = 'Lives: ' + getLives();
             gameOver = playerState.gameOver;
             checkWave();
-            const powerUpState = checkPowerUpCollisions(app, player, soundManager, rearBulletActive, quadFireActive, rearBulletTimer, quadFireTimer);
-            rearBulletActive = powerUpState.rearBulletActive;
-            quadFireActive = powerUpState.quadFireActive;
-            rearBulletTimer = powerUpState.rearBulletTimer;
-            quadFireTimer = powerUpState.quadFireTimer;
+            const powerUpState = checkPowerUpCollisions(app, player, soundManager);
+            checkWave();
         }
     });
 }
