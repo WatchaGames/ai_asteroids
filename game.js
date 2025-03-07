@@ -331,18 +331,15 @@ function handleGameOverKeyRelease(event) {
     }
 }
 
-
 function exitGameOverState() {
     hideGameOver(gPixiAPp);
     destroyAllGameObjects(gPixiAPp);
-
 
     destroyAnyStarfield();
     destroyAnyExplosionParticles();
     destroyAnySpaceship();
 
     removeBattleUI(gPixiAPp);
-
 }
 
 // INPUT PER SCREEN
@@ -384,8 +381,6 @@ function handleBattleKeyPress(event) {
                 gSoundManager.stopAll();
                 gSoundManager.play('spaceshipExplode');
                 gSoundManager.play('gameOver');
-                // Create cyan explosion at ship's position
-                gExplosionParticles.createExplosion(gPlayer.sprite.x, gPlayer.sprite.y, 0x55FFFF);
                 switchToGameState(STATE_GAME_OVER);
             }
             break;
@@ -424,8 +419,6 @@ function handleTitleKeyRelease(event) {
         switchToGameState(STATE_BATTLE);
     }
 }
-
-
 
 
 function handleKeyPressForGameState(event) {
