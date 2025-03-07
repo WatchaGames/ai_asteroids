@@ -15,17 +15,18 @@ import {
     updateBullets,
     updateBonuses,
     updatePowerUps,
-    getAsteroids,
     getScore,
-    setScore,
-    setLives,
-    setCurrentWave,
     startNextWave,
-    stopAllPowerUps,
-    clearScoreMultiplier,
-    addBattleUI,
     removeBattleUI,
-    checkForNewBonusesAndPowerUps
+    checkForNewBonusesAndPowerUps,
+    startBattle,
+    getPlayer,
+    getStarfield,
+    getExplosionParticles,
+    getAsteroids,
+    destroyAnyStarfield,
+    destroyAnyExplosionParticles,
+    destroyAnySpaceship
 } from './battle_screen.js';
 
 // Game States
@@ -234,49 +235,63 @@ function exitTitleState() {
  */                                                  
 
 function enterBattleState() {
-    startBattle();
+    startBattle(gPixiAPp);
 }
 
 
 function updateBattleState() {
-    gPlayer.update();
-    gStarfield.update(gPlayer.velocity);
+    const player = getPlayer();
+    const starfield = getStarfield();
+    const explosionParticles = getExplosionParticles();
+
+    
+    player.update();
+    starfield.update(player.velocity);
     
     // Check for new bonuses and power-ups
     checkForNewBonusesAndPowerUps(gPixiAPp);
     
     // Update debug display only when debug mode is on
     if (gDebugMode) {
-        const rotationDegrees = (gPlayer.sprite.rotation * 180 / Math.PI).toFixed(1);
-        const posX = gPlayer.sprite.x.toFixed(1);
-        const posY = gPlayer.sprite.y.toFixed(1);
+        const rotationDegrees = (player.sprite.rotation * 180 / Math.PI).toFixed(1);
+        const posX = player.sprite.x.toFixed(1);
+        const posY = player.sprite.y.toFixed(1);
         gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
     }
     
     // Update explosion particles
-    gExplosionParticles.update();
+    explosionParticles.update();
     
     updateAsteroids();
     updateBullets();
     updateBonuses();
     updatePowerUps();
-    checkCollisions(gPixiAPp, gExplosionParticles);
+    checkCollisions(gPixiAPp, explosionParticles);
     checkBonusCollisions(gPixiAPp);
-    const isPlayerDead = checkPlayerCollisions(gPixiAPp, gPlayer, gExplosionParticles);
-    if(isPlayerDead) {
-        switchToGameState(STATE_GAME_OVER);
-        return;
-    }
-    const powerUpState = checkPowerUpCollisions(gPixiAPp, gPlayer);
-    if(checkWaveIsCompleted() === true) { // true means wave is over
-        startNextWave(gPixiAPp);
 
+    const powerUpState = checkPowerUpCollisions(gPixiAPp, player);
+    if(checkWave() === true) { // true means wave is over
+        startNextWave(gPixiAPp);
+    }
+
+
+    let playerIsDead = checkPlayerCollisions(gPixiAPp, player, explosionParticles);
+    if(playerIsDead) {
+        switchToGameState(STATE_GAME_OVER);
     }
 }
 
 function exitBattleState() {
-    hideGameOver(gPixiAPp);
-}/* 
+    destroyAnySpaceship();
+
+}
+
+function checkWave() {
+    const asteroids = getAsteroids();
+    return asteroids.length === 0;  // Wave is over when no asteroids remain
+}
+
+/* 
 
  ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ 
 ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗
@@ -293,10 +308,12 @@ function enterGameOverState() {
 
 function updateGameOverState() {
 
+    let gStarfield = getStarfield();
     // garde le starfield en place
     gStarfield.update({x:0,y:0});
         
     // Update explosion particles
+    let gExplosionParticles = getExplosionParticles();
     gExplosionParticles.update();
         
     updateAsteroids();
@@ -332,6 +349,7 @@ function exitGameOverState() {
 
 function handleBattleKeyPress(event) {
 
+    let gPlayer = getPlayer();
     
     // Don't process input if player is teleporting or game is over
     if (gPlayer.isTeleporting) return;
@@ -383,6 +401,7 @@ function handleBattleKeyPress(event) {
 
 function handleBattleKeyRelease(event) {
     // Only process game controls if in battle state
+    let gPlayer = getPlayer();
     switch (event.key) {
         case 'ArrowLeft':
             gPlayer.isRotatingLeft = false;
@@ -442,81 +461,6 @@ function handleKeyReleaseForGameState(event) {
                 console.error('Invalid game state to handle key press:', gGameState);
     }
 }
-
-
-function destroyAnyStarfield() {
-    if(gStarfield !== null){
-        gStarfield.destroy();
-        gStarfield = null;
-    }
-}
-function destroyAnyExplosionParticles() {
-    if(gExplosionParticles !== null){
-        gExplosionParticles.destroy();
-        gExplosionParticles = null;
-    }
-}
-
-function destroyAnySpaceship() {
-    if(gPlayer !== null){
-        gPlayer.destroy();
-        gPlayer = null;
-    }
-}
-
-
-
-
-let gPlayer = null;
-let gStarfield = null;
-let gExplosionParticles = null;
-function startBattle() {
-
-    // Clear any existing game elements
-    destroyAllGameObjects(gPixiAPp);
-
-    destroyAnyStarfield();
-    destroyAnyExplosionParticles();
-    destroyAnySpaceship();
-
-    // Create starfield before other game objects
-    gStarfield = new Starfield(gPixiAPp);
-    gExplosionParticles = new ExplosionParticles(gPixiAPp);
-
-    // Game State Variables
-    gPlayer = new Spaceship(gPixiAPp);
-    gPlayer.sprite.visible = false; // Hide player initially
-    
-    // Initialize battle UI
-    addBattleUI(gPixiAPp);
-
-    // Show player
-    gPlayer.sprite.visible = true;
-    
-    // Reset game state
-    stopAllPowerUps();
-    setScore(0);
-    setLives(3);
-    clearScoreMultiplier();
-    
-    
-    // Reset player position
-    gPlayer.resetLocation();
-
-    // Start first wave
-    setCurrentWave(0);
-    startNextWave(gPixiAPp);
-}
-
-    // Update Functions
-function checkWaveIsCompleted() {
-    const asteroids = getAsteroids();
-    if (asteroids.length === 0) {
-        return true;
-    }
-    return false;
-}
-
 
 
 let gDebugMode = false;

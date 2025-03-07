@@ -3,6 +3,14 @@ import Bullet from './bullet.js';
 import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
 import { gSoundManager } from './soundManager.js';
+import Starfield from './starfield.js';
+import ExplosionParticles from './explosionParticles.js';
+import Spaceship from './spaceship.js';
+
+// Battle objects
+let gPlayer = null;
+let gStarfield = null;
+let gExplosionParticles = null;
 
 // Battle state
 let asteroids = [];
@@ -618,5 +626,85 @@ export function removeBattleUI(app) {
         waveText.parent.removeChild(waveText);
         waveText.destroy();
         waveText = null;
+    }
+}
+
+export function startBattle(app) {
+    // Clear any existing game elements
+    destroyAllGameObjects(app);
+
+    // Destroy any existing battle objects
+    if (gStarfield) {
+        gStarfield.destroy();
+        gStarfield = null;
+    }
+    if (gExplosionParticles) {
+        gExplosionParticles.destroy();
+        gExplosionParticles = null;
+    }
+    if (gPlayer) {
+        gPlayer.destroy();
+        gPlayer = null;
+    }
+
+    // Create starfield before other game objects
+    gStarfield = new Starfield(app);
+    gExplosionParticles = new ExplosionParticles(app);
+
+    // Game State Variables
+    gPlayer = new Spaceship(app);
+    gPlayer.sprite.visible = false; // Hide player initially
+    
+    // Initialize battle UI
+    addBattleUI(app);
+
+    // Show player
+    gPlayer.sprite.visible = true;
+    
+    // Reset game state
+    stopAllPowerUps();
+    setScore(0);
+    setLives(3);
+    clearScoreMultiplier();
+    
+    // Reset player position
+    gPlayer.resetLocation();
+
+    // Start first wave
+    setCurrentWave(0);
+    startNextWave(app);
+}
+
+// Add getters for the battle objects
+export function getPlayer() {
+    return gPlayer;
+}
+
+export function getStarfield() {
+    return gStarfield;
+}
+
+export function getExplosionParticles() {
+    return gExplosionParticles;
+}
+
+export function destroyAnyStarfield() {
+    if(gStarfield !== null){
+        gStarfield.destroy();
+        gStarfield = null;
+    }
+}
+
+export function destroyAnyExplosionParticles() {
+    if(gExplosionParticles !== null){
+        gExplosionParticles.destroy();
+        gExplosionParticles = null;
+    }
+}
+
+export function destroyAnySpaceship() {
+    if(gPlayer !== null){
+        gPlayer.destroy();
+        gPlayer = null;
     }
 }
