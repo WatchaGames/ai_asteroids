@@ -24,6 +24,12 @@ let scoreText = null;
 let multiplierText = null;
 let bonusText = null;
 
+// Game state for bonus and power-up spawning
+let lastBonusSpawn = 0;
+let lastPowerUpSpawn = 0;
+const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
+const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
+
 export function initUI(app) {
     // Score text
     scoreText = new PIXI.Text({
@@ -534,22 +540,38 @@ export function getScoreMultiplier() {
     return scoreMultiplier;
 }
 
-export function setScoreMultiplier(multiplier) {
+/* export function setScoreMultiplier(multiplier) {
     scoreMultiplier = multiplier;
 }
-
-export function getScoreMultiplierTimer() {
+ */
+/* export function getScoreMultiplierTimer() {
     return scoreMultiplierTimer;
 }
-
-export function setScoreMultiplierTimer(timer) {
+ */
+/* export function setScoreMultiplierTimer(timer) {
     scoreMultiplierTimer = timer;
 }
-
+ */
 export function clearScoreMultiplier() {
     scoreMultiplier = 1;
     if (scoreMultiplierTimer) {
         clearTimeout(scoreMultiplierTimer);
         scoreMultiplierTimer = null;
+    }
+}
+
+export function checkForNewBonusesAndPowerUps(app) {
+    const currentTime = Date.now();
+    if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
+        addBonus(app);
+        lastBonusSpawn = currentTime;
+    }
+    
+    if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
+        // Randomly choose between power-up types
+        const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
+        console.log('Spawning power-up:', powerUpType); // Debug log
+        addPowerUp(app, powerUpType);
+        lastPowerUpSpawn = currentTime;
     }
 }

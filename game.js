@@ -10,43 +10,27 @@ import PowerUp from './powerUp.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
 import { palette10 } from './palette.js';
 import { 
-    spawnAsteroidsForWave, 
     destroyAllGameObjects, 
     checkPowerUpCollisions, 
     checkPlayerCollisions, 
     checkBonusCollisions, 
-    destroyAsteroid, 
     checkCollisions,
     updateAsteroids,
     updateBullets,
     updateBonuses,
     updatePowerUps,
     getAsteroids,
-    addAsteroids,
-    clearAsteroids,
-    addBullet,
-    addBonus,
-    addPowerUp,
     getScore,
     setScore,
     getLives,
     setLives,
-    getCurrentWave,
     setCurrentWave,
-    incrementWave,
     startNextWave,
-    getRearBulletActive,
-    getQuadFireActive,
     stopAllPowerUps,
-    getScoreMultiplier,
-    setScoreMultiplier,
-    getScoreMultiplierTimer,
-    setScoreMultiplierTimer,
     clearScoreMultiplier,
     initUI,
     updateScoreText,
-    updateMultiplierText,
-    updateBonusText
+    checkForNewBonusesAndPowerUps
 } from './battle.js';
 
 // Sound configuration
@@ -95,10 +79,6 @@ async function initGame() {
     const player = new Spaceship(pixiApp);
     let gameOver = false;
     let debugMode = false;
-    let lastBonusSpawn = 0;
-    let lastPowerUpSpawn = 0;
-    const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
-    const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 
     // UI Elements
     const livesText = new PIXI.Text({
@@ -249,20 +229,8 @@ async function initGame() {
             player.update();
             starfield.update(player.velocity);
             
-            // Spawn bonus and power-up periodically
-            const currentTime = Date.now();
-            if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-                addBonus(pixiApp);
-                lastBonusSpawn = currentTime;
-            }
-            
-            if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
-                // Randomly choose between power-up types
-                const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
-                console.log('Spawning power-up:', powerUpType); // Debug log
-                addPowerUp(pixiApp, powerUpType);
-                lastPowerUpSpawn = currentTime;
-            }
+            // Check for new bonuses and power-ups
+            checkForNewBonusesAndPowerUps(pixiApp);
             
             // Update debug display only when debug mode is on
             if (debugMode) {
