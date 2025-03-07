@@ -76,7 +76,6 @@ class Spaceship {
     }
 
     actionFire(soundManager) {
-        console.log('actionFire');
         if (getQuadFireActive()) {
             // Shoot in all four directions
             const angles = [

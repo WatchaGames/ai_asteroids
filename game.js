@@ -1,14 +1,10 @@
-import Bullet from './bullet.js';
 import Spaceship from './spaceship.js';
-import Asteroid from './asteroid.js';
 import Starfield from './starfield.js';
-import EngineParticles from './engineParticles.js';
 import ExplosionParticles from './explosionParticles.js';
 import { InitSoundManager, gSoundManager } from './soundManager.js';
-import Bonus from './bonus.js';
-import PowerUp from './powerUp.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
-import { palette10 } from './palette.js';
+import { showTitleScreen, hideTitleScreen } from './title.js';
+import { showLoadingScreen, hideLoadingScreen } from './loading.js';
 import { 
     destroyAllGameObjects, 
     checkPowerUpCollisions, 
@@ -22,17 +18,21 @@ import {
     getAsteroids,
     getScore,
     setScore,
-    getLives,
     setLives,
     setCurrentWave,
     startNextWave,
     stopAllPowerUps,
     clearScoreMultiplier,
-    initUI,
-    updateScoreText,
+    addBattleUI,
     checkForNewBonusesAndPowerUps
 } from './battle.js';
 
+// Game States
+const STATE_BOOT = 'boot';
+const STATE_TITLE = 'title';
+const STATE_BATTLE = 'battle';
+let gGameState = STATE_TITLE;
+let gPixiAPp = null;
 // Sound configuration
 const SOUND_CONFIG = {
     thrust: 0.2,        // Reduced from 0.5
@@ -51,8 +51,8 @@ const SOUND_CONFIG = {
 
 async function initGame() {
     // Initialize PixiJS Application
-    const pixiApp = new PIXI.Application();
-    await pixiApp.init({
+    gPixiAPp = new PIXI.Application();
+    await gPixiAPp.init({
         width: 800,
         height: 600,
         background: 0x000000,
@@ -64,200 +64,374 @@ async function initGame() {
     });
 
     // Initialize PixiJS
-    document.body.appendChild(pixiApp.canvas);
+    document.body.appendChild(gPixiAPp.canvas);
+
+    // Initialize debug mode
+    initDebugMode();
+
+    // Keyboard Input Handling
+    document.addEventListener('keydown', (event) => {
+        handleKeyPressForGameState(event);
+    });
+
+    document.addEventListener('keyup', (event) => {
+
+        handleKeyReleaseForGameState(event);
+    });
+
+    switchToGameState(STATE_BOOT);
+
+    gPixiAPp.ticker.add(() => {
+        updateGameState();
+
+    });
+
+
+
+    // Game Loop
+}
+
+// Start the game
+initGame().catch(console.error); 
+
+
+
+// STATE MACHINE FUNCTIONS OF WHOLE GAME
+
+
+function switchToGameState(newState) {
+    console.log(`switchToGameState ${gGameState} ---> ${newState}`);
+    exitCurrentState();
+    enterNewState(newState);
+    gGameState = newState;
+}
+
+function exitCurrentState() {
+    switch(gGameState) {
+        case STATE_TITLE:
+            exitTitleState();
+            break;
+        case STATE_BATTLE:  
+            exitBattleState();
+            break;
+            case STATE_BOOT:
+                exitBootState();
+                break;
+        default:
+            console.error('Invalid game state to exit:', gGameState);
+    }
+}
+
+function enterNewState(newState) {
+      switch(newState) {
+        case STATE_TITLE:
+            enterTitleState();
+            break;
+        case STATE_BATTLE:
+            enterBattleState();
+            break;
+        case STATE_BOOT:
+            enterBootState();
+            break;
+        default:
+            console.error('Invalid game state to enter:', newState);
+    }
+}
+
+
+function updateGameState() {
+       switch(gGameState) {
+        case STATE_TITLE:
+            updateTitleState();
+            break;
+        case STATE_BATTLE:
+            updateBattleState();
+            break;
+        case STATE_BOOT:
+            updateBootState();
+            break;
+    }
+}
+
+function updateTitleState() {
+    // No update logic for title state
+}   
+
+
+
+function updateBattleState() {
+    if(gGameOver) return;
+    gPlayer.update();
+    gStarfield.update(gPlayer.velocity);
+    
+    // Check for new bonuses and power-ups
+    checkForNewBonusesAndPowerUps(gPixiAPp);
+    
+    // Update debug display only when debug mode is on
+    if (gDebugMode) {
+        const rotationDegrees = (gPlayer.sprite.rotation * 180 / Math.PI).toFixed(1);
+        const posX = gPlayer.sprite.x.toFixed(1);
+        const posY = gPlayer.sprite.y.toFixed(1);
+        gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
+    }
+    
+    // Update explosion particles
+    gExplosionParticles.update();
+    
+    updateAsteroids();
+    updateBullets();
+    updateBonuses();
+    updatePowerUps();
+    checkCollisions(gPixiAPp, gExplosionParticles);
+    checkBonusCollisions(gPixiAPp);
+    const playerState = checkPlayerCollisions(gPixiAPp, gPlayer, gGameOver, gExplosionParticles, showGameOver);
+    gGameOver = playerState.gameOver;
+    const powerUpState = checkPowerUpCollisions(gPixiAPp, gPlayer);
+    if(checkWave() === true) { // true means wave is over
+        startNextWave(gPixiAPp);
+
+    }
+}
+
+
+
+function enterBootState() {
+    // Initialize game assets and settings
+    InitSoundManager(SOUND_CONFIG);
+    // Show loading screen
+    showLoadingScreen(gPixiAPp);
+    
+}
+function updateBootState() {
+    // No update logic for boot state
+    const loaded = true;
+    if(loaded) {
+        switchToGameState(STATE_TITLE);
+    }
+}
+
+function exitBootState() {
+
+    hideLoadingScreen(gPixiAPp);
+}
+
+
+function enterTitleState() {
+    showTitleScreen(gPixiAPp);
+
+}
+
+function enterBattleState() {
+    startBattle();
+}
+
+
+function exitTitleState() {
+    hideTitleScreen(gPixiAPp);
+}
+
+function exitBattleState() {
+    hideGameOver(gPixiAPp);
+}
+
+
+// INPUT PER SCREEN
+
+function handleBattleKeyPress(event) {
+
+    // Handle game restart if game is over
+    if (gGameOver && event.key === ' ') {
+        restartBattle();
+        return;
+    }
+    
+    // Don't process input if player is teleporting or game is over
+    if (gPlayer.isTeleporting || gGameOver) return;
+
+    // Only process game controls if in battle state
+    switch (event.key) {
+        case 'ArrowLeft':
+            gPlayer.isRotatingLeft = true;
+            break;
+        case 'ArrowRight':
+            gPlayer.isRotatingRight = true;
+            break;
+        case 'ArrowUp':
+            gPlayer.isMovingForward = true;
+            gSoundManager.startThrust();  // Start engine sound
+            break;
+        case ' ':
+            gPlayer.actionFire(gSoundManager);
+            break;
+        case 'Shift':
+            gPlayer.tryTeleport(gPixiAPp, gSoundManager);
+            break;
+        case 'd':
+        case 'D':
+            gDebugMode = !gDebugMode;
+            gDebugText.visible = gDebugMode;
+            break;
+        case 'g':
+        case 'G':
+            if (gDebugMode) {
+                console.log('CHEAT:Goto Game Over');
+                gGameOver = true;
+                gSoundManager.stopAll();
+                gSoundManager.play('spaceshipExplode');
+                gSoundManager.play('gameOver');
+                // Create cyan explosion at ship's position
+                gExplosionParticles.createExplosion(gPlayer.sprite.x, gPlayer.sprite.y, 0x55FFFF);
+                
+                // Show game over screen
+                showGameOver(gPixiAPp, getScore());
+            }
+            break;
+        case 'b':
+        case 'B':
+            if (gDebugMode) {
+                console.log('CHEAT:Destroy all game objects');
+                destroyAllGameObjects(gPixiAPp);
+            }
+            break;
+    }
+}
+
+function handleBattleKeyRelease(event) {
+    // Only process game controls if in battle state
+    switch (event.key) {
+        case 'ArrowLeft':
+            gPlayer.isRotatingLeft = false;
+            break;
+        case 'ArrowRight':
+            gPlayer.isRotatingRight = false;
+            break;
+        case 'ArrowUp':
+            gPlayer.isMovingForward = false;
+            gSoundManager.stopThrust();  // Stop engine sound
+            break;
+    }
+}
+
+function handleTitleKeyPress(event) {
+}
+
+function handleTitleKeyRelease(event) {
+    if (event.key === ' ') {
+        switchToGameState(STATE_BATTLE);
+    }
+}
+
+function handleKeyPressForGameState(event) {
+
+    switch(gGameState) {
+        case STATE_TITLE:
+            handleTitleKeyPress(event);
+            break;
+        case STATE_BATTLE:
+            handleBattleKeyPress(event);
+            break;
+            default:
+                console.error('Invalid game state to handle key press:', gGameState);
+    }
+}
+
+function handleKeyReleaseForGameState(event) {
+
+    switch(gGameState) {
+        case STATE_TITLE:
+            handleTitleKeyRelease(event);
+            break;
+        case STATE_BATTLE:
+            handleBattleKeyRelease(event);
+            break;
+            default:
+                console.error('Invalid game state to handle key press:', gGameState);
+    }
+}
+
+let gPlayer = null;
+let gStarfield = null;
+let gExplosionParticles = null;
+let gGameOver = false;
+function startBattle() {
 
     // Create starfield before other game objects
-    const starfield = new Starfield(pixiApp);
-    const explosionParticles = new ExplosionParticles(pixiApp);
+    gStarfield = new Starfield(gPixiAPp);
+    gExplosionParticles = new ExplosionParticles(gPixiAPp);
 
-    InitSoundManager(SOUND_CONFIG);
-
-    // Initialize battle UI
-    initUI(pixiApp);
 
     // Game State Variables
-    const player = new Spaceship(pixiApp);
-    let gameOver = false;
-    let debugMode = false;
-
+    gPlayer = new Spaceship(gPixiAPp);
+    gPlayer.sprite.visible = false; // Hide player initially
+    gGameOver = false;
+    
     // UI Elements
-    const livesText = new PIXI.Text({
-        text: 'Lives: 3',
-        style: { fill: 0xFFFFFF }
-    });
-    livesText.x = pixiApp.screen.width - 100;
-    livesText.y = 10;
-    pixiApp.stage.addChild(livesText);
 
-    // Add wave counter text
-    const waveText = new PIXI.Text({
-        text: 'Wave 1',
-        style: { 
-            fill: 0xFFFFFF,
-            fontSize: 20,
-            fontWeight: 'bold'
-        }
-    });
-    waveText.x = pixiApp.screen.width / 2;
-    waveText.y = 10;
-    waveText.anchor.set(0.5); // Center the text
-    pixiApp.stage.addChild(waveText);
+
+    // Initialize battle UI
+    addBattleUI(gPixiAPp);
+
+    // Show player
+    gPlayer.sprite.visible = true;
+    
+    // Set game state to battle
+    gGameState = STATE_TITLE;
+    
+    // Reset game state
+    gGameOver = false;
+    stopAllPowerUps();
+    setScore(0);
+    setLives(3);
+    clearScoreMultiplier();
+    
+    // Clear any existing game elements
+    destroyAllGameObjects(gPixiAPp);
+    
+    // Reset player position
+    gPlayer.resetLocation();
+
+    // Start first wave
+    setCurrentWave(0);
+    startNextWave(gPixiAPp);
+}
+
+function restartBattle() {
+    // Hide game over screen
+    hideGameOver(gPixiAPp);
+    
+    // Set game state to title
+    gGameState = STATE_TITLE;
+    
+    // Show title screen
+    showTitleScreen(gPixiAPp, startBattle);
+}
+    // Update Functions
+function checkWave() {
+    const asteroids = getAsteroids();
+    if (asteroids.length === 0) {
+        return true;
+    }
+    return false;
+}
+
+
+
+let gDebugMode = false;
+let gDebugText = null;
+function initDebugMode() {
+    gDebugMode = false;
+
 
     // Add debug text for rotation and position (using CGA bright green)
-    const debugText = new PIXI.Text({
+    gDebugText = new PIXI.Text({
         text: 'Debug Info',
         style: { 
             fill: 0x55FF55,  // CGA bright green
             fontSize: 14
         }
     });
-    debugText.x = 10;
-    debugText.y = 40;
-    debugText.visible = debugMode;
-    pixiApp.stage.addChild(debugText);
-
-    function restartGame() {
-        // Reset game state
-        gameOver = false;
-        stopAllPowerUps();
-        setScore(0);
-        setLives(3);
-        setCurrentWave(0);
-        clearScoreMultiplier();
-        updateScoreText();
-        livesText.text = 'Lives: 3';
-        waveText.text = 'Wave 1';
-        
-        // Clear existing game elements
-        destroyAllGameObjects(pixiApp);
-        
-        // Remove game over screen
-        hideGameOver(pixiApp);
-        
-        // Reset player position
-        player.resetLocation();
-
-        startNextWave(pixiApp);
-    }
-
-    // Keyboard Input Handling
-    document.addEventListener('keydown', (event) => {
-        // Handle game restart if game is over
-        if (gameOver && event.key === ' ') {
-            restartGame();
-            return;
-        }
-        
-        // Don't process input if player is teleporting or game is over
-        if (player.isTeleporting || gameOver) return;
-
-        switch (event.key) {
-            case 'ArrowLeft':
-                player.isRotatingLeft = true;
-                break;
-            case 'ArrowRight':
-                player.isRotatingRight = true;
-                break;
-            case 'ArrowUp':
-                player.isMovingForward = true;
-                gSoundManager.startThrust();  // Start engine sound
-                break;
-            case ' ':
-                player.actionFire(gSoundManager);
-                break;
-            case 'Shift':
-                player.tryTeleport(pixiApp, gSoundManager);
-                break;
-            case 'd':
-            case 'D':
-                debugMode = !debugMode;
-                debugText.visible = debugMode;
-                break;
-            case 'g':
-            case 'G':
-                if (debugMode) {
-                    console.log('CHEAT:Goto Game Over');
-                    gameOver = true;
-                    gSoundManager.stopAll();
-                    gSoundManager.play('spaceshipExplode');
-                    gSoundManager.play('gameOver');
-                    // Create cyan explosion at ship's position
-                    explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
-                    
-                    // Show game over screen
-                    showGameOver(pixiApp, getScore());
-                }
-                break;
-            case 'b':
-            case 'B':
-                if (debugMode) {
-                    console.log('CHEAT:Destroy all game objects');
-                    destroyAllGameObjects(pixiApp);
-                }
-                break;
-        }
-    });
-
-    document.addEventListener('keyup', (event) => {
-
-        switch (event.key) {
-            case 'ArrowLeft':
-                player.isRotatingLeft = false;
-                break;
-            case 'ArrowRight':
-                player.isRotatingRight = false;
-                break;
-            case 'ArrowUp':
-                player.isMovingForward = false;
-                gSoundManager.stopThrust();  // Stop engine sound
-                break;
-        }
-    });
-
-    // Update Functions
-    function checkWave() {
-        const asteroids = getAsteroids();
-        if (asteroids.length === 0) {
-            const newWaveIndex = startNextWave(pixiApp);
-            waveText.text = 'Wave ' + newWaveIndex;
-        }
-    }
-
-    // Game Loop
-    pixiApp.ticker.add(() => {
-        if (!gameOver) {
-            player.update();
-            starfield.update(player.velocity);
-            
-            // Check for new bonuses and power-ups
-            checkForNewBonusesAndPowerUps(pixiApp);
-            
-            // Update debug display only when debug mode is on
-            if (debugMode) {
-                const rotationDegrees = (player.sprite.rotation * 180 / Math.PI).toFixed(1);
-                const posX = player.sprite.x.toFixed(1);
-                const posY = player.sprite.y.toFixed(1);
-                debugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
-            }
-            
-            // Update explosion particles
-            explosionParticles.update();
-            
-            updateAsteroids();
-            updateBullets();
-            updateBonuses();
-            updatePowerUps();
-            checkCollisions(pixiApp, explosionParticles);
-            checkBonusCollisions(pixiApp);
-            const playerState = checkPlayerCollisions(pixiApp, player, gameOver, explosionParticles, showGameOver);
-            livesText.text = 'Lives: ' + getLives();
-            gameOver = playerState.gameOver;
-            checkWave();
-            const powerUpState = checkPowerUpCollisions(pixiApp, player);
-            checkWave();
-        }
-    });
+    gDebugText.x = 10;
+    gDebugText.y = 40;
+    gDebugText.visible = gDebugMode;
+    gPixiAPp.stage.addChild(gDebugText);
 }
-
-// Start the game
-initGame().catch(console.error); 

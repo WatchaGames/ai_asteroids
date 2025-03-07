@@ -23,6 +23,8 @@ let scoreMultiplierTimer = null;
 let scoreText = null;
 let multiplierText = null;
 let bonusText = null;
+let livesText = null;
+let waveText = null;
 
 // Game state for bonus and power-up spawning
 let lastBonusSpawn = 0;
@@ -30,7 +32,7 @@ let lastPowerUpSpawn = 0;
 const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
 const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 
-export function initUI(app) {
+export function addBattleUI(app) {
     // Score text
     scoreText = new PIXI.Text({
         text: 'Score: 0',
@@ -68,19 +70,34 @@ export function initUI(app) {
     bonusText.anchor.set(0.5);
     bonusText.visible = false;
     app.stage.addChild(bonusText);
+
+
+    livesText = new PIXI.Text({
+        text: 'Lives: 3',
+        style: { fill: 0xFFFFFF }
+    });
+    livesText.x = app.screen.width - 100;
+    livesText.y = 10;
+    app.stage.addChild(livesText);
+
+    // Add wave counter text
+    waveText = new PIXI.Text({
+        text: 'Wave 1',
+        style: { 
+            fill: 0xFFFFFF,
+            fontSize: 20,
+            fontWeight: 'bold'
+        }
+    });
+    waveText.x = app.screen.width / 2;
+    waveText.y = 10;
+    waveText.anchor.set(0.5); // Center the text
+    app.stage.addChild(waveText);
+
+
+
 }
 
-export function getScoreText() {
-    return scoreText;
-}
-
-export function getMultiplierText() {
-    return multiplierText;
-}
-
-export function getBonusText() {
-    return bonusText;
-}
 
 export function updateScoreText() {
     if (scoreText) {
@@ -127,6 +144,9 @@ export function getScore() {
 
 export function setScore(newScore) {
     score = newScore;
+    updateScoreText();
+
+
 }
 
 export function getLives() {
@@ -135,6 +155,7 @@ export function getLives() {
 
 export function setLives(newLives) {
     lives = newLives;
+    livesText.text = `Lives: ${lives}`;
 }
 
 export function getCurrentWave() {
@@ -143,10 +164,11 @@ export function getCurrentWave() {
 
 export function setCurrentWave(wave) {
     currentWave = wave;
+    waveText.text = `Wave: ${currentWave}`;
 }
 
 export function incrementWave() {
-    currentWave++;
+    setCurrentWave(getCurrentWave() + 1);
 }
 
 export function getRearBulletActive() {
