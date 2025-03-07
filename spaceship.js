@@ -1,5 +1,5 @@
 import { palette10 } from './palette.js';
-import { addBullet, getQuadFireActive, getRearBulletActive } from './battle.js';
+import { addBullet, getQuadFireActive, getRearBulletActive } from './battle_screen.js';
 import EngineParticles from './engineParticles.js';
 
 class Spaceship {

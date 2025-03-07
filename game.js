@@ -3,8 +3,8 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import { InitSoundManager, gSoundManager } from './soundManager.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
-import { showTitleScreen, hideTitleScreen } from './title.js';
-import { showLoadingScreen, hideLoadingScreen } from './loading.js';
+import { showTitleScreen, hideTitleScreen,updateTitleScreen } from './title_screen.js';
+import { showLoadingScreen, hideLoadingScreen } from './boot_screen.js';
 import { 
     destroyAllGameObjects, 
     checkPowerUpCollisions, 
@@ -25,7 +25,7 @@ import {
     clearScoreMultiplier,
     addBattleUI,
     checkForNewBonusesAndPowerUps
-} from './battle.js';
+} from './battle_screen.js';
 
 // Game States
 const STATE_BOOT = 'boot';
@@ -141,22 +141,68 @@ function enterNewState(newState) {
 
 function updateGameState() {
        switch(gGameState) {
+        case STATE_BOOT:
+            updateBootState();
+            break;
         case STATE_TITLE:
             updateTitleState();
             break;
         case STATE_BATTLE:
             updateBattleState();
             break;
-        case STATE_BOOT:
-            updateBootState();
-            break;
     }
 }
 
+
+
+
+
+
+// BOOT STATE
+
+function enterBootState() {
+    // Initialize game assets and settings
+    InitSoundManager(SOUND_CONFIG);
+    // Show loading screen
+    showLoadingScreen(gPixiAPp);
+    
+}
+function updateBootState() {
+    // No update logic for boot state
+    const loaded = true;
+    if(loaded) {
+        switchToGameState(STATE_TITLE);
+    }
+}
+
+function exitBootState() {
+
+    hideLoadingScreen(gPixiAPp);
+}
+
+
+
+// TITLE STATE
+
+function enterTitleState() {
+    showTitleScreen(gPixiAPp);
+
+}
 function updateTitleState() {
     // No update logic for title state
+    // here we wait for the player to press space to start the game
+    updateTitleScreen();
 }   
 
+function exitTitleState() {
+    hideTitleScreen(gPixiAPp);
+}
+
+// BATTLE STATE
+
+function enterBattleState() {
+    startBattle();
+}
 
 
 function updateBattleState() {
@@ -191,43 +237,6 @@ function updateBattleState() {
         startNextWave(gPixiAPp);
 
     }
-}
-
-
-
-function enterBootState() {
-    // Initialize game assets and settings
-    InitSoundManager(SOUND_CONFIG);
-    // Show loading screen
-    showLoadingScreen(gPixiAPp);
-    
-}
-function updateBootState() {
-    // No update logic for boot state
-    const loaded = true;
-    if(loaded) {
-        switchToGameState(STATE_TITLE);
-    }
-}
-
-function exitBootState() {
-
-    hideLoadingScreen(gPixiAPp);
-}
-
-
-function enterTitleState() {
-    showTitleScreen(gPixiAPp);
-
-}
-
-function enterBattleState() {
-    startBattle();
-}
-
-
-function exitTitleState() {
-    hideTitleScreen(gPixiAPp);
 }
 
 function exitBattleState() {

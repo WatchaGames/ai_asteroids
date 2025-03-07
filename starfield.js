@@ -10,9 +10,9 @@ class Starfield {
             0xAAAAAA,  // Light gray (medium stars)
             0xFFFFFF   // White (close stars)
         ];
-        
+
+        // Create the stars immediately
         this.createStars();
-        app.stage.addChildAt(this.stars, 0); // Add at index 0 to be in background
     }
 
     createStars() {
@@ -38,10 +38,12 @@ class Starfield {
             
             this.stars.addChild(star);
         }
+        this.app.stage.addChildAt(this.stars, 0); // Add at index 0 to be in background
     }
 
     // Optional: Add subtle parallax effect based on ship movement
     update(shipVelocity) {
+        if(this.stars == null)return;
         for (let star of this.stars.children) {
             // Move stars slightly in opposite direction of ship movement
             star.x -= shipVelocity.x * star.parallaxFactor;
@@ -53,6 +55,24 @@ class Starfield {
             if (star.y < 0) star.y = this.app.screen.height;
             if (star.y > this.app.screen.height) star.y = 0;
         }
+    }
+
+    // Remove stars container from stage
+    removeStars() {
+        if (this.stars && this.stars.parent) {
+            this.stars.parent.removeChild(this.stars);
+        }
+    }
+
+    // Clean up resources
+    destroy() {
+        this.removeStars();
+        // Destroy all star graphics
+        for (let star of this.stars.children) {
+            star.destroy();
+        }
+        this.stars.destroy();
+        this.stars = null;
     }
 }
 

@@ -13,7 +13,7 @@ export function showTitleScreen(app) {
     
     // Title text
     const titleText = new PIXI.Text({
-        text: 'ASTEROIDS',
+        text: 'RogOids',
         style: {
             fill: palette10.white,
             fontSize: 64,
@@ -56,23 +56,13 @@ export function showTitleScreen(app) {
     
     // Add container to stage
     app.stage.addChild(titleContainer);
-    
-    // Animate the "Press SPACE to Start" text
-    let time = 0;
-    const animate = () => {
-        if (!titleContainer) return;
-        
-        time += 0.05;
-        startText.alpha = 0.5 + Math.sin(time) * 0.5;
-        
-        // Update starfield with a slow drift
-        if (starfield) {
-            starfield.update({ x: Math.sin(time * 0.1) * 0.5, y: Math.cos(time * 0.1) * 0.5 });
-        }
-        
-        requestAnimationFrame(animate);
-    };
-    animate();
+   
+}
+
+export function updateTitleScreen(delta) {
+    if (starfield) {
+        starfield.update({x:5,y:0} );
+    }
 }
 
 export function hideTitleScreen(app) {
