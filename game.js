@@ -24,6 +24,7 @@ import {
     stopAllPowerUps,
     clearScoreMultiplier,
     addBattleUI,
+    removeBattleUI,
     checkForNewBonusesAndPowerUps
 } from './battle_screen.js';
 
@@ -323,6 +324,8 @@ function exitGameOverState() {
     destroyAnyExplosionParticles();
     destroyAnySpaceship();
 
+    removeBattleUI(gPixiAPp);
+
 }
 
 // INPUT PER SCREEN
@@ -476,26 +479,19 @@ function startBattle() {
     destroyAnyExplosionParticles();
     destroyAnySpaceship();
 
-
-
     // Create starfield before other game objects
     gStarfield = new Starfield(gPixiAPp);
     gExplosionParticles = new ExplosionParticles(gPixiAPp);
-
 
     // Game State Variables
     gPlayer = new Spaceship(gPixiAPp);
     gPlayer.sprite.visible = false; // Hide player initially
     
-    // UI Elements
-
-
     // Initialize battle UI
     addBattleUI(gPixiAPp);
 
     // Show player
     gPlayer.sprite.visible = true;
-    
     
     // Reset game state
     stopAllPowerUps();
@@ -512,13 +508,6 @@ function startBattle() {
     startNextWave(gPixiAPp);
 }
 
-function gotoBackToTitleFromGameOver() {
-    // Hide game over screen
-    hideGameOver(gPixiAPp);
-
-    switchToGameState(STATE_TITLE);
-    
-}
     // Update Functions
 function checkWaveIsCompleted() {
     const asteroids = getAsteroids();

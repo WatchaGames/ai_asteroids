@@ -583,3 +583,40 @@ export function checkForNewBonusesAndPowerUps(app) {
         lastPowerUpSpawn = currentTime;
     }
 }
+
+export function removeBattleUI(app) {
+    // Remove and destroy score text
+    if (scoreText && scoreText.parent) {
+        scoreText.parent.removeChild(scoreText);
+        scoreText.destroy();
+        scoreText = null;
+    }
+
+    // Remove and destroy multiplier text
+    if (multiplierText && multiplierText.parent) {
+        multiplierText.parent.removeChild(multiplierText);
+        multiplierText.destroy();
+        multiplierText = null;
+    }
+
+    // Remove and destroy bonus text
+    if (bonusText && bonusText.parent) {
+        bonusText.parent.removeChild(bonusText);
+        bonusText.destroy();
+        bonusText = null;
+    }
+
+    // Remove and destroy lives text
+    if (livesText && livesText.parent) {
+        livesText.parent.removeChild(livesText);
+        livesText.destroy();
+        livesText = null;
+    }
+
+    // Remove and destroy wave text
+    if (waveText && waveText.parent) {
+        waveText.parent.removeChild(waveText);
+        waveText.destroy();
+        waveText = null;
+    }
+}
