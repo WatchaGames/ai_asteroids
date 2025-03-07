@@ -185,7 +185,24 @@ class Spaceship {
         return this.isDisappearing || this.isDisappeared || this.isAppearing;
     }
 
+    destroy() {
+        // Remove sprite from stage
+        if (this.sprite && this.sprite.parent) {
+            this.sprite.parent.removeChild(this.sprite);
+        }
 
+        // Destroy engine particles
+        if (this.engineParticles) {
+            this.engineParticles.destroy();
+        }
+
+        // Destroy sprite
+        this.sprite.destroy();
+
+        // Clear references
+        this.engineParticles = null;
+        this.sprite = null;
+    }
 }
 
 export default Spaceship; 

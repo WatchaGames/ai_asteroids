@@ -84,6 +84,25 @@ class EngineParticles {
             }
         }
     }
+
+    destroy() {
+        // Remove container from stage
+        if (this.container && this.container.parent) {
+            this.container.parent.removeChild(this.container);
+        }
+
+        // Destroy all particles
+        for (let particle of this.particles) {
+            particle.destroy();
+        }
+
+        // Destroy container
+        this.container.destroy();
+
+        // Clear references
+        this.particles = [];
+        this.container = null;
+    }
 }
 
 export default EngineParticles; 

@@ -223,28 +223,28 @@ export function startNextWave(app) {
     return getCurrentWave();
 }
 
-export function clearAsteroids(app) {
+export function destroyAsteroids(app) {
     asteroids.forEach(asteroid => {
         app.stage.removeChild(asteroid.sprite);
     });
     asteroids = [];
 }
 
-export function clearBullets(app) {
+export function destroyBullets(app) {
     bullets.forEach(bullet => {
         app.stage.removeChild(bullet.sprite);
     });
     bullets = [];
 }
 
-export function clearBonuses(app) {
+export function destroyBonuses(app) {
     bonuses.forEach(bonus => {
         app.stage.removeChild(bonus.sprite);
     });
     bonuses = [];
 }
 
-export function clearPowerUps(app) {
+export function destroyPowerUps(app) {
     powerUps.forEach(powerUp => {
         app.stage.removeChild(powerUp.sprite);
     });
@@ -315,8 +315,8 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     return score;
 }
 
-export function checkPlayerCollisions(app, player, gameOver, explosionParticles, showGameOver) {
-    if (gameOver) return { lives, gameOver };
+// return true if player is dead
+export function checkPlayerCollisions(app, player, explosionParticles) {
     
     for (let asteroid of asteroids) {
         const dx = player.sprite.x - asteroid.sprite.x;
@@ -333,9 +333,7 @@ export function checkPlayerCollisions(app, player, gameOver, explosionParticles,
                 // Create cyan explosion at ship's position
                 explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
                 
-                // Show game over screen
-                showGameOver(app, score);
-                return { lives, gameOver: true };
+                return true;
             } else {
                 // Create cyan explosion at ship's position before respawning
                 explosionParticles.createExplosion(player.sprite.x, player.sprite.y, 0x55FFFF);
@@ -345,11 +343,11 @@ export function checkPlayerCollisions(app, player, gameOver, explosionParticles,
                 player.sprite.x = app.screen.width / 2;
                 player.sprite.y = app.screen.height / 2;
                 player.velocity = { x: 0, y: 0 };
-                return { lives, gameOver: false };
+                return false;
             }
         }
     }
-    return { lives, gameOver };
+    return false;
 }
 
 export function checkPowerUpCollisions(app, player) {
@@ -404,11 +402,10 @@ export function checkPowerUpCollisions(app, player) {
 }
 
 export function destroyAllGameObjects(app) {
-    // Remove all game objects from the PIXI stage
-    clearAsteroids(app);
-    clearBullets(app);
-    clearBonuses(app);
-    clearPowerUps(app);
+    destroyAsteroids(app);
+    destroyBullets(app);
+    destroyBonuses(app);
+    destroyPowerUps(app);
     score = 0; // Reset score
     lives = 3; // Reset lives
 }
@@ -562,18 +559,7 @@ export function getScoreMultiplier() {
     return scoreMultiplier;
 }
 
-/* export function setScoreMultiplier(multiplier) {
-    scoreMultiplier = multiplier;
-}
- */
-/* export function getScoreMultiplierTimer() {
-    return scoreMultiplierTimer;
-}
- */
-/* export function setScoreMultiplierTimer(timer) {
-    scoreMultiplierTimer = timer;
-}
- */
+
 export function clearScoreMultiplier() {
     scoreMultiplier = 1;
     if (scoreMultiplierTimer) {

@@ -31,7 +31,11 @@ import {
 const STATE_BOOT = 'boot';
 const STATE_TITLE = 'title';
 const STATE_BATTLE = 'battle';
-let gGameState = STATE_TITLE;
+const STATE_GAME_OVER = 'gameover';
+
+let gGameState = STATE_BOOT; // debut
+
+
 let gPixiAPp = null;
 // Sound configuration
 const SOUND_CONFIG = {
@@ -117,6 +121,9 @@ function exitCurrentState() {
             case STATE_BOOT:
                 exitBootState();
                 break;
+                case STATE_GAME_OVER:
+                    exitGameOverState();
+                    break;
         default:
             console.error('Invalid game state to exit:', gGameState);
     }
@@ -132,6 +139,9 @@ function enterNewState(newState) {
             break;
         case STATE_BOOT:
             enterBootState();
+            break;
+        case STATE_GAME_OVER:
+            enterGameOverState();
             break;
         default:
             console.error('Invalid game state to enter:', newState);
@@ -150,6 +160,9 @@ function updateGameState() {
         case STATE_BATTLE:
             updateBattleState();
             break;
+            case STATE_GAME_OVER:
+                updateGameOverState();
+                break;
     }
 }
 
@@ -157,8 +170,14 @@ function updateGameState() {
 
 
 
-
-// BOOT STATE
+/* 
+██████╗  ██████╗  ██████╗ ████████╗
+██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝
+██████╔╝██║   ██║██║   ██║   ██║   
+██╔══██╗██║   ██║██║   ██║   ██║   
+██████╔╝╚██████╔╝╚██████╔╝   ██║   
+╚═════╝  ╚═════╝  ╚═════╝    ╚═╝   
+ */                                   
 
 function enterBootState() {
     // Initialize game assets and settings
@@ -181,9 +200,15 @@ function exitBootState() {
 }
 
 
-
-// TITLE STATE
-
+/* 
+████████╗██╗████████╗██╗     ███████╗
+╚══██╔══╝██║╚══██╔══╝██║     ██╔════╝
+   ██║   ██║   ██║   ██║     █████╗  
+   ██║   ██║   ██║   ██║     ██╔══╝  
+   ██║   ██║   ██║   ███████╗███████╗
+   ╚═╝   ╚═╝   ╚═╝   ╚══════╝╚══════╝
+                                     
+ */
 function enterTitleState() {
     showTitleScreen(gPixiAPp);
 
@@ -198,7 +223,14 @@ function exitTitleState() {
     hideTitleScreen(gPixiAPp);
 }
 
-// BATTLE STATE
+/* 
+██████╗  █████╗ ████████╗████████╗██╗     ███████╗
+██╔══██╗██╔══██╗╚══██╔══╝╚══██╔══╝██║     ██╔════╝
+██████╔╝███████║   ██║      ██║   ██║     █████╗  
+██╔══██╗██╔══██║   ██║      ██║   ██║     ██╔══╝  
+██████╔╝██║  ██║   ██║      ██║   ███████╗███████╗
+╚═════╝ ╚═╝  ╚═╝   ╚═╝      ╚═╝   ╚══════╝╚══════╝
+ */                                                  
 
 function enterBattleState() {
     startBattle();
@@ -206,7 +238,6 @@ function enterBattleState() {
 
 
 function updateBattleState() {
-    if(gGameOver) return;
     gPlayer.update();
     gStarfield.update(gPlayer.velocity);
     
@@ -230,10 +261,13 @@ function updateBattleState() {
     updatePowerUps();
     checkCollisions(gPixiAPp, gExplosionParticles);
     checkBonusCollisions(gPixiAPp);
-    const playerState = checkPlayerCollisions(gPixiAPp, gPlayer, gGameOver, gExplosionParticles, showGameOver);
-    gGameOver = playerState.gameOver;
+    const isPlayerDead = checkPlayerCollisions(gPixiAPp, gPlayer, gExplosionParticles);
+    if(isPlayerDead) {
+        switchToGameState(STATE_GAME_OVER);
+        return;
+    }
     const powerUpState = checkPowerUpCollisions(gPixiAPp, gPlayer);
-    if(checkWave() === true) { // true means wave is over
+    if(checkWaveIsCompleted() === true) { // true means wave is over
         startNextWave(gPixiAPp);
 
     }
@@ -241,21 +275,63 @@ function updateBattleState() {
 
 function exitBattleState() {
     hideGameOver(gPixiAPp);
+}/* 
+
+ ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ 
+██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗
+██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝
+██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗
+╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║
+ ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝
+                                                                          
+ */
+
+function enterGameOverState() {
+    showGameOver(gPixiAPp, getScore());
 }
 
+function updateGameOverState() {
+
+    // garde le starfield en place
+    gStarfield.update({x:0,y:0});
+        
+    // Update explosion particles
+    gExplosionParticles.update();
+        
+    updateAsteroids();
+    updateBonuses();
+    updatePowerUps();
+}
+
+
+function handleGameOverKeyPress(event) {
+}
+
+function handleGameOverKeyRelease(event) {
+    if (event.key === ' ') {
+        switchToGameState(STATE_TITLE);
+    }
+}
+
+
+function exitGameOverState() {
+    hideGameOver(gPixiAPp);
+    destroyAllGameObjects(gPixiAPp);
+
+
+    destroyAnyStarfield();
+    destroyAnyExplosionParticles();
+    destroyAnySpaceship();
+
+}
 
 // INPUT PER SCREEN
 
 function handleBattleKeyPress(event) {
 
-    // Handle game restart if game is over
-    if (gGameOver && event.key === ' ') {
-        restartBattle();
-        return;
-    }
     
     // Don't process input if player is teleporting or game is over
-    if (gPlayer.isTeleporting || gGameOver) return;
+    if (gPlayer.isTeleporting) return;
 
     // Only process game controls if in battle state
     switch (event.key) {
@@ -284,15 +360,12 @@ function handleBattleKeyPress(event) {
         case 'G':
             if (gDebugMode) {
                 console.log('CHEAT:Goto Game Over');
-                gGameOver = true;
                 gSoundManager.stopAll();
                 gSoundManager.play('spaceshipExplode');
                 gSoundManager.play('gameOver');
                 // Create cyan explosion at ship's position
                 gExplosionParticles.createExplosion(gPlayer.sprite.x, gPlayer.sprite.y, 0x55FFFF);
-                
-                // Show game over screen
-                showGameOver(gPixiAPp, getScore());
+                switchToGameState(STATE_GAME_OVER);
             }
             break;
         case 'b':
@@ -330,6 +403,9 @@ function handleTitleKeyRelease(event) {
     }
 }
 
+
+
+
 function handleKeyPressForGameState(event) {
 
     switch(gGameState) {
@@ -338,6 +414,9 @@ function handleKeyPressForGameState(event) {
             break;
         case STATE_BATTLE:
             handleBattleKeyPress(event);
+            break;
+        case STATE_GAME_OVER:
+            handleGameOverKeyPress(event);
             break;
             default:
                 console.error('Invalid game state to handle key press:', gGameState);
@@ -353,16 +432,51 @@ function handleKeyReleaseForGameState(event) {
         case STATE_BATTLE:
             handleBattleKeyRelease(event);
             break;
+        case STATE_GAME_OVER:
+            handleGameOverKeyRelease(event);
+            break;
             default:
                 console.error('Invalid game state to handle key press:', gGameState);
     }
 }
 
+
+function destroyAnyStarfield() {
+    if(gStarfield !== null){
+        gStarfield.destroy();
+        gStarfield = null;
+    }
+}
+function destroyAnyExplosionParticles() {
+    if(gExplosionParticles !== null){
+        gExplosionParticles.destroy();
+        gExplosionParticles = null;
+    }
+}
+
+function destroyAnySpaceship() {
+    if(gPlayer !== null){
+        gPlayer.destroy();
+        gPlayer = null;
+    }
+}
+
+
+
+
 let gPlayer = null;
 let gStarfield = null;
 let gExplosionParticles = null;
-let gGameOver = false;
 function startBattle() {
+
+    // Clear any existing game elements
+    destroyAllGameObjects(gPixiAPp);
+
+    destroyAnyStarfield();
+    destroyAnyExplosionParticles();
+    destroyAnySpaceship();
+
+
 
     // Create starfield before other game objects
     gStarfield = new Starfield(gPixiAPp);
@@ -372,7 +486,6 @@ function startBattle() {
     // Game State Variables
     gPlayer = new Spaceship(gPixiAPp);
     gPlayer.sprite.visible = false; // Hide player initially
-    gGameOver = false;
     
     // UI Elements
 
@@ -383,18 +496,13 @@ function startBattle() {
     // Show player
     gPlayer.sprite.visible = true;
     
-    // Set game state to battle
-    gGameState = STATE_TITLE;
     
     // Reset game state
-    gGameOver = false;
     stopAllPowerUps();
     setScore(0);
     setLives(3);
     clearScoreMultiplier();
     
-    // Clear any existing game elements
-    destroyAllGameObjects(gPixiAPp);
     
     // Reset player position
     gPlayer.resetLocation();
@@ -404,18 +512,15 @@ function startBattle() {
     startNextWave(gPixiAPp);
 }
 
-function restartBattle() {
+function gotoBackToTitleFromGameOver() {
     // Hide game over screen
     hideGameOver(gPixiAPp);
+
+    switchToGameState(STATE_TITLE);
     
-    // Set game state to title
-    gGameState = STATE_TITLE;
-    
-    // Show title screen
-    showTitleScreen(gPixiAPp, startBattle);
 }
     // Update Functions
-function checkWave() {
+function checkWaveIsCompleted() {
     const asteroids = getAsteroids();
     if (asteroids.length === 0) {
         return true;
