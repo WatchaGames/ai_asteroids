@@ -6,7 +6,7 @@ import { gSoundManager } from './soundManager.js';
 import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
-
+import { GetSectorNameByWaveIndex } from './sectors.js';
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -166,18 +166,13 @@ export function setLives(newLives) {
     livesText.text = `Lives: ${lives}`;
 }
 
-export function getCurrentWave() {
-    return currentWave;
-}
 
-export function setCurrentWave(wave) {
+function setCurrentWave(wave) {
     currentWave = wave;
-    waveText.text = `Wave: ${currentWave}`;
+    const sectorName = GetSectorNameByWaveIndex(currentWave);
+    waveText.text = `${sectorName} Sector (lvl:${currentWave+1})`;
 }
 
-export function incrementWave() {
-    setCurrentWave(getCurrentWave() + 1);
-}
 
 export function getRearBulletActive() {
     return rearBulletActive;
@@ -225,10 +220,11 @@ export function stopAllPowerUps() {
 }
 
 export function startNextWave(app) {
-    incrementWave();
-    const newAsteroids = spawnAsteroidsForWave(app, getCurrentWave());
+    currentWave++;
+    setCurrentWave(currentWave);
+    const newAsteroids = spawnAsteroidsForWave(app, currentWave);
     addAsteroids(newAsteroids);
-    return getCurrentWave();
+    return currentWave;
 }
 
 export function destroyAsteroids(app) {
@@ -671,7 +667,7 @@ export function startBattle(app) {
     gPlayer.resetLocation();
 
     // Start first wave
-    setCurrentWave(0);
+    currentWave = -1;
     startNextWave(app);
 }
 
