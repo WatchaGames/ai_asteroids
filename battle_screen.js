@@ -7,6 +7,7 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorNameByWaveIndex } from './sectors.js';
+import { STATE_GAME_OVER } from './globals.js';
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -39,6 +40,10 @@ let lastBonusSpawn = 0;
 let lastPowerUpSpawn = 0;
 const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
 const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
+
+// Debug state
+let gDebugMode = false;
+let gDebugText = null;
 
 export function addBattleUI(app) {
     // Score text
@@ -703,4 +708,129 @@ export function destroyAnySpaceship() {
         gPlayer.destroy();
         gPlayer = null;
     }
+}
+
+export function initBattleDebug(app) {
+    gDebugMode = false;
+    gDebugText = new PIXI.Text({
+        text: 'Debug Info',
+        style: { 
+            fill: 0x55FF55,  // CGA bright green
+            fontSize: 14
+        }
+    });
+    gDebugText.x = 10;
+    gDebugText.y = 40;
+    gDebugText.visible = gDebugMode;
+    app.stage.addChild(gDebugText);
+}
+
+export function handleBattleKeyPress(event, app) {
+    let nextState = null;
+    // Don't process input if player is teleporting or game is over
+    if (gPlayer.isTeleporting) return;
+
+    // Only process game controls if in battle state
+    switch (event.key) {
+        case 'ArrowLeft':
+            gPlayer.isRotatingLeft = true;
+            break;
+        case 'ArrowRight':
+            gPlayer.isRotatingRight = true;
+            break;
+        case 'ArrowUp':
+            gPlayer.isMovingForward = true;
+            gSoundManager.startThrust();  // Start engine sound
+            break;
+        case ' ':
+            gPlayer.actionFire(gSoundManager);
+            break;
+        case 'Shift':
+            gPlayer.tryTeleport(app, gSoundManager);
+            break;
+        case 'd':
+        case 'D':
+            gDebugMode = !gDebugMode;
+            gDebugText.visible = gDebugMode;
+            break;
+        case 'g':
+        case 'G':
+            if (gDebugMode) {
+                console.log('CHEAT:Goto Game Over');
+                gSoundManager.stopAll();
+                gSoundManager.play('spaceshipExplode');
+                gSoundManager.play('gameOver');
+                nextState = STATE_GAME_OVER;
+            }
+            break;
+        case 'b':
+        case 'B':
+            if (gDebugMode) {
+                console.log('CHEAT:Destroy all game objects');
+                destroyAllGameObjects(app);
+            }
+            break;
+    }
+    return nextState;
+}
+
+export function handleBattleKeyRelease(event) {
+    let nextState = null;
+    switch (event.key) {
+        case 'ArrowLeft':
+            gPlayer.isRotatingLeft = false;
+            break;
+        case 'ArrowRight':
+            gPlayer.isRotatingRight = false;
+            break;
+        case 'ArrowUp':
+            gPlayer.isMovingForward = false;
+            gSoundManager.stopThrust();  // Stop engine sound
+            break;
+    }
+    return nextState;
+}
+
+export function updateDebugText() {
+    if (gDebugMode && gDebugText && gPlayer) {
+        const rotationDegrees = (gPlayer.sprite.rotation * 180 / Math.PI).toFixed(1);
+        const posX = gPlayer.sprite.x.toFixed(1);
+        const posY = gPlayer.sprite.y.toFixed(1);
+        gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
+    }
+}
+
+export function updateBattleState(app) {
+    let nextState = null;
+    const player = getPlayer();
+    const starfield = getStarfield();
+    const explosionParticles = getExplosionParticles();
+    
+    player.update();
+    starfield.update(player.velocity);
+    
+    // Check for new bonuses and power-ups
+    checkForNewBonusesAndPowerUps(app);
+    
+    // Update debug display
+    updateDebugText();
+    
+    // Update explosion particles
+    explosionParticles.update();
+    
+    updateAsteroids();
+    updateBullets();
+    updateBonuses();
+    updatePowerUps();
+    checkCollisions(app, explosionParticles);
+    checkBonusCollisions(app);
+    let playerIsDead = checkPlayerCollisions(app, player, explosionParticles);
+    if(playerIsDead) {
+        nextState = STATE_GAME_OVER;
+    }
+    const powerUpState = checkPowerUpCollisions(app, player);
+    if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
+        startNextWave(app);
+    }
+    return nextState;
 }

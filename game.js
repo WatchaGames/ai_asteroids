@@ -1,42 +1,31 @@
-import Spaceship from './spaceship.js';
-import Starfield from './starfield.js';
-import ExplosionParticles from './explosionParticles.js';
-import { InitSoundManager, gSoundManager } from './soundManager.js';
+import { InitSoundManager } from './soundManager.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
-import { showTitleScreen, hideTitleScreen,updateTitleScreen } from './title_screen.js';
+import { showTitleScreen, hideTitleScreen,updateTitleScreen,handleTitleKeyPress,handleTitleKeyRelease } from './title_screen.js';
 import { showLoadingScreen, hideLoadingScreen } from './boot_screen.js';
+import { STATE_BOOT, STATE_TITLE, STATE_BATTLE, STATE_GAME_OVER } from './globals.js';
+
 import { 
     destroyAllGameObjects, 
-    checkPowerUpCollisions, 
-    checkPlayerCollisions, 
-    checkBonusCollisions, 
-    checkCollisions,
     updateAsteroids,
     updateBullets,
     updateBonuses,
     updatePowerUps,
     getScore,
-    startNextWave,
     removeBattleUI,
-    checkForNewBonusesAndPowerUps,
     startBattle,
-    getPlayer,
     getStarfield,
     getExplosionParticles,
     getAsteroids,
     destroyAnyStarfield,
     destroyAnyExplosionParticles,
-    destroyAnySpaceship
+    destroyAnySpaceship,
+    handleBattleKeyPress,
+    handleBattleKeyRelease,
+    initBattleDebug,
+    updateBattleState
 } from './battle_screen.js';
 
-// Game States
-const STATE_BOOT = 'boot';
-const STATE_TITLE = 'title';
-const STATE_BATTLE = 'battle';
-const STATE_GAME_OVER = 'gameover';
-
 let gGameState = STATE_BOOT; // debut
-
 
 let gPixiAPp = null;
 // Sound configuration
@@ -77,12 +66,18 @@ async function initGame() {
 
     // Keyboard Input Handling
     document.addEventListener('keydown', (event) => {
-        handleKeyPressForGameState(event);
+        let nextState =  handleKeyPressForGameState(event);
+        if(nextState) {
+            switchToGameState(nextState);
+        }
     });
 
     document.addEventListener('keyup', (event) => {
 
-        handleKeyReleaseForGameState(event);
+        let nextState = handleKeyReleaseForGameState(event);
+        if(nextState) {
+            switchToGameState(nextState);
+        }
     });
 
     switchToGameState(STATE_BOOT);
@@ -152,19 +147,23 @@ function enterNewState(newState) {
 
 
 function updateGameState() {
+    let nextState = null;
        switch(gGameState) {
         case STATE_BOOT:
-            updateBootState();
+            nextState = updateBootState();
             break;
         case STATE_TITLE:
-            updateTitleState();
+            nextState = updateTitleState();
             break;
         case STATE_BATTLE:
-            updateBattleState();
+            nextState = updateBattleState(gPixiAPp);
             break;
             case STATE_GAME_OVER:
-                updateGameOverState();
+            nextState = updateGameOverState();
                 break;
+    }
+    if(nextState) {
+        switchToGameState(nextState);
     }
 }
 
@@ -189,11 +188,13 @@ function enterBootState() {
     
 }
 function updateBootState() {
+    let nextState = null;
     // No update logic for boot state
     const loaded = true;
     if(loaded) {
-        switchToGameState(STATE_TITLE);
+        nextState = STATE_TITLE;
     }
+    return nextState;
 }
 
 function exitBootState() {
@@ -219,6 +220,7 @@ function updateTitleState() {
     // No update logic for title state
     // here we wait for the player to press space to start the game
     updateTitleScreen();
+    return null;
 }   
 
 function exitTitleState() {
@@ -236,54 +238,12 @@ function exitTitleState() {
 
 function enterBattleState() {
     startBattle(gPixiAPp);
+    initBattleDebug(gPixiAPp);
 }
 
-
-function updateBattleState() {
-    const player = getPlayer();
-    const starfield = getStarfield();
-    const explosionParticles = getExplosionParticles();
-
-    
-    player.update();
-    starfield.update(player.velocity);
-    
-    // Check for new bonuses and power-ups
-    checkForNewBonusesAndPowerUps(gPixiAPp);
-    
-    // Update debug display only when debug mode is on
-    if (gDebugMode) {
-        const rotationDegrees = (player.sprite.rotation * 180 / Math.PI).toFixed(1);
-        const posX = player.sprite.x.toFixed(1);
-        const posY = player.sprite.y.toFixed(1);
-        gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
-    }
-    
-    // Update explosion particles
-    explosionParticles.update();
-    
-    updateAsteroids();
-    updateBullets();
-    updateBonuses();
-    updatePowerUps();
-    checkCollisions(gPixiAPp, explosionParticles);
-    checkBonusCollisions(gPixiAPp);
-
-    const powerUpState = checkPowerUpCollisions(gPixiAPp, player);
-    if(checkWave() === true) { // true means wave is over
-        startNextWave(gPixiAPp);
-    }
-
-
-    let playerIsDead = checkPlayerCollisions(gPixiAPp, player, explosionParticles);
-    if(playerIsDead) {
-        switchToGameState(STATE_GAME_OVER);
-    }
-}
 
 function exitBattleState() {
     destroyAnySpaceship();
-
 }
 
 function checkWave() {
@@ -307,7 +267,7 @@ function enterGameOverState() {
 }
 
 function updateGameOverState() {
-
+    let nextState = null;
     let gStarfield = getStarfield();
     // garde le starfield en place
     gStarfield.update({x:0,y:0});
@@ -344,116 +304,44 @@ function exitGameOverState() {
 
 // INPUT PER SCREEN
 
-function handleBattleKeyPress(event) {
-
-    let gPlayer = getPlayer();
-    
-    // Don't process input if player is teleporting or game is over
-    if (gPlayer.isTeleporting) return;
-
-    // Only process game controls if in battle state
-    switch (event.key) {
-        case 'ArrowLeft':
-            gPlayer.isRotatingLeft = true;
-            break;
-        case 'ArrowRight':
-            gPlayer.isRotatingRight = true;
-            break;
-        case 'ArrowUp':
-            gPlayer.isMovingForward = true;
-            gSoundManager.startThrust();  // Start engine sound
-            break;
-        case ' ':
-            gPlayer.actionFire(gSoundManager);
-            break;
-        case 'Shift':
-            gPlayer.tryTeleport(gPixiAPp, gSoundManager);
-            break;
-        case 'd':
-        case 'D':
-            gDebugMode = !gDebugMode;
-            gDebugText.visible = gDebugMode;
-            break;
-        case 'g':
-        case 'G':
-            if (gDebugMode) {
-                console.log('CHEAT:Goto Game Over');
-                gSoundManager.stopAll();
-                gSoundManager.play('spaceshipExplode');
-                gSoundManager.play('gameOver');
-                switchToGameState(STATE_GAME_OVER);
-            }
-            break;
-        case 'b':
-        case 'B':
-            if (gDebugMode) {
-                console.log('CHEAT:Destroy all game objects');
-                destroyAllGameObjects(gPixiAPp);
-            }
-            break;
-    }
-}
-
-function handleBattleKeyRelease(event) {
-    // Only process game controls if in battle state
-    let gPlayer = getPlayer();
-    switch (event.key) {
-        case 'ArrowLeft':
-            gPlayer.isRotatingLeft = false;
-            break;
-        case 'ArrowRight':
-            gPlayer.isRotatingRight = false;
-            break;
-        case 'ArrowUp':
-            gPlayer.isMovingForward = false;
-            gSoundManager.stopThrust();  // Stop engine sound
-            break;
-    }
-}
-
-function handleTitleKeyPress(event) {
-}
-
-function handleTitleKeyRelease(event) {
-    if (event.key === ' ') {
-        switchToGameState(STATE_BATTLE);
-    }
-}
-
-
 function handleKeyPressForGameState(event) {
-
+    let nextState = null;
     switch(gGameState) {
         case STATE_TITLE:
-            handleTitleKeyPress(event);
+            nextState = handleTitleKeyPress(event);
             break;
         case STATE_BATTLE:
-            handleBattleKeyPress(event);
+            nextState = handleBattleKeyPress(event, gPixiAPp);
             break;
         case STATE_GAME_OVER:
-            handleGameOverKeyPress(event);
+            nextState = handleGameOverKeyPress(event);
             break;
-            default:
-                console.error('Invalid game state to handle key press:', gGameState);
+        default:
+            console.error('Invalid game state to handle key press:', gGameState);
     }
+    return nextState;
 }
 
 function handleKeyReleaseForGameState(event) {
-
+    let nextState = null;
     switch(gGameState) {
         case STATE_TITLE:
-            handleTitleKeyRelease(event);
+            nextState = handleTitleKeyRelease(event);
             break;
         case STATE_BATTLE:
-            handleBattleKeyRelease(event);
+            nextState = handleBattleKeyRelease(event);
             break;
         case STATE_GAME_OVER:
-            handleGameOverKeyRelease(event);
+            nextState = handleGameOverKeyRelease(event);
             break;
-            default:
-                console.error('Invalid game state to handle key press:', gGameState);
+        default:
+            console.error('Invalid game state to handle key press:', gGameState);
     }
+    return nextState;
 }
+
+
+
 
 
 let gDebugMode = false;

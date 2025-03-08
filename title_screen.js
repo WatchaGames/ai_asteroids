@@ -1,5 +1,6 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
+import { STATE_BATTLE } from './globals.js';
 
 let titleContainer = null;
 let starfield = null;
@@ -75,3 +76,15 @@ export function hideTitleScreen(app) {
         starfield = null;
     }
 } 
+
+
+export function handleTitleKeyPress(event) {
+    return null;
+}
+
+export function handleTitleKeyRelease(event) {
+    if (event.key === ' ') {
+        return STATE_BATTLE;
+    }
+    return null;
+}
