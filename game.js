@@ -2,7 +2,15 @@ import { InitSoundManager } from './soundManager.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
 import { showTitleScreen, hideTitleScreen,updateTitleScreen,handleTitleKeyPress,handleTitleKeyRelease } from './title_screen.js';
 import { showLoadingScreen, hideLoadingScreen } from './boot_screen.js';
-import { STATE_BOOT, STATE_TITLE, STATE_BATTLE, STATE_GAME_OVER } from './globals.js';
+import { STATE_BOOT, STATE_TITLE, STATE_BATTLE, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
+
+import { showSectorSelect,
+    hideSectorSelect,
+    updateSectorSelect,
+    getSelectedSectorIndex,
+    handleSectorSelectKeyPress,
+    handleSectorSelectKeyRelease
+} from './sector_select_screen.js';
 
 import { 
     destroyAllGameObjects, 
@@ -15,17 +23,27 @@ import {
     startBattle,
     getStarfield,
     getExplosionParticles,
-    getAsteroids,
     destroyAnyStarfield,
     destroyAnyExplosionParticles,
     destroyAnySpaceship,
     handleBattleKeyPress,
     handleBattleKeyRelease,
     initBattleDebug,
-    updateBattleState
+    updateBattleState,
+    removeBattleDebug
 } from './battle_screen.js';
 
-let gGameState = STATE_BOOT; // debut
+// Game state variables
+let gGameState = STATE_BOOT;
+let gCurrentWave = 1;
+
+export function getCurrentWave() {
+    return gCurrentWave;
+}
+
+export function setCurrentWave(wave) {
+    gCurrentWave = wave;
+}
 
 let gPixiAPp = null;
 // Sound configuration
@@ -116,19 +134,22 @@ function exitCurrentState() {
         case STATE_BATTLE:  
             exitBattleState();
             break;
-            case STATE_BOOT:
-                exitBootState();
-                break;
-                case STATE_GAME_OVER:
-                    exitGameOverState();
-                    break;
+        case STATE_BOOT:
+            exitBootState();
+            break;
+        case STATE_GAME_OVER:
+            exitGameOverState();
+            break;
+        case STATE_SECTOR_SELECT:
+            exitSectorSelectState();
+            break;
         default:
             console.error('Invalid game state to exit:', gGameState);
     }
 }
 
 function enterNewState(newState) {
-      switch(newState) {
+    switch(newState) {
         case STATE_TITLE:
             enterTitleState();
             break;
@@ -141,6 +162,9 @@ function enterNewState(newState) {
         case STATE_GAME_OVER:
             enterGameOverState();
             break;
+        case STATE_SECTOR_SELECT:
+            enterSectorSelectState();
+            break;
         default:
             console.error('Invalid game state to enter:', newState);
     }
@@ -149,7 +173,7 @@ function enterNewState(newState) {
 
 function updateGameState() {
     let nextState = null;
-       switch(gGameState) {
+    switch(gGameState) {
         case STATE_BOOT:
             nextState = updateBootState();
             break;
@@ -157,11 +181,14 @@ function updateGameState() {
             nextState = updateTitleState();
             break;
         case STATE_BATTLE:
-            nextState = updateBattleState(gPixiAPp);
+            nextState = updateBattleState(gPixiAPp, () => switchToGameState(STATE_GAME_OVER));
             break;
-            case STATE_GAME_OVER:
+        case STATE_GAME_OVER:
             nextState = updateGameOverState();
-                break;
+            break;
+        case STATE_SECTOR_SELECT:
+            nextState = updateSectorSelect();
+            break;
     }
     return nextState;
 }
@@ -243,8 +270,29 @@ function enterBattleState() {
 
 function exitBattleState() {
     destroyAnySpaceship();
+    removeBattleUI(gPixiAPp);
+    removeBattleDebug(gPixiAPp);
 }
 
+
+/*
+███████╗███████╗ ██████╗████████╗ ██████╗ ██████╗     ███████╗███████╗██╗     ███████╗ ██████╗████████╗
+██╔════╝██╔════╝██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗    ██╔════╝██╔════╝██║     ██╔════╝██╔════╝╚══██╔══╝
+███████╗█████╗  ██║        ██║   ██║   ██║██████╔╝    ███████╗█████╗  ██║     █████╗  ██║        ██║   
+╚════██║██╔══╝  ██║        ██║   ██║   ██║██╔══██╗    ╚════██║██╔══╝  ██║     ██╔══╝  ██║        ██║   
+███████║███████╗╚██████╗   ██║   ╚██████╔╝██║  ██║    ███████║███████╗███████╗███████╗╚██████╗   ██║   
+╚══════╝╚══════╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝    ╚══════╝╚══════╝╚══════╝╚══════╝ ╚═════╝   ╚═╝   
+                                                                                                       
+*/
+
+// Add new state functions
+function enterSectorSelectState() {
+    showSectorSelect(gPixiAPp, getCurrentWave());
+}
+
+function exitSectorSelectState() {
+    hideSectorSelect(gPixiAPp);
+}
 
 /* 
 
@@ -312,6 +360,9 @@ function handleKeyPressForGameState(event) {
         case STATE_GAME_OVER:
             nextState = handleGameOverKeyPress(event);
             break;
+        case STATE_SECTOR_SELECT:
+            nextState = handleSectorSelectKeyPress(event);
+            break;
         default:
             console.error('Invalid game state to handle key press:', gGameState);
     }
@@ -330,6 +381,9 @@ function handleKeyReleaseForGameState(event) {
         case STATE_GAME_OVER:
             nextState = handleGameOverKeyRelease(event);
             break;
+        case STATE_SECTOR_SELECT:
+            nextState = handleSectorSelectKeyRelease(event);
+            break;
         default:
             console.error('Invalid game state to handle key press:', gGameState);
     }
@@ -338,6 +392,22 @@ function handleKeyReleaseForGameState(event) {
 
 
 
+
+
+
+
+
+
+/*
+
+██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗     ██╗   ██╗██╗
+██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝     ██║   ██║██║
+██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗    ██║   ██║██║
+██║  ██║██╔══╝  ██╔══██╗██║   ██║██║   ██║    ██║   ██║██║
+██████╔╝███████╗██████╔╝╚██████╔╝╚██████╔╝    ╚██████╔╝██║
+╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝      ╚═════╝ ╚═╝
+
+*/
 
 
 let gDebugMode = false;

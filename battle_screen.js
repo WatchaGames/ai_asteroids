@@ -7,7 +7,9 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorNameByWaveIndex } from './sectors.js';
-import { STATE_GAME_OVER } from './globals.js';
+import { STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
+import { getCurrentWave, setCurrentWave } from './game.js';
+
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -20,7 +22,6 @@ let bonuses = [];
 let powerUps = [];
 let score = 0;
 let lives = 3;
-let currentWave = 1;
 let rearBulletActive = false;
 let rearBulletTimer = null;
 let quadFireActive = false;
@@ -171,14 +172,6 @@ export function setLives(newLives) {
     livesText.text = `Lives: ${lives}`;
 }
 
-
-function setCurrentWave(wave) {
-    currentWave = wave;
-    const sectorName = GetSectorNameByWaveIndex(currentWave);
-    waveText.text = `${sectorName} Sector (lvl:${currentWave+1})`;
-}
-
-
 export function getRearBulletActive() {
     return rearBulletActive;
 }
@@ -225,11 +218,9 @@ export function stopAllPowerUps() {
 }
 
 export function startNextWave(app) {
-    currentWave++;
-    setCurrentWave(currentWave);
-    const newAsteroids = spawnAsteroidsForWave(app, currentWave);
+    const newAsteroids = spawnAsteroidsForWave(app, getCurrentWave());
     addAsteroids(newAsteroids);
-    return currentWave;
+    return getCurrentWave();
 }
 
 export function destroyAsteroids(app) {
@@ -672,7 +663,6 @@ export function startBattle(app) {
     gPlayer.resetLocation();
 
     // Start first wave
-    currentWave = -1;
     startNextWave(app);
 }
 
@@ -723,6 +713,13 @@ export function initBattleDebug(app) {
     gDebugText.y = 40;
     gDebugText.visible = gDebugMode;
     app.stage.addChild(gDebugText);
+}
+
+export function removeBattleDebug(app) {
+    if(gDebugText !== null){
+        gDebugText.destroy();
+        gDebugText = null;
+    }
 }
 
 export function handleBattleKeyPress(event, app) {
@@ -830,7 +827,10 @@ export function updateBattleState(app) {
     }
     const powerUpState = checkPowerUpCollisions(app, player);
     if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
-        startNextWave(app);
+        nextState = STATE_SECTOR_SELECT;
+//        startNextWave(app);
     }
     return nextState;
 }
+
+
