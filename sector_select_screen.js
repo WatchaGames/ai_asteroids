@@ -1,5 +1,5 @@
 import { palette10 } from './palette.js';
-import { GetSectorNameByWaveIndex } from './sectors.js';
+import { GetSectorDescriptionByIndex } from './sectors.js';
 import { STATE_BATTLE } from './globals.js';
 
 let sectorSelectContainer = null;
@@ -78,9 +78,12 @@ function createSectorFrame(app, waveIndex, optionIndex) {
         selectedSectorIndex = optionIndex;
     });
     
+
+    const sectorDescription = GetSectorDescriptionByIndex(waveIndex);
+
     // Add sector name
     const sectorName = new PIXI.Text({
-        text: GetSectorNameByWaveIndex(waveIndex),
+        text: sectorDescription.name,
         style: {
             fill: palette10.white,
             fontSize: 24,
@@ -93,7 +96,7 @@ function createSectorFrame(app, waveIndex, optionIndex) {
     
     // Add sector description
     const description = new PIXI.Text({
-        text: generateSectorDescription(waveIndex),
+        text: sectorDescription.asteroids + " asteroids, " + sectorDescription.bonuses + " bonuses",
         style: {
             fill: palette10.white,
             fontSize: 16,

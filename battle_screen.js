@@ -6,9 +6,9 @@ import { gSoundManager } from './soundManager.js';
 import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
-import { GetSectorNameByWaveIndex } from './sectors.js';
+import { GetSectorNameByIndex } from './sectors.js';
 import { STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
-import { getCurrentWave, setCurrentWave } from './game.js';
+import { getCurrentSectorIndex, setCurrentSectorIndex } from './game.js';
 
 // Battle objects
 let gPlayer = null;
@@ -218,9 +218,9 @@ export function stopAllPowerUps() {
 }
 
 export function startNextWave(app) {
-    const newAsteroids = spawnAsteroidsForWave(app, getCurrentWave());
+    const newAsteroids = spawnAsteroidsForWave(app, getCurrentSectorIndex());
     addAsteroids(newAsteroids);
-    return getCurrentWave();
+    return getCurrentSectorIndex();
 }
 
 export function destroyAsteroids(app) {

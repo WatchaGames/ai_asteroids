@@ -7,7 +7,6 @@ import { STATE_BOOT, STATE_TITLE, STATE_BATTLE, STATE_GAME_OVER, STATE_SECTOR_SE
 import { showSectorSelect,
     hideSectorSelect,
     updateSectorSelect,
-    getSelectedSectorIndex,
     handleSectorSelectKeyPress,
     handleSectorSelectKeyRelease
 } from './sector_select_screen.js';
@@ -35,14 +34,15 @@ import {
 
 // Game state variables
 let gGameState = STATE_BOOT;
-let gCurrentWave = 1;
+let gCurrentSectorIndex = 1;
+let gCurrentMissionNumber = 1;
 
-export function getCurrentWave() {
-    return gCurrentWave;
+export function getCurrentSectorIndex() {
+    return gCurrentSectorIndex;
 }
 
-export function setCurrentWave(wave) {
-    gCurrentWave = wave;
+export function setCurrentSectorIndex(newIndex) {
+    gCurrentSectorIndex = newIndex;
 }
 
 let gPixiAPp = null;
@@ -287,7 +287,7 @@ function exitBattleState() {
 
 // Add new state functions
 function enterSectorSelectState() {
-    showSectorSelect(gPixiAPp, getCurrentWave());
+    showSectorSelect(gPixiAPp, getCurrentSectorIndex());
 }
 
 function exitSectorSelectState() {
