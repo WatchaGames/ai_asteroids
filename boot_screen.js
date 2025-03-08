@@ -32,3 +32,14 @@ export function hideLoadingScreen(app) {
         loadingContainer = null;
     }
 }
+
+
+export function handleBootKeyPress(event) {
+    return null;
+}
+
+export function handleBootKeyRelease(event) {
+    return null;    
+}
+
+

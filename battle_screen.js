@@ -6,9 +6,8 @@ import { gSoundManager } from './soundManager.js';
 import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
-import { GetSectorNameByIndex } from './sectors.js';
-import { STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
-import { getCurrentSectorIndex, setCurrentSectorIndex } from './game.js';
+import { GetSectorDescriptionByIndex } from './sectors.js';
+import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
 
 // Battle objects
 let gPlayer = null;
@@ -34,7 +33,7 @@ let scoreText = null;
 let multiplierText = null;
 let bonusText = null;
 let livesText = null;
-let waveText = null;
+let missionDescText = null;
 
 // Game state for bonus and power-up spawning
 let lastBonusSpawn = 0;
@@ -94,19 +93,21 @@ export function addBattleUI(app) {
     livesText.y = 10;
     app.stage.addChild(livesText);
 
+    const missionDesc = GetSectorDescriptionByIndex(getCurrentSectorIndex());
+    const missionDescString = `Mission ${getCurrentMissionNumber()}: ${missionDesc.name} sector`;
     // Add wave counter text
-    waveText = new PIXI.Text({
-        text: 'Wave 1',
+    missionDescText = new PIXI.Text({
+        text: missionDescString,
         style: { 
             fill: 0xFFFFFF,
             fontSize: 20,
             fontWeight: 'bold'
         }
     });
-    waveText.x = app.screen.width / 2;
-    waveText.y = 10;
-    waveText.anchor.set(0.5); // Center the text
-    app.stage.addChild(waveText);
+    missionDescText.x = app.screen.width / 2;
+    missionDescText.y = 10;
+    missionDescText.anchor.set(0.5); // Center the text
+    app.stage.addChild(missionDescText);
 
 
 
@@ -614,10 +615,10 @@ export function removeBattleUI(app) {
     }
 
     // Remove and destroy wave text
-    if (waveText && waveText.parent) {
-        waveText.parent.removeChild(waveText);
-        waveText.destroy();
-        waveText = null;
+    if (missionDescText && missionDescText.parent) {
+        missionDescText.parent.removeChild(missionDescText);
+        missionDescText.destroy();
+        missionDescText = null;
     }
 }
 

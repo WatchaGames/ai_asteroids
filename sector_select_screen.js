@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { STATE_BATTLE } from './globals.js';
+import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber } from './globals.js';
 
 let sectorSelectContainer = null;
 let selectedSectorIndex = null;
@@ -24,8 +24,8 @@ export function showSectorSelect(app, waveIndex) {
     titleText.anchor.set(0.5);
     
     // Create two sector options
-    const sector1 = createSectorFrame(app, waveIndex, 0);
-    const sector2 = createSectorFrame(app, waveIndex + 1, 1);
+    const sector1 = createSectorFrame(app, waveIndex + 1, 0);
+    const sector2 = createSectorFrame(app, waveIndex + 2, 1);
     
     // Calculate positions to center the frames
     const frameWidth = 300; // Width of each frame
@@ -52,7 +52,7 @@ export function showSectorSelect(app, waveIndex) {
     app.stage.addChild(sectorSelectContainer);
 }
 
-function createSectorFrame(app, waveIndex, optionIndex) {
+function createSectorFrame(app, targetSectorIndex) {
     const frame = new PIXI.Container();
     
     // Create frame background
@@ -75,11 +75,11 @@ function createSectorFrame(app, waveIndex, optionIndex) {
     });
     
     bg.on('click', () => {
-        selectedSectorIndex = optionIndex;
+        selectedSectorIndex = targetSectorIndex;
     });
     
 
-    const sectorDescription = GetSectorDescriptionByIndex(waveIndex);
+    const sectorDescription = GetSectorDescriptionByIndex(targetSectorIndex);
 
     // Add sector name
     const sectorName = new PIXI.Text({
@@ -125,7 +125,8 @@ function generateSectorDescription(waveIndex) {
 export function updateSectorSelect() {
     // Return the selected sector if one was chosen
     if (selectedSectorIndex !== null) {
-        const chosenWaveIndex = currentWaveIndex + selectedSectorIndex;
+        setCurrentSectorIndex(selectedSectorIndex);
+        setCurrentMissionNumber(getCurrentMissionNumber() + 1);
         selectedSectorIndex = null; // Reset for next time
         return STATE_BATTLE;
     }

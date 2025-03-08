@@ -2,11 +2,24 @@ import { InitSoundManager } from './soundManager.js';
 import { showGameOver, hideGameOver } from './game_over_screen.js';
 import { showTitleScreen, hideTitleScreen,updateTitleScreen,handleTitleKeyPress,handleTitleKeyRelease } from './title_screen.js';
 import { showLoadingScreen, hideLoadingScreen } from './boot_screen.js';
-import { STATE_BOOT, STATE_TITLE, STATE_BATTLE, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
+import { 
+    STATE_BOOT, 
+    STATE_TITLE, 
+    STATE_BATTLE, 
+    STATE_GAME_OVER, 
+    STATE_SECTOR_SELECT,
+    getCurrentGameState,
+    setGameState,
+    getCurrentSectorIndex,
+    setCurrentSectorIndex,
+    getCurrentMissionNumber,
+    setCurrentMissionNumber
+} from './globals.js';
 
 import { showSectorSelect,
     hideSectorSelect,
     updateSectorSelect,
+    getSelectedSectorIndex,
     handleSectorSelectKeyPress,
     handleSectorSelectKeyRelease
 } from './sector_select_screen.js';
@@ -33,17 +46,6 @@ import {
 } from './battle_screen.js';
 
 // Game state variables
-let gGameState = STATE_BOOT;
-let gCurrentSectorIndex = 1;
-let gCurrentMissionNumber = 1;
-
-export function getCurrentSectorIndex() {
-    return gCurrentSectorIndex;
-}
-
-export function setCurrentSectorIndex(newIndex) {
-    gCurrentSectorIndex = newIndex;
-}
 
 let gPixiAPp = null;
 // Sound configuration
@@ -120,14 +122,14 @@ initGame().catch(console.error);
 
 
 function switchToGameState(newState) {
-    console.log(`switchToGameState ${gGameState} ---> ${newState}`);
+    console.log(`switchToGameState ${getCurrentGameState()} ---> ${newState}`);
     exitCurrentState();
     enterNewState(newState);
-    gGameState = newState;
+    setGameState(newState);
 }
 
 function exitCurrentState() {
-    switch(gGameState) {
+    switch(getCurrentGameState()) {
         case STATE_TITLE:
             exitTitleState();
             break;
@@ -144,7 +146,7 @@ function exitCurrentState() {
             exitSectorSelectState();
             break;
         default:
-            console.error('Invalid game state to exit:', gGameState);
+            console.error('Invalid game state to exit:', getCurrentGameState());
     }
 }
 
@@ -173,7 +175,7 @@ function enterNewState(newState) {
 
 function updateGameState() {
     let nextState = null;
-    switch(gGameState) {
+    switch(getCurrentGameState()) {
         case STATE_BOOT:
             nextState = updateBootState();
             break;
@@ -350,7 +352,7 @@ function exitGameOverState() {
 
 function handleKeyPressForGameState(event) {
     let nextState = null;
-    switch(gGameState) {
+    switch(getCurrentGameState()) {
         case STATE_TITLE:
             nextState = handleTitleKeyPress(event);
             break;
@@ -363,15 +365,18 @@ function handleKeyPressForGameState(event) {
         case STATE_SECTOR_SELECT:
             nextState = handleSectorSelectKeyPress(event);
             break;
+        case STATE_BOOT:
+            nextState = handleBootKeyPress(event);
+            break;
         default:
-            console.error('Invalid game state to handle key press:', gGameState);
+            console.error('Invalid game state to handle key press:', getCurrentGameState());
     }
     return nextState;
 }
 
 function handleKeyReleaseForGameState(event) {
     let nextState = null;
-    switch(gGameState) {
+    switch(getCurrentGameState()) {
         case STATE_TITLE:
             nextState = handleTitleKeyRelease(event);
             break;
@@ -384,8 +389,11 @@ function handleKeyReleaseForGameState(event) {
         case STATE_SECTOR_SELECT:
             nextState = handleSectorSelectKeyRelease(event);
             break;
+        case STATE_BOOT:
+            nextState = handleBootKeyRelease(event);
+            break;
         default:
-            console.error('Invalid game state to handle key press:', gGameState);
+            console.error('Invalid game state to handle key press:', getCurrentGameState());
     }
     return nextState;
 }
