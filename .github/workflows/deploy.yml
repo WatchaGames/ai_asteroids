@@ -3,4 +3,13 @@
    branches:
    - main
 jobs:
+ deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
+      - name: Deploy application
+        run: |
+          echo "Deploying RogOids..."
+          # Add your deployment command here, e.g., a script or CLI command
