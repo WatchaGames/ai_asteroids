@@ -27,11 +27,21 @@ export function showSectorSelect(app, waveIndex) {
     const sector1 = createSectorFrame(app, waveIndex, 0);
     const sector2 = createSectorFrame(app, waveIndex + 1, 1);
     
-    sector1.x = app.screen.width * 0.25;
-    sector1.y = app.screen.height * 0.3;
+    // Calculate positions to center the frames
+    const frameWidth = 300; // Width of each frame
+    const frameHeight = 200; // Height of each frame
+    const spacing = 40; // Space between frames
+    const totalWidth = (frameWidth * 2) + spacing;
     
-    sector2.x = app.screen.width * 0.75;
-    sector2.y = app.screen.height * 0.3;
+    // Calculate starting X position to center both frames
+    const startX = (app.screen.width - totalWidth) / 2;
+    
+    // Position frames
+    sector1.x = startX;
+    sector1.y = (app.screen.height - frameHeight) / 2;
+    
+    sector2.x = startX + frameWidth + spacing;
+    sector2.y = (app.screen.height - frameHeight) / 2;
     
     // Add elements to container
     sectorSelectContainer.addChild(titleText);
