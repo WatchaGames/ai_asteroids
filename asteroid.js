@@ -1,10 +1,10 @@
 import { palette10 } from './palette.js';
 
 class Asteroid {
-    constructor(app, size, sizeLevel, x, y) {
+    constructor(app, size, inSizeName, x, y) {
         this.app = app;
         this.size = size;
-        this.sizeLevel = sizeLevel;
+        this.sizeName = inSizeName;
         
         // Create the sprite
         this.sprite = new PIXI.Graphics();
@@ -44,7 +44,7 @@ class Asteroid {
     }
 
     getColorForSize() {
-        switch(this.sizeLevel) {
+        switch(this.sizeName) {
             case 'large':
                 return palette10.blue_1;
             case 'medium':
@@ -72,9 +72,9 @@ class Asteroid {
     }
 
     split() {
-        if (this.sizeLevel === 'large') {
+        if (this.sizeName === 'large') {
             return this.createSplitAsteroids(15, 'medium', 2);
-        } else if (this.sizeLevel === 'medium') {
+        } else if (this.sizeName === 'medium') {
             return this.createSplitAsteroids(7.5, 'small', 2);
         }
         return [];

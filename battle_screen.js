@@ -285,12 +285,12 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
         asteroid.sprite.x,
         asteroid.sprite.y,
         asteroid.getColorForSize(),
-        explosionSize[asteroid.sizeLevel]
+        explosionSize[asteroid.sizeName]
     );
 
     // Play explosion sound
     if (gSoundManager) {
-        gSoundManager.playExplosion(asteroid.sizeLevel);
+        gSoundManager.playExplosion(asteroid.sizeName);
     }
     
     // Remove asteroid and update score
@@ -298,15 +298,15 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     asteroids.splice(index, 1);
     
     let points = 0;
-    if (asteroid.sizeLevel === 'large') {
+    if (asteroid.sizeName === 'large') {
         points = 20;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
-    } else if (asteroid.sizeLevel === 'medium') {
+    } else if (asteroid.sizeName === 'medium') {
         points = 50;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
-    } else if (asteroid.sizeLevel === 'small') {
+    } else if (asteroid.sizeName === 'small') {
         points = 100;
     }
     
@@ -411,21 +411,23 @@ export function destroyAllGameObjects(app) {
     lives = 3; // Reset lives
 }
 
-export function spawnAsteroidsForWave(app, waveIndex) {
-    const numAsteroids = 5 + waveIndex  * 2; // Increase difficulty
-    console.log(`spawnAsteroidsForWave:${waveIndex} with:${numAsteroids}`);
+export function spawnAsteroidsForWave(app, sectorIndex) {
+    const sectorDescription = GetSectorDescriptionByIndex(sectorIndex);
+    const numAsteroids = sectorDescription ? sectorDescription.asteroids : 5; // Default to 5 if sector not found
+    console.log(`spawnAsteroidsForWave:${sectorIndex} with:${numAsteroids} asteroids`);
+    
     const centerX = app.screen.width / 2;
     const centerY = app.screen.height / 2;
     const minDistanceFromCenter = Math.min(app.screen.width, app.screen.height) * 0.33; // 33% of screen size
-
-    const asteroids = [];
+    
+    const newAsteroids = [];
     for (let i = 0; i < numAsteroids; i++) {
         let asteroid;
         let validPosition = false;
         
         // Keep trying until we find a valid position
         while (!validPosition) {
-            asteroid = new Asteroid(app, 30, 'large');
+            asteroid = new Asteroid(app, 30,'large');
             const dx = asteroid.sprite.x - centerX;
             const dy = asteroid.sprite.y - centerY;
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
@@ -438,9 +440,9 @@ export function spawnAsteroidsForWave(app, waveIndex) {
             }
         }
         
-        asteroids.push(asteroid);
+        newAsteroids.push(asteroid);
     }
-    return asteroids;
+    return newAsteroids;
 }
 
 export function checkBonusCollisions(app) {

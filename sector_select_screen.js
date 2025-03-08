@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber } from './globals.js';
+import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber, getCurrentSectorIndex } from './globals.js';
 
 let sectorSelectContainer = null;
 let selectedSectorIndex = null;
@@ -12,7 +12,7 @@ export function showSectorSelect(app, waveIndex) {
     
     // Title
     const titleText = new PIXI.Text({
-        text: 'Select Next Sector',
+        text: 'Select Next Sector to warp to...',
         style: {
             fill: palette10.white,
             fontSize: 48,
@@ -105,6 +105,17 @@ function createSectorFrame(app, targetSectorIndex) {
             wordWrapWidth: 280
         }
     });
+
+
+    const difficultyText = new PIXI.Text({
+        text: `Distance: ${targetSectorIndex - getCurrentSectorIndex()}`,
+        style: {
+            fill: palette10.white,
+            fontSize: 16,
+            align: 'center'
+        }
+    });
+
     description.x = 150;
     description.y = 80;
     description.anchor.set(0.5, 0);
@@ -112,7 +123,8 @@ function createSectorFrame(app, targetSectorIndex) {
     frame.addChild(bg);
     frame.addChild(sectorName);
     frame.addChild(description);
-    
+    frame.addChild(difficultyText);
+
     return frame;
 }
 
