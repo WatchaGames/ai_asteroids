@@ -245,10 +245,6 @@ function exitBattleState() {
     destroyAnySpaceship();
 }
 
-function checkWave() {
-    const asteroids = getAsteroids();
-    return asteroids.length === 0;  // Wave is over when no asteroids remain
-}
 
 /* 
 
