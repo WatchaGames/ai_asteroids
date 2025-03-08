@@ -83,10 +83,11 @@ async function initGame() {
     switchToGameState(STATE_BOOT);
 
     gPixiAPp.ticker.add(() => {
-        updateGameState();
-
+        let nextState = updateGameState();
+        if(nextState) {
+            switchToGameState(nextState);
+        }
     });
-
 
 
     // Game Loop
@@ -162,9 +163,7 @@ function updateGameState() {
             nextState = updateGameOverState();
                 break;
     }
-    if(nextState) {
-        switchToGameState(nextState);
-    }
+    return nextState;
 }
 
 
@@ -279,6 +278,7 @@ function updateGameOverState() {
     updateAsteroids();
     updateBonuses();
     updatePowerUps();
+    return nextState;
 }
 
 
@@ -287,7 +287,7 @@ function handleGameOverKeyPress(event) {
 
 function handleGameOverKeyRelease(event) {
     if (event.key === ' ') {
-        switchToGameState(STATE_TITLE);
+        return STATE_TITLE;
     }
 }
 
