@@ -413,7 +413,7 @@ export function destroyAllGameObjects(app) {
 
 export function spawnAsteroidsForWave(app, sectorIndex) {
     const sectorDescription = GetSectorDescriptionByIndex(sectorIndex);
-    const numAsteroids = sectorDescription ? sectorDescription.asteroids : 5; // Default to 5 if sector not found
+    const numAsteroids = sectorDescription ? sectorDescription.nbAsteroids : 5; // Default to 5 if sector not found
     console.log(`spawnAsteroidsForWave:${sectorIndex} with:${numAsteroids} asteroids`);
     
     const centerX = app.screen.width / 2;
@@ -427,7 +427,7 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
         
         // Keep trying until we find a valid position
         while (!validPosition) {
-            asteroid = new Asteroid(app, 30,'large');
+            asteroid = new Asteroid(app,sectorDescription, 'large');
             const dx = asteroid.sprite.x - centerX;
             const dy = asteroid.sprite.y - centerY;
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);

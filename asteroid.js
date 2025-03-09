@@ -1,11 +1,17 @@
 import { palette10 } from './palette.js';
+import { GetSectorAsteroidSize, GetSectorAsteroidSpeed } from './sectors.js';
 
 class Asteroid {
-    constructor(app, size, inSizeName, x, y) {
+    // spawnns asteroid based on sector description
+    constructor(app, desctorDesc, inSizeName, x, y) {
         this.app = app;
-        this.size = size;
         this.sizeName = inSizeName;
+        this.sectorDesc = desctorDesc; // on le garde pour les split
         
+
+        this.size = GetSectorAsteroidSize(desctorDesc,inSizeName);
+
+
         // Create the sprite
         this.sprite = new PIXI.Graphics();
         
@@ -21,7 +27,7 @@ class Asteroid {
         
         for (let i = 0; i < vertices; i++) {
             const angle = i * angleStep;
-            const radius = size * (0.8 + Math.random() * 0.4);
+            const radius = this.size * (0.8 + Math.random() * 0.4);
             if (radius > maxRadius) maxRadius = radius;
             const pointX = Math.cos(angle) * radius;
             const pointY = Math.sin(angle) * radius;
@@ -34,9 +40,12 @@ class Asteroid {
         // Position and velocity
         this.sprite.x = x || Math.random() * app.screen.width;
         this.sprite.y = y || Math.random() * app.screen.height;
+
+        const speed = GetSectorAsteroidSpeed(this.sectorDesc,this.sizeName);
+
         this.velocity = {
-            x: (Math.random() - 0.5) * 2,
-            y: (Math.random() - 0.5) * 2
+            x: (Math.random() - 0.5) * speed,
+            y: (Math.random() - 0.5) * speed
         };
         
         this.radius = maxRadius;
@@ -73,29 +82,32 @@ class Asteroid {
 
     split() {
         if (this.sizeName === 'large') {
-            return this.createSplitAsteroids(15, 'medium', 2);
+            return this.createSplitAsteroids('medium', 2);
         } else if (this.sizeName === 'medium') {
-            return this.createSplitAsteroids(7.5, 'small', 2);
+            return this.createSplitAsteroids('small', 2);
         }
         return [];
     }
 
-    createSplitAsteroids(size, sizeName, count) {
+    createSplitAsteroids(sizeName, count) {
         const newAsteroids = [];
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
                 this.app,
-                size,
+                this.desctorDesc,
                 sizeName,
                 this.sprite.x,
                 this.sprite.y
             );
-            asteroid.velocity.x += (Math.random() - 0.5) * 2;
-            asteroid.velocity.y += (Math.random() - 0.5) * 2;
+            const speed = GetSectorAsteroidSpeed(this.sectorDesc,sizeName);
+            asteroid.velocity.x = (Math.random() - 0.5) * speed;
+            asteroid.velocity.y = (Math.random() - 0.5) * speed;
             newAsteroids.push(asteroid);
         }
         return newAsteroids;
     }
 }
+
+
 
 export default Asteroid; 
