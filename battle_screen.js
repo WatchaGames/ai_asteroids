@@ -66,11 +66,11 @@ export function updateWaveInfo() {
     updateWaveUI(getCurrentSectorIndex());
 }
 
-export function showBonus(text) {
+export function showScoreBonus(text) {
     updateBonusUI(text);
 }
 
-export function updateBonusText(text, x, y, visible, alpha) {
+export function updateScoreBonusText(text, x, y, visible, alpha) {
     if (bonusText) {
         bonusText.text = text;
         bonusText.x = x;
@@ -191,13 +191,13 @@ export function addBullet(app, x, y, angle) {
     bullets.push(bullet);
 }
 
-export function addBonusObject(app) {
+export function addScoreBonusObject(app) {
     const bonus = new Bonus(app);
     bonuses.push(bonus);
 }
 
-export function addPowerUpObject(app, type) {
-    const powerUp = new PowerUp(app, type);
+export function addPowerUpObject(app, type,posX,posY) {
+    const powerUp = new PowerUp(app, type,posX,posY);
     powerUps.push(powerUp);
 }
 
@@ -232,6 +232,8 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
         points = 20;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
+        CheckForChanceToDropPowerUpLoot(app,asteroid.sprite.x,asteroid.sprite.y);
+        
     } else if (asteroid.sizeName === 'medium') {
         points = 50;
         const newAsteroids = asteroid.split();
@@ -243,6 +245,14 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     // Apply score multiplier
     const scoreToAdd = (points * getMultiplier());
     return scoreToAdd;
+}
+
+function CheckForChanceToDropPowerUpLoot(app,posX,posY) {
+    const sectorDescription = GetSectorDescriptionByIndex(getCurrentSectorIndex());
+    const chanceToDropPowerUp = sectorDescription.bonuses;
+    if (Math.random() < chanceToDropPowerUp) {
+        addRandomPowerUpObject(app,posX,posY);
+    }
 }
 
 // return true if player is dead
@@ -405,7 +415,7 @@ export function checkBonusCollisions(app) {
                 }
                 
                 // Show bonus text at bonus location
-                updateBonusText('x2!', startX, startY, true, 1);
+                updateScoreBonusText('x2!', startX, startY, true, 1);
                 
                 // Animate text flying to score
                 let startTime = Date.now();
@@ -418,10 +428,10 @@ export function checkBonusCollisions(app) {
                         const currentX = startX + (targetX - startX) * progress;
                         const currentY = startY + (targetY - startY) * progress;
                         // Update position and fade out
-                        updateBonusText('x2!', currentX, currentY, true, 1 - progress);
+                        updateScoreBonusText('x2!', currentX, currentY, true, 1 - progress);
                         requestAnimationFrame(flyToScore);
                     } else {
-                        updateBonusText('', 0, 0, false, 0);
+                        updateScoreBonusText('', 0, 0, false, 0);
                     }
                 };
                 flyToScore();
@@ -480,21 +490,24 @@ export function updatePowerUps() {
 
 
 
-export function checkForNewBonusesAndPowerUps(app) {
+export function checkForNewBonusesAndPowerUpsOverTime(app) {
     const currentTime = Date.now();
     if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-        addBonusObject(app);
+        addScoreBonusObject(app);
         lastBonusSpawn = currentTime;
     }
     
     if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
-        // Randomly choose between power-up types
-        const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
-        console.log('Spawning power-up:', powerUpType); // Debug log
-        addPowerUpObject(app, powerUpType);
+        addRandomPowerUpObject(app);
         lastPowerUpSpawn = currentTime;
     }
 }
+
+function addRandomPowerUpObject(app,posX,posY) {
+    const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
+    console.log('Spawning power-up:', powerUpType); // Debug log
+    addPowerUpObject(app, powerUpType,posX,posY);
+}   
 
 export function updateDebugText() {
     if (gDebugMode && gDebugText && gPlayer) {
@@ -557,7 +570,7 @@ export function updateBattleState(app) {
     starfield.update(player.velocity);
     
     // Check for new bonuses and power-ups
-    checkForNewBonusesAndPowerUps(app);
+    checkForNewBonusesAndPowerUpsOverTime(app);
     
     // Update debug display
     updateDebugText();

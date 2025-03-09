@@ -1,5 +1,5 @@
 export default class PowerUp {
-    constructor(app, type) {
+    constructor(app, type,posX,posY) {
         this.app = app;
         this.type = type;
         this.radius = 30; // Collision radius
@@ -41,8 +41,15 @@ export default class PowerUp {
         
         // Randomly choose top or bottom spawn
         const spawnFromTop = Math.random() < 0.5;
-        this.sprite.x = Math.random() * (app.screen.width - 40) + 20; // Random X position with padding
-        this.sprite.y = spawnFromTop ? -20 : app.screen.height + 20;
+
+        if(posX && posY) {
+            this.sprite.x = posX;
+            this.sprite.y = posY;
+        } else {
+            this.sprite.x = Math.random() * (app.screen.width - 40) + 20; // Random X position with padding
+            this.sprite.y = spawnFromTop ? -20 : app.screen.height + 20;
+        }
+        
         
         this.speed = 1; // Movement speed (halved from 2)
         this.direction = spawnFromTop ? 1 : -1; // 1 for moving down, -1 for moving up

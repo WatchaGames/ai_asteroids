@@ -1,5 +1,5 @@
 import { palette10 } from './palette.js';
-import { GetSectorAsteroidSize, GetSectorAsteroidSpeed } from './sectors.js';
+import { GetSectorAsteroidSize, GetSectorAsteroidSpeed, GetAsteroidToSpawnInfo } from './sectors.js';
 
 class Asteroid {
     // spawnns asteroid based on sector description
@@ -7,10 +7,8 @@ class Asteroid {
         this.app = app;
         this.sizeName = inSizeName;
         this.sectorDesc = desctorDesc; // on le garde pour les split
-        
 
         this.size = GetSectorAsteroidSize(desctorDesc,inSizeName);
-
 
         // Create the sprite
         this.sprite = new PIXI.Graphics();
@@ -41,7 +39,13 @@ class Asteroid {
         this.sprite.x = x || Math.random() * app.screen.width;
         this.sprite.y = y || Math.random() * app.screen.height;
 
-        const speed = GetSectorAsteroidSpeed(this.sectorDesc,this.sizeName);
+        const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.sizeName);
+
+        //const speed = GetSectorAsteroidSpeed(this.sectorDesc,this.sizeName);
+        const speed = asteroidInfo.speed;
+
+
+        // TODO : handle different movement types of asteroids
 
         this.velocity = {
             x: (Math.random() - 0.5) * speed,
@@ -82,6 +86,7 @@ class Asteroid {
 
     split() {
         if (this.sizeName === 'large') {
+            // check for loot of score  
             return this.createSplitAsteroids('medium', 2);
         } else if (this.sizeName === 'medium') {
             return this.createSplitAsteroids('small', 2);
@@ -94,7 +99,7 @@ class Asteroid {
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
                 this.app,
-                this.desctorDesc,
+                this.sectorDesc,
                 sizeName,
                 this.sprite.x,
                 this.sprite.y

@@ -1,24 +1,25 @@
 const sectorDescriptions = {
-    "sector_1": {"name": "Andromeda", "nbAsteroids": 4, "bonuses": 10, "description": "TODO"},
-    "sector_2": {"name": "Antlia", "nbAsteroids": 6, "bonuses": 10, "description": "TODO"},
-    "sector_3": {"name": "Apus", "nbAsteroids": 8, "bonuses": 10, "description": "TODO"},
-    "sector_4": {"name": "Aquarius", "nbAsteroids": 10, "bonuses": 10, "description": "TODO"},
-    "sector_5": {"name": "Aquila", "nbAsteroids": 12, "bonuses": 10, "description": "TODO"},
-    "sector_6": {"name": "Ara", "nbAsteroids": 14, "bonuses": 10, "description": "TODO"}  ,
-    "sector_7": {"name": "Aries", "nbAsteroids": 16, "bonuses": 10, "description": "TODO"},
-    "sector_8": {"name": "Auriga", "nbAsteroids": 18, "bonuses": 10, "description": "TODO"},
-    "sector_9": {"name": "Bootes", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_10": {"name": "Caelum", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_11": {"name": "Camelopardalis", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"}, 
-    "sector_12": {"name": "Cancer", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_13": {"name": "Canes Venatici", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_14": {"name": "Canis Major", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_15": {"name": "Canis Minor", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_16": {"name": "Capricornus", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_17": {"name": "Carina", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_18": {"name": "Cassiopeia", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_19": {"name": "Centaurus", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
-    "sector_20": {"name": "Cepheus", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
+    "sector_1": {"name": "Andromeda", "nbAsteroids": 4, "acConfig": "ac_regular_only", 	"bonuses": 0.3, "description": "TODO"},
+    "sector_2": {"name": "Antlia", "nbAsteroids": 6, "acConfig": "ac_regular_only", "bonuses": 0.3, "description": "TODO"},
+    "sector_3": {"name": "Apus", "nbAsteroids": 8, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_4": {"name": "Aquarius", "nbAsteroids": 10, "acConfig": "ac_regular_only", "bonuses": 10, "description": "TODO"},
+    "sector_5": {"name": "Aquila", "nbAsteroids": 12, "acConfig": "ac_regular_only", "bonuses": 1.0 , "description": "TODO"},
+    "sector_6": {"name": "Ara", "nbAsteroids": 14, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"}  ,
+    "sector_7": {"name": "Aries", "nbAsteroids": 16, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_8": {"name": "Auriga", "nbAsteroids": 18, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_9": {"name": "Bootes", "nbAsteroids": 22, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_10": {"name": "Caelum", "nbAsteroids": 26, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_11": {"name": "Camelopardalis", "nbAsteroids": 30, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"}, 
+    "sector_12": {"name": "Cancer", "nbAsteroids": 34, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_13": {"name": "Canes Venatici", "nbAsteroids": 40, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_14": {"name": "Canis Major", "nbAsteroids": 44, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_15": {"name": "Canis Minor", "nbAsteroids": 50, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_16": {"name": "Capricornus", "nbAsteroids": 60, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_17": {"name": "Carina", "nbAsteroids": 62, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_18": {"name": "Cassiopeia", "nbAsteroids": 64, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_19": {"name": "Centaurus", "nbAsteroids": 66, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    "sector_20": {"name": "Cepheus", "nbAsteroids": 70, "acConfig": "ac_regular_only", "bonuses": 1.0, "description": "TODO"},
+    
     "sector_21": {"name": "Cetus", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
     "sector_22": {"name": "Chamaeleon", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
     "sector_23": {"name": "Circinus", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"},
@@ -101,6 +102,17 @@ const sectorDescriptions = {
     "sector_100": {"name": "Antares", "nbAsteroids": 100, "bonuses": 10, "description": "TODO"}
 }
 
+
+const asteroidsConfigs = {
+    "ac_regular_only": { speedMultiplier: 1, probabilities: { straight: 0.5, orbiting: 0.0 , aiming: 0.0} },
+    "ac_orbiting_only": { speedMultiplier: 1, probabilities: { straight: 0.0, orbiting: 0.5 , aiming: 0.0} },
+    "ac_aiming_only": { speedMultiplier: 1, probabilities: { straight: 0.0, orbiting: 0.0 , aiming: 0.5} },
+    "ac_fast_regular_only": { speedMultiplier: 2, probabilities: { straight: 0.5, orbiting: 0.0 , aiming: 0.0} },
+    "ac_fast_orbiting_only": { speedMultiplier: 2, probabilities: { straight: 0.0, orbiting: 0.5 , aiming: 0.0} },
+    "ac_fast_aiming_only": { speedMultiplier: 2, probabilities: { straight: 0.0, orbiting: 0.0 , aiming: 0.5} },
+}
+
+
 export function GetSectorNameByIndex(index) {
     const sectorNumber = (index % 100);
     const sectorKey = `sector_${sectorNumber}`;
@@ -132,5 +144,33 @@ export function GetSectorAsteroidSpeed(sectorDescription,sizeName){
     else if(sizeName == 'small') {return 4; }
     return 2;
 }
+
+
+function GetAsteroidsConfig(sectorDescription){
+    const configName = sectorDescription.acConfig;
+    const config = asteroidsConfigs[configName];
+    if(config) {return config; }
+}
+
+
+// returns infos on asteroid to spawn for this sector
+// returns sizeName, speed, type (straight, orbiting, aiming)
+export function GetAsteroidToSpawnInfo(sectorDescription,inSizeName){
+    let ret = {
+        sizeName: inSizeName,
+        speed: 2,
+        type: 'straight'
+    }
+    const config = GetAsteroidsConfig(sectorDescription);
+    const probabilities = config.probabilities;
+    const random = Math.random();
+    if(random < probabilities.straight) {ret.type = 'straight'; }
+    else if(random < probabilities.orbiting) {ret.type = 'orbiting'; }
+    else {ret.type = 'aiming'; }
+    ret.speed = GetSectorAsteroidSpeed(sectorDescription,ret.sizeName) * config.speedMultiplier;
+    return ret;
+}
+
+// Generation of asteroids dependeing on the sector configuration
 
 export { sectorDescriptions as sectorNames };
