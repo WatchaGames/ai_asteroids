@@ -1,12 +1,12 @@
 const sectorDescriptions = {
-    "sector_1": {"name": "Andromeda", "asteroids": 10, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_2": {"name": "Antlia", "asteroids": 20, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_3": {"name": "Apus", "asteroids": 30, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_4": {"name": "Aquarius", "asteroids": 40, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_5": {"name": "Aquila", "asteroids": 50, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_6": {"name": "Ara", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."}  ,
-    "sector_7": {"name": "Aries", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
-    "sector_8": {"name": "Auriga", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_1": {"name": "Andromeda", "asteroids": 4, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_2": {"name": "Antlia", "asteroids": 6, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_3": {"name": "Apus", "asteroids": 8, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_4": {"name": "Aquarius", "asteroids": 10, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_5": {"name": "Aquila", "asteroids": 12, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_6": {"name": "Ara", "asteroids": 14, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."}  ,
+    "sector_7": {"name": "Aries", "asteroids": 16, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
+    "sector_8": {"name": "Auriga", "asteroids": 18, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
     "sector_9": {"name": "Bootes", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
     "sector_10": {"name": "Caelum", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."},
     "sector_11": {"name": "Camelopardalis", "asteroids": 100, "bonuses": 10, "description": "A dense cluster of stars and galaxies, known for its spiral arms and active star formation."}, 
@@ -103,7 +103,7 @@ const sectorDescriptions = {
 
 export function GetSectorNameByIndex(index) {
     // Convert wave index to sector number (1-based)
-    const sectorNumber = (index % 100) + 1;
+    const sectorNumber = (index % 100);
     const sectorKey = `sector_${sectorNumber}`;
     if (sectorDescriptions[sectorKey]) {
         return sectorDescriptions[sectorKey].name;
@@ -112,7 +112,7 @@ export function GetSectorNameByIndex(index) {
 }
 
 export function GetSectorDescriptionByIndex(index){
-    const sectorNumber = (index % 100) + 1;
+    const sectorNumber = (index % 100);
     const sectorKey = `sector_${sectorNumber}`;
     if (sectorDescriptions[sectorKey]) {
         return sectorDescriptions[sectorKey];

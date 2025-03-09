@@ -80,13 +80,13 @@ class Asteroid {
         return [];
     }
 
-    createSplitAsteroids(size, sizeLevel, count) {
+    createSplitAsteroids(size, sizeName, count) {
         const newAsteroids = [];
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
                 this.app,
                 size,
-                sizeLevel,
+                sizeName,
                 this.sprite.x,
                 this.sprite.y
             );

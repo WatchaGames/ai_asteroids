@@ -1,15 +1,15 @@
- on:
+name: Deploy Main Branch
+
+on:
   push:
-   branches:
-   - main
+    branches:
+      - main
+
 jobs:
- deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Deploy application
+      - uses: actions/checkout@v4
+      - name: Deploy
         run: |
-          echo "Deploying RogOids..."
-          # Add your deployment command here, e.g., a script or CLI command
+          echo "Deploying main branch"
