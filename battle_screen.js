@@ -8,7 +8,8 @@ import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
-
+import { removeOneLife, getMultiplier, setScore, setLives, addScore, clearScoreMultiplier, setNewScoreMultiplier, updateBonusUI } from './inventory_ui.js';
+import { palette10 } from './palette.js';
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -19,21 +20,18 @@ let asteroids = [];
 let bullets = [];
 let bonuses = [];
 let powerUps = [];
-let score = 0;
-let lives = 3;
+ 
 let rearBulletActive = false;
 let rearBulletTimer = null;
 let quadFireActive = false;
 let quadFireTimer = null;
-let scoreMultiplier = 1;
-let scoreMultiplierTimer = null;
 
 // UI Elements
-let scoreText = null;
-let multiplierText = null;
 let bonusText = null;
-let livesText = null;
-let missionDescText = null;
+
+
+// Wave UI
+let waveText = null;
 
 // Game state for bonus and power-up spawning
 let lastBonusSpawn = 0;
@@ -45,86 +43,31 @@ const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 let gDebugMode = false;
 let gDebugText = null;
 
-export function addBattleUI(app) {
-    // Score text
-    scoreText = new PIXI.Text({
-        text: 'Score: 0',
-        style: { fill: 0xFFFFFF }
-    });
-    scoreText.x = 10;
-    scoreText.y = 10;
-    app.stage.addChild(scoreText);
+export function addBattleObjects(app) {
+    // Create player
+    gPlayer = new Spaceship(app);
+    
+    // Create starfield
+    gStarfield = new Starfield(app);
+    
+    // Create explosion particles system
+    gExplosionParticles = new ExplosionParticles(app);
+    
+}
 
-    // Multiplier text
-    multiplierText = new PIXI.Text({
-        text: '',
-        style: { 
-            fill: 0xFFFF00,
-            fontSize: 16,
-            fontWeight: 'bold'
-        }
-    });
-    multiplierText.x = 10;
-    multiplierText.y = 35;
-    multiplierText.visible = false;
-    app.stage.addChild(multiplierText);
-
-    // Bonus text
-    bonusText = new PIXI.Text({
-        text: '',
-        style: { 
-            fill: 0xFFFF00,
-            fontSize: 24,
-            fontWeight: 'bold'
-        }
-    });
-    bonusText.x = app.screen.width / 2;
-    bonusText.y = 50;
-    bonusText.anchor.set(0.5);
-    bonusText.visible = false;
-    app.stage.addChild(bonusText);
-
-
-    livesText = new PIXI.Text({
-        text: 'Lives: 3',
-        style: { fill: 0xFFFFFF }
-    });
-    livesText.x = app.screen.width - 100;
-    livesText.y = 10;
-    app.stage.addChild(livesText);
-
-    const missionDesc = GetSectorDescriptionByIndex(getCurrentSectorIndex());
-    const missionDescString = `Mission ${getCurrentMissionNumber()}: ${missionDesc.name} sector`;
-    // Add wave counter text
-    missionDescText = new PIXI.Text({
-        text: missionDescString,
-        style: { 
-            fill: 0xFFFFFF,
-            fontSize: 20,
-            fontWeight: 'bold'
-        }
-    });
-    missionDescText.x = app.screen.width / 2;
-    missionDescText.y = 10;
-    missionDescText.anchor.set(0.5); // Center the text
-    app.stage.addChild(missionDescText);
-
-
-
+export function removeBattleObjects(app) {
+    
+    // Remove all game objects
+    destroyAllGameObjects(app);
 }
 
 
-export function updateScoreText() {
-    if (scoreText) {
-        scoreText.text = 'Score: ' + score;
-    }
+export function updateWaveInfo() {
+    updateWaveUI(getCurrentSectorIndex());
 }
 
-export function updateMultiplierText(text, visible) {
-    if (multiplierText) {
-        multiplierText.text = text;
-        multiplierText.visible = visible;
-    }
+export function showBonus(text) {
+    updateBonusUI(text);
 }
 
 export function updateBonusText(text, x, y, visible, alpha) {
@@ -153,25 +96,7 @@ export function getPowerUps() {
     return powerUps;
 }
 
-export function getScore() {
-    return score;
-}
 
-export function setScore(newScore) {
-    score = newScore;
-    updateScoreText();
-
-
-}
-
-export function getLives() {
-    return lives;
-}
-
-export function setLives(newLives) {
-    lives = newLives;
-    livesText.text = `Lives: ${lives}`;
-}
 
 export function getRearBulletActive() {
     return rearBulletActive;
@@ -218,7 +143,12 @@ export function stopAllPowerUps() {
     }
 }
 
-export function startNextWave(app) {
+export function startSectorWave(app) {
+
+    removeWaveUI(app);
+    addWaveUI(app);
+    updateWaveUI(getCurrentSectorIndex());
+
     const newAsteroids = spawnAsteroidsForWave(app, getCurrentSectorIndex());
     addAsteroids(newAsteroids);
     return getCurrentSectorIndex();
@@ -261,17 +191,17 @@ export function addBullet(app, x, y, angle) {
     bullets.push(bullet);
 }
 
-export function addBonus(app) {
+export function addBonusObject(app) {
     const bonus = new Bonus(app);
     bonuses.push(bonus);
 }
 
-export function addPowerUp(app, type) {
+export function addPowerUpObject(app, type) {
     const powerUp = new PowerUp(app, type);
     powerUps.push(powerUp);
 }
 
-
+// return the score to add
 export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
@@ -311,9 +241,8 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     }
     
     // Apply score multiplier
-    score += (points * scoreMultiplier);
-    updateScoreText();
-    return score;
+    const scoreToAdd = (points * getMultiplier());
+    return scoreToAdd;
 }
 
 // return true if player is dead
@@ -324,8 +253,8 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
         const dy = player.sprite.y - asteroid.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < player.radius + asteroid.radius) {
-            lives--;
-            if (lives <= 0) {
+            const livesLeft = removeOneLife();
+            if (livesLeft <= 0) {
                 if (gSoundManager) {
                     gSoundManager.stopAll();
                     gSoundManager.play('spaceshipExplode');
@@ -407,8 +336,6 @@ export function destroyAllGameObjects(app) {
     destroyBullets(app);
     destroyBonuses(app);
     destroyPowerUps(app);
-    score = 0; // Reset score
-    lives = 3; // Reset lives
 }
 
 export function spawnAsteroidsForWave(app, sectorIndex) {
@@ -467,18 +394,10 @@ export function checkBonusCollisions(app) {
                 bonuses.splice(j, 1);
                 
                 // Clear any existing multiplier timer
-                if (scoreMultiplierTimer) {
-                    clearTimeout(scoreMultiplierTimer);
-                }
+                clearScoreMultiplier();
                 
                 // Activate score multiplier
-                scoreMultiplier = 2;
-                updateMultiplierText('Score x2!', true);
-                
-                // Set timer to deactivate after 10 seconds
-                scoreMultiplierTimer = setTimeout(() => {
-                    updateMultiplierText('', false);
-                }, 10000);
+                setNewScoreMultiplier(2);
                 
                 // Play bonus sound
                 if (gSoundManager) {
@@ -512,6 +431,7 @@ export function checkBonusCollisions(app) {
 }
 
 export function checkCollisions(app, explosionParticles) {
+    let scoreToAdd = 0;
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = asteroids.length - 1; j >= 0; j--) {
@@ -522,12 +442,12 @@ export function checkCollisions(app, explosionParticles) {
             if (distance < bullet.radius + asteroid.radius) {
                 app.stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                score = destroyAsteroid(app, asteroid, j, explosionParticles);
+                scoreToAdd += destroyAsteroid(app, asteroid, j, explosionParticles);
                 break; // Bullet can only hit one asteroid
             }
         }
     }
-    return score;
+    return scoreToAdd;
 }
 
 export function updateAsteroids() {
@@ -558,23 +478,12 @@ export function updatePowerUps() {
     }
 }
 
-export function getScoreMultiplier() {
-    return scoreMultiplier;
-}
 
-
-export function clearScoreMultiplier() {
-    scoreMultiplier = 1;
-    if (scoreMultiplierTimer) {
-        clearTimeout(scoreMultiplierTimer);
-        scoreMultiplierTimer = null;
-    }
-}
 
 export function checkForNewBonusesAndPowerUps(app) {
     const currentTime = Date.now();
     if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-        addBonus(app);
+        addBonusObject(app);
         lastBonusSpawn = currentTime;
     }
     
@@ -582,49 +491,21 @@ export function checkForNewBonusesAndPowerUps(app) {
         // Randomly choose between power-up types
         const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
         console.log('Spawning power-up:', powerUpType); // Debug log
-        addPowerUp(app, powerUpType);
+        addPowerUpObject(app, powerUpType);
         lastPowerUpSpawn = currentTime;
     }
 }
 
-export function removeBattleUI(app) {
-    // Remove and destroy score text
-    if (scoreText && scoreText.parent) {
-        scoreText.parent.removeChild(scoreText);
-        scoreText.destroy();
-        scoreText = null;
-    }
-
-    // Remove and destroy multiplier text
-    if (multiplierText && multiplierText.parent) {
-        multiplierText.parent.removeChild(multiplierText);
-        multiplierText.destroy();
-        multiplierText = null;
-    }
-
-    // Remove and destroy bonus text
-    if (bonusText && bonusText.parent) {
-        bonusText.parent.removeChild(bonusText);
-        bonusText.destroy();
-        bonusText = null;
-    }
-
-    // Remove and destroy lives text
-    if (livesText && livesText.parent) {
-        livesText.parent.removeChild(livesText);
-        livesText.destroy();
-        livesText = null;
-    }
-
-    // Remove and destroy wave text
-    if (missionDescText && missionDescText.parent) {
-        missionDescText.parent.removeChild(missionDescText);
-        missionDescText.destroy();
-        missionDescText = null;
+export function updateDebugText() {
+    if (gDebugMode && gDebugText && gPlayer) {
+        const rotationDegrees = (gPlayer.sprite.rotation * 180 / Math.PI).toFixed(1);
+        const posX = gPlayer.sprite.x.toFixed(1);
+        const posY = gPlayer.sprite.y.toFixed(1);
+        gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
     }
 }
 
-export function startBattle(app) {
+export function startBattleInCurrentSelectedSector(app) {
     // Clear any existing game elements
     destroyAllGameObjects(app);
 
@@ -650,23 +531,58 @@ export function startBattle(app) {
     gPlayer = new Spaceship(app);
     gPlayer.sprite.visible = false; // Hide player initially
     
-    // Initialize battle UI
-    addBattleUI(app);
 
     // Show player
     gPlayer.sprite.visible = true;
     
     // Reset game state
     stopAllPowerUps();
-    setScore(0);
-    setLives(3);
-    clearScoreMultiplier();
     
     // Reset player position
     gPlayer.resetLocation();
 
     // Start first wave
-    startNextWave(app);
+    startSectorWave(app);
+}
+
+
+
+export function updateBattleState(app) {
+    let nextState = null;
+    const player = getPlayer();
+    const starfield = getStarfield();
+    const explosionParticles = getExplosionParticles();
+    
+    player.update();
+    starfield.update(player.velocity);
+    
+    // Check for new bonuses and power-ups
+    checkForNewBonusesAndPowerUps(app);
+    
+    // Update debug display
+    updateDebugText();
+    
+    // Update explosion particles
+    explosionParticles.update();
+    
+    updateAsteroids();
+    updateBullets();
+    updateBonuses();
+    updatePowerUps();
+    const scoreToAdd = checkCollisions(app, explosionParticles);
+    addScore(scoreToAdd);
+    checkBonusCollisions(app);
+    let playerIsDead = checkPlayerCollisions(app, player, explosionParticles);
+    if(playerIsDead) {
+        nextState = STATE_GAME_OVER;
+    }
+    const powerUpState = checkPowerUpCollisions(app, player);
+    if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
+        removeWaveUI(app);
+
+        nextState = STATE_SECTOR_SELECT;
+    }
+    return nextState;
 }
 
 // Add getters for the battle objects
@@ -791,49 +707,36 @@ export function handleBattleKeyRelease(event) {
     return nextState;
 }
 
-export function updateDebugText() {
-    if (gDebugMode && gDebugText && gPlayer) {
-        const rotationDegrees = (gPlayer.sprite.rotation * 180 / Math.PI).toFixed(1);
-        const posX = gPlayer.sprite.x.toFixed(1);
-        const posY = gPlayer.sprite.y.toFixed(1);
-        gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
-    }
+
+function addWaveUI(app) {
+    // Wave text
+    waveText = new PIXI.Text({
+        text: 'TOFILL WAVE',
+        style: {
+            fill: palette10.white,
+            fontSize: 24,
+            fontWeight: 'bold'
+        }
+    });
+    waveText.x = app.screen.width / 2;
+    waveText.y = 10;
+    waveText.anchor.set(0.5, 0); // Center horizontally, align to top
+    app.stage.addChild(waveText);
 }
 
-export function updateBattleState(app) {
-    let nextState = null;
-    const player = getPlayer();
-    const starfield = getStarfield();
-    const explosionParticles = getExplosionParticles();
-    
-    player.update();
-    starfield.update(player.velocity);
-    
-    // Check for new bonuses and power-ups
-    checkForNewBonusesAndPowerUps(app);
-    
-    // Update debug display
-    updateDebugText();
-    
-    // Update explosion particles
-    explosionParticles.update();
-    
-    updateAsteroids();
-    updateBullets();
-    updateBonuses();
-    updatePowerUps();
-    checkCollisions(app, explosionParticles);
-    checkBonusCollisions(app);
-    let playerIsDead = checkPlayerCollisions(app, player, explosionParticles);
-    if(playerIsDead) {
-        nextState = STATE_GAME_OVER;
+function removeWaveUI(app) {
+    if (waveText && waveText.parent) {
+        waveText.parent.removeChild(waveText);
     }
-    const powerUpState = checkPowerUpCollisions(app, player);
-    if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
-        nextState = STATE_SECTOR_SELECT;
-//        startNextWave(app);
+    waveText = null;
+}
+
+function updateWaveUI(sectorIndex) {
+    if (waveText) {
+        const sectorDescription = GetSectorDescriptionByIndex(sectorIndex);
+        const sectorName = sectorDescription ? sectorDescription.name : "Unknown";
+        waveText.text = `Mission ${getCurrentMissionNumber()} - ${sectorName} Sector`;
     }
-    return nextState;
 }
 
 

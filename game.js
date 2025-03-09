@@ -30,9 +30,7 @@ import {
     updateBullets,
     updateBonuses,
     updatePowerUps,
-    getScore,
-    removeBattleUI,
-    startBattle,
+    startBattleInCurrentSelectedSector,
     getStarfield,
     getExplosionParticles,
     destroyAnyStarfield,
@@ -45,6 +43,8 @@ import {
     removeBattleDebug
 } from './battle_screen.js';
 
+
+import { getScore,addInventoryUI, removeInventoryUI, InitInventory } from './inventory_ui.js';
 // Game state variables
 
 let gPixiAPp = null;
@@ -196,9 +196,6 @@ function updateGameState() {
 }
 
 
-
-
-
 /* 
 ██████╗  ██████╗  ██████╗ ████████╗
 ██╔══██╗██╔═══██╗██╔═══██╗╚══██╔══╝
@@ -252,6 +249,8 @@ function updateTitleState() {
 }   
 
 function exitTitleState() {
+    InitInventory();
+    addInventoryUI(gPixiAPp);
     hideTitleScreen(gPixiAPp);
 }
 
@@ -265,14 +264,13 @@ function exitTitleState() {
  */                                                  
 
 function enterBattleState() {
-    startBattle(gPixiAPp);
+    startBattleInCurrentSelectedSector(gPixiAPp);
     initBattleDebug(gPixiAPp);
 }
 
 
 function exitBattleState() {
     destroyAnySpaceship();
-    removeBattleUI(gPixiAPp);
     removeBattleDebug(gPixiAPp);
 }
 
@@ -345,7 +343,7 @@ function exitGameOverState() {
     destroyAnyExplosionParticles();
     destroyAnySpaceship();
 
-    removeBattleUI(gPixiAPp);
+    removeInventoryUI(gPixiAPp);
 }
 
 // INPUT PER SCREEN

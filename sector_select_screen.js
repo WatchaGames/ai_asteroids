@@ -15,7 +15,7 @@ export function showSectorSelect(app, waveIndex) {
         text: 'Select Next Sector to warp to...',
         style: {
             fill: palette10.white,
-            fontSize: 48,
+            fontSize: 32,
             fontWeight: 'bold'
         }
     });
