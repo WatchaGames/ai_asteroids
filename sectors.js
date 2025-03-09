@@ -102,7 +102,6 @@ const sectorDescriptions = {
 }
 
 export function GetSectorNameByIndex(index) {
-    // Convert wave index to sector number (1-based)
     const sectorNumber = (index % 100);
     const sectorKey = `sector_${sectorNumber}`;
     if (sectorDescriptions[sectorKey]) {
