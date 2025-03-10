@@ -13,8 +13,11 @@ import {
     getCurrentSectorIndex,
     setCurrentSectorIndex,
     getCurrentMissionNumber,
-    setCurrentMissionNumber
+    setCurrentMissionNumber,
 } from './globals.js';
+
+
+import { LoadFonts } from './fonts.js';
 
 import { showSectorSelect,
     hideSectorSelect,
@@ -85,6 +88,9 @@ async function initGame() {
     // Initialize PixiJS
     document.body.appendChild(gPixiAPp.canvas);
 
+
+    await LoadFonts();
+
     // Initialize debug mode
     initDebugMode();
 
@@ -119,6 +125,10 @@ async function initGame() {
 
 // Start the game
 initGame().catch(console.error); 
+
+
+
+
 
 
 
@@ -187,7 +197,7 @@ function updateGameState() {
             nextState = updateTitleState();
             break;
         case STATE_BATTLE:
-            nextState = updateBattleState(gPixiAPp, () => switchToGameState(STATE_GAME_OVER));
+            nextState = updateBattleState(gPixiAPp);
             break;
         case STATE_GAME_OVER:
             nextState = updateGameOverState();

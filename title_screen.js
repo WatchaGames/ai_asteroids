@@ -1,7 +1,7 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
 import { STATE_BATTLE } from './globals.js';
-
+import { getMainFontStyleBig } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
@@ -92,14 +92,13 @@ export function showTitleScreen(app) {
     earthGraphic = createEarthGraphic(app);
     titleContainer.addChild(earthGraphic);
     
+
+    const fontStyle = getMainFontStyleBig();
     // Title text
     const titleText = new PIXI.Text({
-        text: 'RogOids',
-        style: {
-            fill: palette10.white,
-            fontSize: 64,
-            fontWeight: 'bold'
-        }
+        text: 'Rog_Oids',
+        style: fontStyle,
+        fill: palette10.white
     });
     titleText.x = app.screen.width / 2;
     titleText.y = app.screen.height * 0.3;

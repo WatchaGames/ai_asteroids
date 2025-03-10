@@ -12,6 +12,9 @@ let gGameState = STATE_BOOT;
 export let gCurrentSectorIndex = 1;
 export let gCurrentMissionNumber = 1;
 
+
+
+
 export function getCurrentGameState() {
     return gGameState;
 }
