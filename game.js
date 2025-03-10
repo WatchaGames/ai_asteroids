@@ -369,7 +369,7 @@ function handleKeyPressForGameState(event) {
             nextState = handleTitleKeyPress(event);
             break;
         case STATE_BATTLE:
-            nextState = handleBattleKeyPress(event, gPixiAPp);
+            nextState = handleBattleKeyPress(event);
             break;
         case STATE_GAME_OVER:
             nextState = handleGameOverKeyPress(event);
@@ -448,4 +448,20 @@ function initDebugMode() {
     gDebugText.y = 40;
     gDebugText.visible = gDebugMode;
     gPixiAPp.stage.addChild(gDebugText);
+}
+
+
+function activatePowerUp(powerUp) {
+    switch (powerUp.type) {
+        case 'shield':
+            gPlayer.activateShield();
+            break;
+        case 'rapid_fire':
+            gPlayer.activateRapidFire();
+            break;
+        case 'double_shot':
+            gPlayer.activateDoubleShot();
+            break;
+        // Add other power-up types as needed
+    }
 }

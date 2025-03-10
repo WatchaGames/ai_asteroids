@@ -9,11 +9,14 @@ let lives = 3;
 let scoreMultiplier = 1;
 let scoreMultiplierTimer = null;
 
+// Power-up stack management
+let powerUpStack = [];
 
 // UI Elements
 let scoreText = null;
 let multiplierText = null;
 let livesText = null;
+let powerUpText = null;
 
 
 
@@ -145,6 +148,17 @@ export function addInventoryUI(app) {
     livesText.y = app.screen.height - 34;
     app.stage.addChild(livesText);
 
+    // Power-up text
+    powerUpText = new PIXI.Text({
+        text: 'No Power-ups',
+        style: {
+            fill: palette10.gray,
+            fontSize: 24
+        }
+    });
+    powerUpText.x = 10;
+    powerUpText.y = app.screen.height - 64;
+    app.stage.addChild(powerUpText);
 }
 
 export function removeInventoryUI(app) {
@@ -157,10 +171,39 @@ export function removeInventoryUI(app) {
     if (livesText && livesText.parent) {
         livesText.parent.removeChild(livesText);
     }
+    if (powerUpText && powerUpText.parent) {
+        powerUpText.parent.removeChild(powerUpText);
+    }
     
     scoreText = null;
     multiplierText = null;
     livesText = null;
+    powerUpText = null;
+}
+
+export function addPowerUpToStack(powerUp) {
+    powerUpStack.push(powerUp);
+    updatePowerUpUI();
+}
+
+export function getAndRemovePowerUpFromTopOfStack() {
+    if (powerUpStack.length === 0) return null;
+    const powerUp = powerUpStack.pop();
+    updatePowerUpUI();
+    return powerUp;
+}
+
+function updatePowerUpUI() {
+    if (!powerUpText) return;
+    
+    if (powerUpStack.length === 0) {
+        powerUpText.text = 'No Power-ups';
+        powerUpText.style.fill = palette10.gray;
+    } else {
+        const topPower = powerUpStack[powerUpStack.length - 1];
+        powerUpText.text = `Power-up: ${topPower.type} (${powerUpStack.length})`;
+        powerUpText.style.fill = palette10.white;
+    }
 }
 
 

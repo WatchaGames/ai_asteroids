@@ -18,6 +18,8 @@ import { removeOneLife,
     addScore, 
     clearScoreMultiplier, 
     setNewScoreMultiplier, 
+    addPowerUpToStack,
+    getAndRemovePowerUpFromTopOfStack
     } from './inventory_ui.js';
 
 import { palette10 } from './palette.js';
@@ -284,6 +286,29 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
     return false;
 }
 
+
+
+/* export function checkPowerUpCollisions(app) {
+    if (!gPlayer || !gPowerUps) return;
+    
+    for (let i = gPowerUps.length - 1; i >= 0; i--) {
+        const powerUp = gPowerUps[i];
+        if (checkCollision(gPlayer, powerUp)) {
+            // Store the power-up instead of activating it
+            addPowerUpToStack(powerUp);
+            
+            // Remove the power-up from the game
+            app.stage.removeChild(powerUp);
+            gPowerUps.splice(i, 1);
+            
+            if (soundManager) {
+                soundManager.play('powerup');
+            }
+        }
+    }
+} 
+ */
+
 export function checkPowerUpCollisions(app, player) {
     for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
         const powerUp = flyingPowerUps[i];
@@ -292,44 +317,9 @@ export function checkPowerUpCollisions(app, player) {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         if (distance < player.radius + powerUp.radius) { // Use power-up's radius
-            // Handle power-up collection
-            switch(powerUp.type) {
-                case 'rearBullet':
-                    // Clear any existing timer
-                    if (rearBulletTimer) {
-                        clearTimeout(rearBulletTimer);
-                    }
-                    // Activate rear bullet power-up
-                    rearBulletActive = true;
-                    // Set timer to deactivate after 10 seconds
-                    rearBulletTimer = setTimeout(() => {
-                        rearBulletActive = false;
-                    }, 10000);
-                    // Play rear bullet power-up sound
-                    if (gSoundManager) {
-                        gSoundManager.play('power_double');
-                    }
-                    break;
-                case 'quadFire':
-                    // Clear any existing timer
-                    if (quadFireTimer) {
-                        clearTimeout(quadFireTimer);
-                    }
-                    // Activate quad fire power-up
-                    quadFireActive = true;
-                    // Set timer to deactivate after 10 seconds
-                    quadFireTimer = setTimeout(() => {
-                        quadFireActive = false;
-                    }, 10000);
-                    // Play quad fire power-up sound
-                    if (gSoundManager) {
-                        gSoundManager.play('power_quad');
-                    }
-                    break;
-            }
-            
+            addPowerUpToStack(powerUp);
             // Remove power-up
-            powerUp.destroy();
+//            powerUp.destroy();
             flyingPowerUps.splice(i, 1);
         }
     }
@@ -376,7 +366,7 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
     return newAsteroids;
 }
 
-export function checkBonusCollisions(app) {
+export function checkScorMultipliersCollisions(app) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = flyingBonuses.length - 1; j >= 0; j--) {
@@ -560,12 +550,16 @@ export function updateBattleState(app) {
     updatePowerUps();
     const scoreToAdd = checkCollisions(app, explosionParticles);
     addScore(scoreToAdd);
-    checkBonusCollisions(app);
+    checkScorMultipliersCollisions(app);
     let playerIsDead = checkPlayerCollisions(app, player, explosionParticles);
     if(playerIsDead) {
         nextState = STATE_GAME_OVER;
     }
-    const powerUpState = checkPowerUpCollisions(app, player);
+    
+    checkPowerUpCollisions(app, player);
+
+
+
     if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
         removeWaveUI(app);
 
@@ -630,12 +624,68 @@ export function removeBattleDebug(app) {
     }
 }
 
+
+function activatePowerUp(powerUp) {
+
+            // Handle power-up collection
+             switch(powerUp.type) {
+                case 'rearBullet':
+                    // Clear any existing timer
+                    if (rearBulletTimer) {
+                        clearTimeout(rearBulletTimer);
+                    }
+                    // Activate rear bullet power-up
+                    rearBulletActive = true;
+                    // Set timer to deactivate after 10 seconds
+                    rearBulletTimer = setTimeout(() => {
+                        rearBulletActive = false;
+                    }, 10000);
+                    // Play rear bullet power-up sound
+                    if (gSoundManager) {
+                        gSoundManager.play('power_double');
+                    }
+                    break;
+                case 'quadFire':
+                    // Clear any existing timer
+                    if (quadFireTimer) {
+                        clearTimeout(quadFireTimer);
+                    }
+                    // Activate quad fire power-up
+                    quadFireActive = true;
+                    // Set timer to deactivate after 10 seconds
+                    quadFireTimer = setTimeout(() => {
+                        quadFireActive = false;
+                    }, 10000);
+                    // Play quad fire power-up sound
+                    if (gSoundManager) {
+                        gSoundManager.play('power_quad');
+                    }
+                    break;
+            }
+        
+        }
+
+
+
+
 export function handleBattleKeyPress(event, app) {
     let nextState = null;
     // Don't process input if player is teleporting or game is over
     if (gPlayer.isTeleporting) return;
 
-    // Only process game controls if in battle state
+
+    if (event.key === 'q' || event.key === 'Q') {
+        const powerUp = getAndRemovePowerUpFromTopOfStack();
+        if (powerUp) {
+
+            // activate the power up
+            activatePowerUp(powerUp);
+
+            return null;
+        }
+    }
+
+
     switch (event.key) {
         case 'ArrowLeft':
             gPlayer.isRotatingLeft = true;
