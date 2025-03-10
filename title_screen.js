@@ -1,7 +1,7 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
 import { STATE_BATTLE } from './globals.js';
-import { getMainFontStyleBig } from './fonts.js';
+import { getMainFontStyleTitle } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
@@ -93,7 +93,7 @@ export function showTitleScreen(app) {
     titleContainer.addChild(earthGraphic);
     
 
-    const fontStyle = getMainFontStyleBig();
+    const fontStyle = getMainFontStyleTitle();
     // Title text
     const titleText = new PIXI.Text({
         text: 'Rog_Oids',
@@ -113,7 +113,7 @@ export function showTitleScreen(app) {
         }
     });
     pressSpaceText.x = app.screen.width / 2;
-    pressSpaceText.y = app.screen.height * 0.4;
+    pressSpaceText.y = app.screen.height * 0.45;
     pressSpaceText.anchor.set(0.5);
     
     // Controls text

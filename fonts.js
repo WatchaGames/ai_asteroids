@@ -3,7 +3,7 @@ export let gMainFont = null;
 export let gMainFontStyleNormal = null;
 export let gMainFontStyleSmall = null;
 export let gMainFontStyleBig = null;
-
+export let gMainFontStyleTitle = null;
 
 const FONT_FILENAME = 'Jersey10-Regular.ttf';
 
@@ -31,6 +31,12 @@ export async function LoadFonts() {
         fontSize: 64,
         fill: '#ffffff'
     });
+
+    gMainFontStyleTitle = new PIXI.TextStyle({
+        fontFamily: gMainFont.family,
+        fontSize: 128,
+        fill: '#ffffff'
+    });
 }
 
 export function getMainFontStyleNormal() {
@@ -41,5 +47,8 @@ export function getMainFontStyleSmall() {
 }
 export function getMainFontStyleBig() {
     return gMainFontStyleBig;
+}
+export function getMainFontStyleTitle() {
+    return gMainFontStyleTitle;
 }
 
