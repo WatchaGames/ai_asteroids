@@ -1,3 +1,6 @@
+
+const DEBUG_BATTLE = false;
+
 import Asteroid from './asteroid.js';
 import Bullet from './bullet.js';
 import Bonus from './bonus.js';
@@ -505,7 +508,7 @@ export function checkForNewBonusesAndPowerUpsOverTime(app) {
 
 function addRandomPowerUpObject(app,posX,posY) {
     const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
-    console.log('Spawning power-up:', powerUpType); // Debug log
+    if(DEBUG_BATTLE)console.log('Spawning power-up:', powerUpType); // Debug log
     addPowerUpObject(app, powerUpType,posX,posY);
 }   
 

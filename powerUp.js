@@ -1,9 +1,11 @@
+const DEBUG_POWERUP = false;
+
 export default class PowerUp {
     constructor(app, type,posX,posY) {
         this.app = app;
         this.type = type;
         this.radius = 30; // Collision radius
-        console.log('Creating power-up of type:', type); // Debug log
+        if(DEBUG_POWERUP)console.log('Creating power-up of type:', type); // Debug log
         this.sprite = new PIXI.Graphics();
         
         // Create power-up appearance based on type

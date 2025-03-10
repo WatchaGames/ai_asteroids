@@ -45,6 +45,10 @@ import {
 
 
 import { getScore,addInventoryUI, removeInventoryUI, InitInventory } from './inventory_ui.js';
+
+
+let GAME_DEBUG = false;
+
 // Game state variables
 
 let gPixiAPp = null;
@@ -122,7 +126,7 @@ initGame().catch(console.error);
 
 
 function switchToGameState(newState) {
-    console.log(`switchToGameState ${getCurrentGameState()} ---> ${newState}`);
+    if(GAME_DEBUG)console.log(`switchToGameState ${getCurrentGameState()} ---> ${newState}`);
     exitCurrentState();
     enterNewState(newState);
     setGameState(newState);
