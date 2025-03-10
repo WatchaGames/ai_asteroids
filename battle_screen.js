@@ -10,7 +10,7 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
+import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getPixiApp } from './globals.js';
 import { removeOneLife, 
     getMultiplier, 
     setScore, 
@@ -288,27 +288,6 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
 
 
 
-/* export function checkPowerUpCollisions(app) {
-    if (!gPlayer || !gPowerUps) return;
-    
-    for (let i = gPowerUps.length - 1; i >= 0; i--) {
-        const powerUp = gPowerUps[i];
-        if (checkCollision(gPlayer, powerUp)) {
-            // Store the power-up instead of activating it
-            addPowerUpToStack(powerUp);
-            
-            // Remove the power-up from the game
-            app.stage.removeChild(powerUp);
-            gPowerUps.splice(i, 1);
-            
-            if (soundManager) {
-                soundManager.play('powerup');
-            }
-        }
-    }
-} 
- */
-
 export function checkPowerUpCollisions(app, player) {
     for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
         const powerUp = flyingPowerUps[i];
@@ -317,6 +296,10 @@ export function checkPowerUpCollisions(app, player) {
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         if (distance < player.radius + powerUp.radius) { // Use power-up's radius
+            // remove the pooweUp from the container (stage)
+            app.stage.removeChild(powerUp.sprite);
+
+            // done le a l'inventaire
             addPowerUpToStack(powerUp);
             // Remove power-up
 //            powerUp.destroy();
@@ -325,7 +308,8 @@ export function checkPowerUpCollisions(app, player) {
     }
 }
 
-export function destroyAllGameObjects(app) {
+export function destroyAllGameObjects() {
+    let app = getPixiApp();
     destroyAsteroids(app);
     destroyBullets(app);
     destroyBonuses(app);
@@ -484,8 +468,9 @@ export function updateDebugText() {
     }
 }
 
-export function startBattleInCurrentSelectedSector(app) {
+export function startBattleInCurrentSelectedSector() {
     // Clear any existing game elements
+    let app = getPixiApp();
     destroyAllGameObjects(app);
 
     // Destroy any existing battle objects
@@ -526,12 +511,14 @@ export function startBattleInCurrentSelectedSector(app) {
 
 
 
-export function updateBattleState(app) {
+export function updateBattleState() {
     let nextState = null;
     const player = getPlayer();
     const starfield = getStarfield();
     const explosionParticles = getExplosionParticles();
     
+    const app = getPixiApp();
+
     player.update();
     starfield.update(player.velocity);
     
@@ -602,7 +589,8 @@ export function destroyAnySpaceship() {
     }
 }
 
-export function initBattleDebug(app) {
+export function initBattleDebug() {
+    let app = getPixiApp();
     gDebugMode = false;
     gDebugText = new PIXI.Text({
         text: 'Debug Info',
@@ -617,7 +605,8 @@ export function initBattleDebug(app) {
     app.stage.addChild(gDebugText);
 }
 
-export function removeBattleDebug(app) {
+export function removeBattleDebug() {
+//    let app = getPixiApp();
     if(gDebugText !== null){
         gDebugText.destroy();
         gDebugText = null;

@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
-import { STATE_BATTLE } from './globals.js';
+import { STATE_BATTLE, getPixiApp } from './globals.js';
 import { getMainFontStyleTitle } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
@@ -81,7 +81,8 @@ function createEarthGraphic(app) {
     return container;
 }
 
-export function showTitleScreen(app) {
+export function showTitleScreen() {
+    let app = getPixiApp();
     // Create container for title screen elements
     titleContainer = new PIXI.Container();
     
@@ -156,7 +157,8 @@ export function updateTitleScreen(delta) {
     }
 }
 
-export function hideTitleScreen(app) {
+export function hideTitleScreen() {
+    let app = getPixiApp();
     if (titleContainer) {
         app.stage.removeChild(titleContainer);
         titleContainer = null;

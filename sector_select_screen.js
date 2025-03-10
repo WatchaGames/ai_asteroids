@@ -6,7 +6,8 @@ let sectorSelectContainer = null;
 let selectedSectorIndex = null;
 let currentWaveIndex = 0;
 
-export function showSectorSelect(app, waveIndex) {
+export function showSectorSelect(waveIndex) {
+    let app = getPixiApp();
     currentWaveIndex = waveIndex;
     sectorSelectContainer = new PIXI.Container();
     
@@ -145,7 +146,8 @@ export function updateSectorSelect() {
     return null;
 }
 
-export function hideSectorSelect(app) {
+export function hideSectorSelect() {
+    let app = getPixiApp();
     if (sectorSelectContainer) {
         app.stage.removeChild(sectorSelectContainer);
         sectorSelectContainer = null;

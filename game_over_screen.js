@@ -1,7 +1,8 @@
+import { getPixiApp } from './globals.js';
 let gameOverContainer = null;
 
-export function showGameOver(app, score) {
-
+export function showGameOver(score) {
+    let app = getPixiApp();
 
     if(gameOverContainer !=null){
         console.error("Game over screen already exists");
@@ -62,7 +63,8 @@ export function showGameOver(app, score) {
     return gameOverContainer;
 }
 
-export function hideGameOver(app) {
+export function hideGameOver() {
+    let app = getPixiApp();
     // Find and remove the game over container
     app.stage.removeChild(gameOverContainer);
     gameOverContainer = null;

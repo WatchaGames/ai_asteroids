@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getCurrentSectorIndex } from './globals.js';
+import { getCurrentSectorIndex, getPixiApp } from './globals.js';
 
 // Variables
 let score = 0;
@@ -18,8 +18,6 @@ let multiplierText = null;
 let livesText = null;
 let powerUpText = null;
 
-
-
 export function InitInventory() {
     setScore(0)
     setLives(3);
@@ -28,7 +26,6 @@ export function InitInventory() {
 }
 
 // SCORE
-
 export function getScore() {
     return score;
 }
@@ -110,7 +107,8 @@ export function updateLivesUI(lives) {
     }
 }
 
-export function addInventoryUI(app) {
+export function addInventoryUI() {
+    let app = getPixiApp();
     // Score text
     scoreText = new PIXI.Text({
         text: 'Score: 0',
@@ -161,7 +159,8 @@ export function addInventoryUI(app) {
     app.stage.addChild(powerUpText);
 }
 
-export function removeInventoryUI(app) {
+export function removeInventoryUI() {
+    let app = getPixiApp();
     if (scoreText && scoreText.parent) {
         scoreText.parent.removeChild(scoreText);
     }
@@ -179,9 +178,20 @@ export function removeInventoryUI(app) {
     multiplierText = null;
     livesText = null;
     powerUpText = null;
+    
+    // Remove power-up graphics
+    powerUpStack.forEach(graphic => {
+        if (graphic && graphic.parent) {
+            graphic.parent.removeChild(graphic);
+        }
+    });
+    powerUpStack = [];
 }
 
 export function addPowerUpToStack(powerUp) {
+    // add the powerUp to the stage (app.stage)
+    const app = getPixiApp();
+    app.stage.addChild(powerUp.sprite);
     powerUpStack.push(powerUp);
     updatePowerUpUI();
 }
@@ -193,16 +203,48 @@ export function getAndRemovePowerUpFromTopOfStack() {
     return powerUp;
 }
 
+
+function getPowerUpColor(type) {
+    switch(type) {
+        case 'shield':
+            return 0x00FF00; // Green
+        case 'rapid_fire':
+            return 0xFF0000; // Red
+        case 'double_shot':
+            return 0x0000FF; // Blue
+        default:
+            return 0xFFFFFF; // White
+    }
+}
+
 function updatePowerUpUI() {
-    if (!powerUpText) return;
-    
     if (powerUpStack.length === 0) {
-        powerUpText.text = 'No Power-ups';
-        powerUpText.style.fill = palette10.gray;
-    } else {
-        const topPower = powerUpStack[powerUpStack.length - 1];
-        powerUpText.text = `Power-up: ${topPower.type} (${powerUpStack.length})`;
+        if (powerUpText) {
+            powerUpText.text = 'No Power-ups';
+            powerUpText.style.fill = palette10.gray;
+        }
+        return;
+    }
+    
+    // Calculate spacing and starting position
+    const app = getPixiApp();
+    const spacing = 40;
+    const startX = (app.screen.width - (powerUpStack.length * spacing)) / 2;
+    const y = app.screen.height - 64;
+    
+    // Create and position new graphics
+    powerUpStack.forEach((powerUp, index) => {
+        const graphic = powerUp.sprite;
+        graphic.x = startX + (index * spacing);
+        graphic.y = y;
+    });
+    
+    // Update text
+    if (powerUpText) {
+        powerUpText.text = `Power-ups: ${powerUpStack.length}`;
         powerUpText.style.fill = palette10.white;
+        powerUpText.x = 10;
+        powerUpText.y = y;
     }
 }
 

@@ -1,5 +1,5 @@
 import { InitSoundManager } from './soundManager.js';
-import { showGameOver, hideGameOver } from './game_over_screen.js';
+import { showGameOver, hideGameOver as removeGameOver } from './game_over_screen.js';
 import { showTitleScreen, hideTitleScreen,updateTitleScreen,handleTitleKeyPress,handleTitleKeyRelease } from './title_screen.js';
 import { showLoadingScreen, hideLoadingScreen } from './boot_screen.js';
 import { 
@@ -14,6 +14,8 @@ import {
     setCurrentSectorIndex,
     getCurrentMissionNumber,
     setCurrentMissionNumber,
+    getPixiApp,
+    setPixiApp
 } from './globals.js';
 
 
@@ -54,7 +56,6 @@ let GAME_DEBUG = false;
 
 // Game state variables
 
-let gPixiAPp = null;
 // Sound configuration
 const SOUND_CONFIG = {
     thrust: 0.2,        // Reduced from 0.5
@@ -73,8 +74,8 @@ const SOUND_CONFIG = {
 
 async function initGame() {
     // Initialize PixiJS Application
-    gPixiAPp = new PIXI.Application();
-    await gPixiAPp.init({
+    const app = new PIXI.Application();
+    await app.init({
         width: 800,
         height: 600,
         background: 0x000000,
@@ -85,8 +86,11 @@ async function initGame() {
         powerPreference: "high-performance"
     });
 
+    // Set the global PixiJS Application
+    setPixiApp(app);
+
     // Initialize PixiJS
-    document.body.appendChild(gPixiAPp.canvas);
+    document.body.appendChild(app.canvas);
 
 
     await LoadFonts();
@@ -112,7 +116,7 @@ async function initGame() {
 
     switchToGameState(STATE_BOOT);
 
-    gPixiAPp.ticker.add(() => {
+    app.ticker.add(() => {
         let nextState = updateGameState();
         if(nextState) {
             switchToGameState(nextState);
@@ -197,7 +201,7 @@ function updateGameState() {
             nextState = updateTitleState();
             break;
         case STATE_BATTLE:
-            nextState = updateBattleState(gPixiAPp);
+            nextState = updateBattleState();
             break;
         case STATE_GAME_OVER:
             nextState = updateGameOverState();
@@ -223,7 +227,7 @@ function enterBootState() {
     // Initialize game assets and settings
     InitSoundManager(SOUND_CONFIG);
     // Show loading screen
-    showLoadingScreen(gPixiAPp);
+    showLoadingScreen();
     
 }
 function updateBootState() {
@@ -238,7 +242,7 @@ function updateBootState() {
 
 function exitBootState() {
 
-    hideLoadingScreen(gPixiAPp);
+    hideLoadingScreen();
 }
 
 
@@ -252,7 +256,7 @@ function exitBootState() {
                                      
  */
 function enterTitleState() {
-    showTitleScreen(gPixiAPp);
+    showTitleScreen();
 
 }
 function updateTitleState() {
@@ -263,9 +267,9 @@ function updateTitleState() {
 }   
 
 function exitTitleState() {
-    addInventoryUI(gPixiAPp);
+    addInventoryUI();
     InitInventory();
-    hideTitleScreen(gPixiAPp);
+    hideTitleScreen();
 }
 
 /* 
@@ -278,14 +282,14 @@ function exitTitleState() {
  */                                                  
 
 function enterBattleState() {
-    startBattleInCurrentSelectedSector(gPixiAPp);
-    initBattleDebug(gPixiAPp);
+    startBattleInCurrentSelectedSector();
+    initBattleDebug();
 }
 
 
 function exitBattleState() {
     destroyAnySpaceship();
-    removeBattleDebug(gPixiAPp);
+    removeBattleDebug();
 }
 
 
@@ -301,11 +305,11 @@ function exitBattleState() {
 
 // Add new state functions
 function enterSectorSelectState() {
-    showSectorSelect(gPixiAPp, getCurrentSectorIndex());
+    showSectorSelect(getCurrentSectorIndex());
 }
 
 function exitSectorSelectState() {
-    hideSectorSelect(gPixiAPp);
+    hideSectorSelect();
 }
 
 /* 
@@ -320,7 +324,7 @@ function exitSectorSelectState() {
  */
 
 function enterGameOverState() {
-    showGameOver(gPixiAPp, getScore());
+    showGameOver(getScore());
 }
 
 function updateGameOverState() {
@@ -350,14 +354,14 @@ function handleGameOverKeyRelease(event) {
 }
 
 function exitGameOverState() {
-    hideGameOver(gPixiAPp);
-    destroyAllGameObjects(gPixiAPp);
+    removeGameOver();
+    destroyAllGameObjects();
 
     destroyAnyStarfield();
     destroyAnyExplosionParticles();
     destroyAnySpaceship();
 
-    removeInventoryUI(gPixiAPp);
+    removeInventoryUI();
 }
 
 // INPUT PER SCREEN
@@ -447,21 +451,8 @@ function initDebugMode() {
     gDebugText.x = 10;
     gDebugText.y = 40;
     gDebugText.visible = gDebugMode;
-    gPixiAPp.stage.addChild(gDebugText);
+    let app = getPixiApp();
+    app.stage.addChild(gDebugText);
 }
 
 
-function activatePowerUp(powerUp) {
-    switch (powerUp.type) {
-        case 'shield':
-            gPlayer.activateShield();
-            break;
-        case 'rapid_fire':
-            gPlayer.activateRapidFire();
-            break;
-        case 'double_shot':
-            gPlayer.activateDoubleShot();
-            break;
-        // Add other power-up types as needed
-    }
-}

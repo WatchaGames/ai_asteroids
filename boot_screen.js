@@ -1,9 +1,10 @@
 import { palette10 } from './palette.js';
-
+import { getPixiApp } from './globals.js';
 let loadingContainer = null;
 
-export function showLoadingScreen(app) {
+export function showLoadingScreen() {
     // Create container for loading screen elements
+    let app = getPixiApp();
     loadingContainer = new PIXI.Container();
     
     // Loading text
@@ -26,7 +27,8 @@ export function showLoadingScreen(app) {
     app.stage.addChild(loadingContainer);
 }
 
-export function hideLoadingScreen(app) {
+export function hideLoadingScreen() {
+    let app = getPixiApp();
     if (loadingContainer) {
         app.stage.removeChild(loadingContainer);
         loadingContainer = null;

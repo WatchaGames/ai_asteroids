@@ -12,8 +12,8 @@ let gGameState = STATE_BOOT;
 export let gCurrentSectorIndex = 1;
 export let gCurrentMissionNumber = 1;
 
-
-
+// PixiJS Application
+let gPixiApp = null;
 
 export function getCurrentGameState() {
     return gGameState;
@@ -37,4 +37,12 @@ export function getCurrentMissionNumber() {
 
 export function setCurrentMissionNumber(newNumber) {
     gCurrentMissionNumber = newNumber;
+}
+
+export function getPixiApp() {
+    return gPixiApp;
+}
+
+export function setPixiApp(app) {
+    gPixiApp = app;
 }
