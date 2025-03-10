@@ -1,4 +1,9 @@
-export const GAME_VERSION = '0.0.1';
+export const GAME_VERSION = '123';
+
+
+export function getGameVersion() {
+    return GAME_VERSION;
+}
 
 // Game States
 export const STATE_BOOT = 'boot';

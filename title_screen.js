@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
-import { STATE_BATTLE,   getAppStage, getScreenHeight, getScreenWidth } from './globals.js';
+import { STATE_BATTLE,   getAppStage, getScreenHeight, getScreenWidth, getGameVersion } from './globals.js';
 import { getMainFontStyleTitle } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
@@ -129,13 +129,31 @@ export function showTitleScreen() {
     controlsText.x = getScreenWidth() / 2;
     controlsText.y = getScreenHeight() * 0.6;
     controlsText.anchor.set(0.5);
+
+    const versionText = new PIXI.Text({
+        text: `v${getGameVersion()}`,
+        style: {
+            fill: palette10.white,
+            fontSize: 20,
+            align: 'center',
+            color: palette10.white,
+        }
+    });
+    versionText.alpha = 0.5;
+    versionText.x = getScreenWidth() * 0.95;
+    versionText.y = getScreenHeight() * 0.95;
+    versionText.anchor.set(0.5);
+
+
+
     
     // Add elements to container
     titleContainer.addChild(titleText);
     titleContainer.addChild(pressSpaceText);
     titleContainer.addChild(controlsText);
-    
+    titleContainer.addChild(versionText);
 
+    
     let stage = getAppStage();
     // Add container to stage
     stage.addChild(titleContainer);
