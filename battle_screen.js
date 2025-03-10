@@ -11,7 +11,15 @@ import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT } from './globals.js';
-import { removeOneLife, getMultiplier, setScore, setLives, addScore, clearScoreMultiplier, setNewScoreMultiplier, updateBonusUI } from './inventory_ui.js';
+import { removeOneLife, 
+    getMultiplier, 
+    setScore, 
+    setLives, 
+    addScore, 
+    clearScoreMultiplier, 
+    setNewScoreMultiplier, 
+    } from './inventory_ui.js';
+
 import { palette10 } from './palette.js';
 // Battle objects
 let gPlayer = null;
@@ -21,17 +29,13 @@ let gExplosionParticles = null;
 // Battle state
 let asteroids = [];
 let bullets = [];
-let bonuses = [];
-let powerUps = [];
+let flyingBonuses = [];
+let flyingPowerUps = [];
  
 let rearBulletActive = false;
 let rearBulletTimer = null;
 let quadFireActive = false;
 let quadFireTimer = null;
-
-// UI Elements
-let bonusText = null;
-
 
 // Wave UI
 let waveText = null;
@@ -69,19 +73,6 @@ export function updateWaveInfo() {
     updateWaveUI(getCurrentSectorIndex());
 }
 
-export function showScoreBonus(text) {
-    updateBonusUI(text);
-}
-
-export function updateScoreBonusText(text, x, y, visible, alpha) {
-    if (bonusText) {
-        bonusText.text = text;
-        bonusText.x = x;
-        bonusText.y = y;
-        bonusText.visible = visible;
-        bonusText.alpha = alpha;
-    }
-}
 
 export function getAsteroids() {
     return asteroids;
@@ -92,11 +83,11 @@ export function getBullets() {
 }
 
 export function getBonuses() {
-    return bonuses;
+    return flyingBonuses;
 }
 
 export function getPowerUps() {
-    return powerUps;
+    return flyingPowerUps;
 }
 
 
@@ -172,17 +163,17 @@ export function destroyBullets(app) {
 }
 
 export function destroyBonuses(app) {
-    bonuses.forEach(bonus => {
+    flyingBonuses.forEach(bonus => {
         app.stage.removeChild(bonus.sprite);
     });
-    bonuses = [];
+    flyingBonuses = [];
 }
 
 export function destroyPowerUps(app) {
-    powerUps.forEach(powerUp => {
+    flyingPowerUps.forEach(powerUp => {
         app.stage.removeChild(powerUp.sprite);
     });
-    powerUps = [];
+    flyingPowerUps = [];
 }
 
 export function addAsteroids(newAsteroids) {
@@ -196,12 +187,12 @@ export function addBullet(app, x, y, angle) {
 
 export function addScoreBonusObject(app) {
     const bonus = new Bonus(app);
-    bonuses.push(bonus);
+    flyingBonuses.push(bonus);
 }
 
 export function addPowerUpObject(app, type,posX,posY) {
     const powerUp = new PowerUp(app, type,posX,posY);
-    powerUps.push(powerUp);
+    flyingPowerUps.push(powerUp);
 }
 
 // return the score to add
@@ -294,8 +285,8 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
 }
 
 export function checkPowerUpCollisions(app, player) {
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-        const powerUp = powerUps[i];
+    for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
+        const powerUp = flyingPowerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
         const dy = player.sprite.y - powerUp.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -339,7 +330,7 @@ export function checkPowerUpCollisions(app, player) {
             
             // Remove power-up
             powerUp.destroy();
-            powerUps.splice(i, 1);
+            flyingPowerUps.splice(i, 1);
         }
     }
 }
@@ -388,8 +379,8 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
 export function checkBonusCollisions(app) {
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
-        for (let j = bonuses.length - 1; j >= 0; j--) {
-            const bonus = bonuses[j];
+        for (let j = flyingBonuses.length - 1; j >= 0; j--) {
+            const bonus = flyingBonuses[j];
             const dx = bullet.sprite.x - bonus.sprite.x;
             const dy = bullet.sprite.y - bonus.sprite.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -404,7 +395,7 @@ export function checkBonusCollisions(app) {
                 const targetX = 10; // Score text X position
                 const targetY = 10; // Score text Y position
                 bonus.destroy();
-                bonuses.splice(j, 1);
+                flyingBonuses.splice(j, 1);
                 
                 // Clear any existing multiplier timer
                 clearScoreMultiplier();
@@ -418,26 +409,8 @@ export function checkBonusCollisions(app) {
                 }
                 
                 // Show bonus text at bonus location
-                updateScoreBonusText('x2!', startX, startY, true, 1);
+                setNewScoreMultiplier(2);
                 
-                // Animate text flying to score
-                let startTime = Date.now();
-                const flyToScore = () => {
-                    const elapsed = Date.now() - startTime;
-                    if (elapsed < 1000) { // Animation duration increased to 1 second
-                        // Calculate progress (0 to 1)
-                        const progress = elapsed / 1000;
-                        // Move position
-                        const currentX = startX + (targetX - startX) * progress;
-                        const currentY = startY + (targetY - startY) * progress;
-                        // Update position and fade out
-                        updateScoreBonusText('x2!', currentX, currentY, true, 1 - progress);
-                        requestAnimationFrame(flyToScore);
-                    } else {
-                        updateScoreBonusText('', 0, 0, false, 0);
-                    }
-                };
-                flyToScore();
             }
         }
     }
@@ -476,17 +449,17 @@ export function updateBullets() {
 }
 
 export function updateBonuses() {
-    for (let i = bonuses.length - 1; i >= 0; i--) {
-        if (bonuses[i].update()) {
-            bonuses.splice(i, 1);
+    for (let i = flyingBonuses.length - 1; i >= 0; i--) {
+        if (flyingBonuses[i].update()) {
+            flyingBonuses.splice(i, 1);
         }
     }
 }
 
 export function updatePowerUps() {
-    for (let i = powerUps.length - 1; i >= 0; i--) {
-        if (powerUps[i].update()) {
-            powerUps.splice(i, 1);
+    for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
+        if (flyingPowerUps[i].update()) {
+            flyingPowerUps.splice(i, 1);
         }
     }
 }

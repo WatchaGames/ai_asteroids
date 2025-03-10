@@ -253,8 +253,8 @@ function updateTitleState() {
 }   
 
 function exitTitleState() {
-    InitInventory();
     addInventoryUI(gPixiAPp);
+    InitInventory();
     hideTitleScreen(gPixiAPp);
 }
 

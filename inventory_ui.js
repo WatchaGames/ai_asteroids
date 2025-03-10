@@ -2,25 +2,27 @@ import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getCurrentSectorIndex } from './globals.js';
 
-let scoreText = null;
-let multiplierText = null;
-let bonusText = null;
-let livesText = null;
-let waveText = null;
-
-
+// Variables
 let score = 0;
 let multiplier = 1;
 let lives = 3;
 let scoreMultiplier = 1;
 let scoreMultiplierTimer = null;
 
+
+// UI Elements
+let scoreText = null;
+let multiplierText = null;
+let livesText = null;
+
+
+
 export function InitInventory() {
     setScore(0)
     setLives(3);
     clearScoreMultiplier();
+    setNewScoreMultiplier(1);
 }
-
 
 // SCORE
 
@@ -37,6 +39,12 @@ export function addScore(scoreToAdd) {
     setScore(score + scoreToAdd);
 }
 
+
+export function updateScoreUI(score) {
+    if (scoreText) {
+        scoreText.text = `Score: ${score}`;
+    }
+}
 
 // MULTIPLIER
 export function getMultiplier() {
@@ -56,15 +64,20 @@ export function setNewScoreMultiplier(newMultiplier) {
         clearTimeout(scoreMultiplierTimer);
         scoreMultiplierTimer = null;
     }
-    UpdateScoreMultiplierUI();
+    updateScoreMultiplierUI(scoreMultiplier);
+
 }
 
-function UpdateScoreMultiplierUI() {
-    if (multiplierText) {
-        multiplierText.text = `x${scoreMultiplier}`;
-        multiplierText.visible = scoreMultiplier > 1;
+
+export function updateScoreMultiplierUI(multiplier) {
+    if (multiplier > 0) {
+        multiplierText.text = `x${multiplier}`;
+        multiplierText.visible = true;
+    }else{
+        multiplierText.visible = false;
     }
 }
+
 
 
 // LIVES
@@ -87,6 +100,13 @@ export function removeOneLife() {
     return lives;
 }
 
+
+export function updateLivesUI(lives) {
+    if (livesText) {
+        livesText.text = `Lives: ${lives}`;
+    }
+}
+
 export function addInventoryUI(app) {
     // Score text
     scoreText = new PIXI.Text({
@@ -102,7 +122,7 @@ export function addInventoryUI(app) {
 
     // Multiplier text
     multiplierText = new PIXI.Text({
-        text: 'x1',
+        text: '[MULT]',
         style: {
             fill: palette10.white,
             fontSize: 24
@@ -112,19 +132,7 @@ export function addInventoryUI(app) {
     multiplierText.y = 10;
     app.stage.addChild(multiplierText);
 
-    // Bonus text
-    bonusText = new PIXI.Text({
-        text: '',
-        style: {
-            fill: palette10.yellow,
-            fontSize: 24
-        }
-    });
-    bonusText.x = app.screen.width / 2;
-    bonusText.y = 10;
-    bonusText.anchor.set(0.5, 0);
-    app.stage.addChild(bonusText);
-
+  
     // Lives text
     livesText = new PIXI.Text({
         text: 'Lives: 3',
@@ -146,43 +154,13 @@ export function removeInventoryUI(app) {
     if (multiplierText && multiplierText.parent) {
         multiplierText.parent.removeChild(multiplierText);
     }
-    if (bonusText && bonusText.parent) {
-        bonusText.parent.removeChild(bonusText);
-    }
     if (livesText && livesText.parent) {
         livesText.parent.removeChild(livesText);
     }
     
     scoreText = null;
     multiplierText = null;
-    bonusText = null;
     livesText = null;
 }
 
-export function updateScoreUI(score) {
-    if (scoreText) {
-        scoreText.text = `Score: ${score}`;
-    }
-}
-
-export function updateMultiplierUI(multiplier) {
-    if (multiplierTex > 0) {
-        multiplierText.text = `x${multiplier}`;
-        multiplierText.visible = true;
-    }else{
-        multiplierText.visible = false;
-    }
-}
-
-export function updateBonusUI(text) {
-    if (bonusText) {
-        bonusText.text = text;
-    }
-}
-
-export function updateLivesUI(lives) {
-    if (livesText) {
-        livesText.text = `Lives: ${lives}`;
-    }
-}
 
