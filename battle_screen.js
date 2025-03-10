@@ -22,7 +22,7 @@ import { removeOneLife,
     getAndRemovePowerUpFromTopOfStack
     } from './inventory_ui.js';
 
-import { palette10 } from './palette.js';
+import { getMainFontStyleNormal } from './fonts.js';
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -698,7 +698,7 @@ export function handleBattleKeyPress(event) {
         case ' ':
             gPlayer.actionFire(gSoundManager);
             break;
-        case 'Shift':
+        case 'ArrowDown':
             gPlayer.tryTeleport(gSoundManager); //TODO remvoe sound manager parameter
             break;
         case 'd':
@@ -747,14 +747,13 @@ export function handleBattleKeyRelease(event) {
 
 function addWaveUI() {
     // Wave text
+    const fontStyle = getMainFontStyleNormal();
     waveText = new PIXI.Text({
         text: 'TOFILL WAVE',
-        style: {
-            fill: palette10.white,
-            fontSize: 24,
-            fontWeight: 'bold'
-        }
-    });
+        style: fontStyle
+        });
+
+    waveText.alpha = 0.5;
     waveText.x = getScreenWidth()/ 2;
     waveText.y = 10;
     waveText.anchor.set(0.5, 0); // Center horizontally, align to top

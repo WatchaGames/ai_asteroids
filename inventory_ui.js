@@ -1,7 +1,7 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getPixiApp, getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
-
+import { getMainFontStyleNormal } from './fonts.js';
 // Variables
 let score = 0;
 let multiplier = 1;
@@ -102,6 +102,7 @@ export function getLives() {
 
 
 export function setLives(newLives) {
+    console.log(`setLives:${newLives}`);
     lives = newLives;
     updateLivesUI(lives);
 }
@@ -117,6 +118,7 @@ export function removeOneLife() {
 
 
 export function updateLivesUI(lives) {
+    console.log(`updateLivesUI:${lives}`);
     if (livesText) {
         livesText.text = `Lives: ${lives}`;
     }
@@ -124,53 +126,44 @@ export function updateLivesUI(lives) {
 
 export function addInventoryUI() {
     let stage = getAppStage();
+
+    const fontStyle = getMainFontStyleNormal();
+
     // Score text
     scoreText = new PIXI.Text({
         text: 'Score: 0',
-        style: {
-            fill: palette10.white,
-            fontSize: 24
-        }
+        style: fontStyle,
     });
     scoreText.x = 10;
     scoreText.y = 10;
     stage.addChild(scoreText);
 
-    // Multiplier text
+    // Multiplier text under the score text
     multiplierText = new PIXI.Text({
         text: '[MULT]',
-        style: {
-            fill: palette10.white,
-            fontSize: 24
-        }
+        style: fontStyle,
     });
-    multiplierText.x = getScreenWidth - 50;
-    multiplierText.y = 10;
+    multiplierText.x = scoreText.x;
+    multiplierText.y = scoreText.y + scoreText.height;
     stage.addChild(multiplierText);
 
   
     // Lives text
     livesText = new PIXI.Text({
         text: 'Lives: 3',
-        style: {
-            fill: palette10.white,
-            fontSize: 24
-        }
+        style: fontStyle,
     });
-    livesText.x = 10;
-    livesText.y = getScreenHeight - 34;
+    livesText.x = getScreenWidth() - 100;
+    livesText.y = 10;
     stage.addChild(livesText);
 
     // Power-up text
     powerUpText = new PIXI.Text({
         text: 'No Power-ups',
-        style: {
-            fill: palette10.gray,
-            fontSize: 24
-        }
+        style: fontStyle,
     });
     powerUpText.x = 10;
-    powerUpText.y = getScreenHeight - 64;
+    powerUpText.y = getScreenHeight() - 64;
     stage.addChild(powerUpText);
 }
 

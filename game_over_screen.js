@@ -1,4 +1,5 @@
-import { getPixiApp, getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
+import { getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
+import { getMainFontStyleBig, getMainFontStyleTitle} from './fonts.js';
 let gameOverContainer = null;
 
 export function showGameOver(score) {
@@ -23,37 +24,36 @@ export function showGameOver(score) {
     const centerY = getScreenHeight() / 2;
     
     // Draw main text box with white border
+    const textBoxWidth = 600;
+    const textBoxHeight = 200;
     const textBox = new PIXI.Graphics();
     textBox.lineStyle(2, 0xFFFFFF);  // White border
     textBox.beginFill(0x000000);
-    textBox.drawRect(0, 0, 400, 200);
+    textBox.drawRect(0, 0, textBoxWidth, textBoxHeight);
     textBox.endFill();
-    textBox.x = (getScreenWidth() - 400) / 2;
-    textBox.y = (getScreenHeight() - 200) / 2;
+    textBox.x = (getScreenWidth() - textBoxWidth) / 2;
+    textBox.y = (getScreenHeight() - textBoxHeight) / 2;
     gameOverContainer.addChild(textBox);
+
+
+    const fontStyle = getMainFontStyleTitle();
 
     // Add "GAME OVER" text in white
     const gameOverText = new PIXI.Text({
         text: 'GAME OVER',
-        style: { 
-            fill: 0xFFFFFF,
-            fontSize: 48,
-            fontWeight: 'bold'
-        }
+        style: fontStyle,
     });
     gameOverText.x = (getScreenWidth() - gameOverText.width) / 2;
     gameOverText.y = (getScreenHeight() - gameOverText.height) / 2;
     gameOverContainer.addChild(gameOverText);
 
     // Add final score text in cyan
+    const scoreFontStyle = getMainFontStyleBig();
+
     const finalScoreText = new PIXI.Text({
         text: `Final Score: ${score}`,
-        style: { 
-            fill: 0x00FFFF,  // Cyan color
-            fontSize: 24,
-            fontWeight: 'bold'
-        }
-    });
+        style: scoreFontStyle,
+   });
     finalScoreText.x = (getScreenWidth() - finalScoreText.width) / 2;
     finalScoreText.y = (getScreenHeight() - finalScoreText.height) / 2 + 60;
     gameOverContainer.addChild(finalScoreText);

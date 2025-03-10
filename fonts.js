@@ -16,19 +16,19 @@ export async function LoadFonts() {
 
     gMainFontStyleNormal = new PIXI.TextStyle({
         fontFamily: gMainFont.family,
-        fontSize: 14,
+        fontSize: 20,
         fill: '#ffffff'
     });
 
     gMainFontStyleSmall = new PIXI.TextStyle({
         fontFamily: gMainFont.family,
-        fontSize: 10,
+        fontSize: 14,
         fill: '#ffffff'
     });
 
     gMainFontStyleBig = new PIXI.TextStyle({
         fontFamily: gMainFont.family,
-        fontSize: 64,
+        fontSize: 32,
         fill: '#ffffff'
     });
 

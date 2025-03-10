@@ -1,10 +1,13 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
 import { STATE_BATTLE,   getAppStage, getScreenHeight, getScreenWidth, getGameVersion } from './globals.js';
-import { getMainFontStyleTitle } from './fonts.js';
+import { getMainFontStyleTitle, getMainFontStyleBig, getMainFontStyleNormal } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
+
+const gameName = 'Astero FORCE';
+const gameSubtitle = 'How far can you clean deep space ?';
 
 function createEarthGraphic() {
     const container = new PIXI.Container();
@@ -94,50 +97,48 @@ export function showTitleScreen() {
     titleContainer.addChild(earthGraphic);
     
 
-    const fontStyle = getMainFontStyleTitle();
+    const titleFontStyle = getMainFontStyleTitle();
     // Title text
     const titleText = new PIXI.Text({
-        text: 'Astero FORCE',
-        style: fontStyle,
+        text: gameName,
+        style: titleFontStyle,
         fill: palette10.white
     });
     titleText.x = getScreenWidth() / 2;
-    titleText.y = getScreenHeight() * 0.3;
+    titleText.y = getScreenHeight() * 0.25;
     titleText.anchor.set(0.5);
-    
-    // Press space text
-    const pressSpaceText = new PIXI.Text({
-        text: 'Press Space to Start',
-        style: {
-            fill: palette10.white,
-            fontSize: 24
-        }
+
+    // Subtitle text
+    const subtitleFontStyle = getMainFontStyleBig();
+    const subtitleText = new PIXI.Text({
+        text: gameSubtitle,
+        style: subtitleFontStyle,
+        fill: palette10.white
     });
-    pressSpaceText.x = getScreenWidth()/ 2;
-    pressSpaceText.y = getScreenHeight() * 0.45;
-    pressSpaceText.anchor.set(0.5);
+    subtitleText.x = getScreenWidth() / 2;
+    subtitleText.y = getScreenHeight() * 0.37;
+    subtitleText.anchor.set(0.5);
+    
+
+
+    // Press space text
+    const restFontStyle = getMainFontStyleNormal();
+
     
     // Controls text
     const controlsText = new PIXI.Text({
-        text: 'Controls:\n↑ Thrust\n← → Rotate\nSPACE Fire\nSHIFT Teleport',
-        style: {
-            fill: palette10.white,
-            fontSize: 20,
-            align: 'center'
-        }
+        text: 'Controls:\n↑ Thrust\n← → Rotate\nSPACE Fire\n↓ Teleport\nQ Use Power-up',
+        style: restFontStyle
     });
     controlsText.x = getScreenWidth() / 2;
-    controlsText.y = getScreenHeight() * 0.6;
+    controlsText.y = getScreenHeight() * 0.55;
     controlsText.anchor.set(0.5);
 
     const versionText = new PIXI.Text({
         text: `v${getGameVersion()}`,
-        style: {
-            fill: palette10.white,
-            fontSize: 20,
-            align: 'center',
-            color: palette10.white,
-        }
+        style: restFontStyle,
+        fill: palette10.white,
+        align: 'center',
     });
     versionText.alpha = 0.5;
     versionText.x = getScreenWidth() * 0.95;
@@ -145,10 +146,20 @@ export function showTitleScreen() {
     versionText.anchor.set(0.5);
 
 
+    const pressSpaceText = new PIXI.Text({
+        text: 'Press Space to Start',
+        style: restFontStyle,
+        fill: palette10.white,
+    });
+    pressSpaceText.x = getScreenWidth()/ 2;
+    pressSpaceText.y = getScreenHeight() * 0.71;
+    pressSpaceText.anchor.set(0.5);
+
 
     
     // Add elements to container
     titleContainer.addChild(titleText);
+    titleContainer.addChild(subtitleText);
     titleContainer.addChild(pressSpaceText);
     titleContainer.addChild(controlsText);
     titleContainer.addChild(versionText);

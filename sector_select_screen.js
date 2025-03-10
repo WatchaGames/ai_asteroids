@@ -1,6 +1,7 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber, getCurrentSectorIndex, getPixiApp, getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
+import { getMainFontStyleBig, getMainFontStyleNormal } from './fonts.js';
 
 let sectorSelectContainer = null;
 let selectedSectorIndex = null;
@@ -10,26 +11,24 @@ export function showSectorSelect(waveIndex) {
     currentWaveIndex = waveIndex;
     sectorSelectContainer = new PIXI.Container();
     
+    const fontStyleBig = getMainFontStyleBig();
     // Title
     const titleText = new PIXI.Text({
         text: 'Select Next Sector to warp to...',
-        style: {
-            fill: palette10.white,
-            fontSize: 32,
-            fontWeight: 'bold'
-        }
+        style: fontStyleBig
     });
     titleText.x = getScreenWidth() / 2;
-    titleText.y = 50;
+    titleText.y = getScreenHeight() * 0.1;
     titleText.anchor.set(0.5);
-    
-    // Create two sector options
-    const sector1 = createSectorFrame(waveIndex + 1, 0);
-    const sector2 = createSectorFrame(waveIndex + 2, 1);
-    
-    // Calculate positions to center the frames
+
     const frameWidth = 300; // Width of each frame
     const frameHeight = 200; // Height of each frame
+
+    // Create two sector options
+    const sector1 = createSectorFrame(waveIndex + 1,frameWidth,frameHeight);
+    const sector2 = createSectorFrame(waveIndex + 2,frameWidth,frameHeight);
+    
+    // Calculate positions to center the frames
     const spacing = 40; // Space between frames
     const totalWidth = (frameWidth * 2) + spacing;
     
@@ -53,14 +52,16 @@ export function showSectorSelect(waveIndex) {
     stage.addChild(sectorSelectContainer);
 }
 
-function createSectorFrame(targetSectorIndex) {
+function createSectorFrame(targetSectorIndex,frameWidth,frameHeight) {
     const frame = new PIXI.Container();
-    
+    const fontStyleNormal = getMainFontStyleNormal();
+    const fontStyleBig = getMainFontStyleBig();
+
     // Create frame background
     const bg = new PIXI.Graphics();
     bg.lineStyle(2, palette10.white);
     bg.beginFill(palette10.darkBlue, 0.3);
-    bg.drawRect(0, 0, 300, 200);
+    bg.drawRect(0, 0, frameWidth, frameHeight);
     bg.endFill();
     
     // Make frame interactive
@@ -85,11 +86,7 @@ function createSectorFrame(targetSectorIndex) {
     // Add sector name
     const sectorName = new PIXI.Text({
         text: sectorDescription.name,
-        style: {
-            fill: palette10.white,
-            fontSize: 24,
-            align: 'center'
-        }
+        style: fontStyleBig
     });
     sectorName.x = 150;
     sectorName.y = 30;
@@ -98,15 +95,9 @@ function createSectorFrame(targetSectorIndex) {
     // Add sector description
     const description = new PIXI.Text({
         text: sectorDescription.asteroids + " asteroids, " + sectorDescription.bonuses + " bonuses",
-        style: {
-            fill: palette10.white,
-            fontSize: 16,
-            align: 'center',
-            wordWrap: true,
-            wordWrapWidth: 280
-        }
+        style: fontStyleNormal
     });
-
+    description.align = 'center';
 
     const difficultyText = new PIXI.Text({
         text: `Distance: ${targetSectorIndex - getCurrentSectorIndex()}`,
