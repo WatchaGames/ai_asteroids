@@ -1,5 +1,7 @@
 import { palette10 } from './palette.js';
-import { getPixiApp } from './globals.js';
+import { getPixiApp, getAppStage } from './globals.js';
+
+
 let loadingContainer = null;
 
 export function showLoadingScreen() {
@@ -24,13 +26,15 @@ export function showLoadingScreen() {
     loadingContainer.addChild(loadingText);
     
     // Add container to stage
-    app.stage.addChild(loadingContainer);
+    let stage = getAppStage();
+    stage.addChild(loadingContainer);
 }
 
 export function hideLoadingScreen() {
     let app = getPixiApp();
     if (loadingContainer) {
-        app.stage.removeChild(loadingContainer);
+        let stage = getAppStage();
+        stage.removeChild(loadingContainer);
         loadingContainer = null;
     }
 }

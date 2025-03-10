@@ -51,6 +51,7 @@ import {
 
 import { getScore,addInventoryUI, removeInventoryUI, InitInventory } from './inventory_ui.js';
 
+import { handleBootKeyPress, handleBootKeyRelease } from './boot_screen.js';
 
 let GAME_DEBUG = false;
 
@@ -432,7 +433,7 @@ function handleKeyReleaseForGameState(event) {
 ╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝      ╚═════╝ ╚═╝
 
 */
-
+import { getAppStage } from './globals.js';
 
 let gDebugMode = false;
 let gDebugText = null;
@@ -451,8 +452,8 @@ function initDebugMode() {
     gDebugText.x = 10;
     gDebugText.y = 40;
     gDebugText.visible = gDebugMode;
-    let app = getPixiApp();
-    app.stage.addChild(gDebugText);
+    let stage = getAppStage();
+    stage.addChild(gDebugText);
 }
 
 

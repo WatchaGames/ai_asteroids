@@ -1,6 +1,7 @@
+import { getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
+
 class Bonus {
-    constructor(app) {
-        this.app = app;
+    constructor() {
         this.sprite = new PIXI.Graphics();
         
         // Create a star shape
@@ -19,15 +20,16 @@ class Bonus {
         
         // Randomly choose starting side (left or right)
         const startFromLeft = Math.random() < 0.5;
-        this.sprite.x = startFromLeft ? -20 : app.screen.width + 20;
-        this.sprite.y = Math.random() * (app.screen.height - 100) + 50; // Random height with padding
+        this.sprite.x = startFromLeft ? -20 : getScreenWidth() + 20;
+        this.sprite.y = Math.random() * (getScreenHeight() - 100) + 50; // Random height with padding
         
         // Set movement speed and direction
         this.speed = 3;
         this.direction = startFromLeft ? 1 : -1;
         
         // Add to stage
-        app.stage.addChild(this.sprite);
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
     }
 
     update() {
@@ -35,7 +37,7 @@ class Bonus {
         this.sprite.x += this.speed * this.direction;
         
         // Remove if off screen
-        if ((this.direction > 0 && this.sprite.x > this.app.screen.width + 20) ||
+        if ((this.direction > 0 && this.sprite.x > getScreenWidth() + 20) ||
             (this.direction < 0 && this.sprite.x < -20)) {
             this.destroy();
             return true; // Signal to remove from array
@@ -45,7 +47,8 @@ class Bonus {
     }
 
     destroy() {
-        this.app.stage.removeChild(this.sprite);
+        let stage = getAppStage();
+        stage.removeChild(this.sprite);
     }
 }
 

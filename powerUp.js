@@ -1,8 +1,9 @@
+import { getScreenHeight, getScreenWidth, getAppStage } from "./globals.js";
+
 const DEBUG_POWERUP = false;
 
 export default class PowerUp {
-    constructor(app, type,posX,posY) {
-        this.app = app;
+    constructor(type,posX,posY) {
         this.type = type;
         this.radius = 30; // Collision radius
         if(DEBUG_POWERUP)console.log('Creating power-up of type:', type); // Debug log
@@ -48,15 +49,16 @@ export default class PowerUp {
             this.sprite.x = posX;
             this.sprite.y = posY;
         } else {
-            this.sprite.x = Math.random() * (app.screen.width - 40) + 20; // Random X position with padding
-            this.sprite.y = spawnFromTop ? -20 : app.screen.height + 20;
+            this.sprite.x = Math.random() * (getScreenWidth() - 40) + 20; // Random X position with padding
+            this.sprite.y = spawnFromTop ? -20 : getScreenHeight() + 20;
         }
         
         
         this.speed = 1; // Movement speed (halved from 2)
         this.direction = spawnFromTop ? 1 : -1; // 1 for moving down, -1 for moving up
         
-        app.stage.addChild(this.sprite);
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
     }
     
     update() {
@@ -64,7 +66,7 @@ export default class PowerUp {
         this.sprite.y += this.speed * this.direction;
         
         // Check if power-up is off screen
-        if ((this.direction === 1 && this.sprite.y > this.app.screen.height + 20) ||
+        if ((this.direction === 1 && this.sprite.y > getScreenHeight() + 20) ||
             (this.direction === -1 && this.sprite.y < -20)) {
             this.destroy();
             return true; // Signal for removal
@@ -74,6 +76,7 @@ export default class PowerUp {
     }
     
     destroy() {
-        this.app.stage.removeChild(this.sprite);
+        let stage = getAppStage();
+        stage.removeChild(this.sprite);
     }
 } 

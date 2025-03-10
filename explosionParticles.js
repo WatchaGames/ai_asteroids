@@ -1,9 +1,11 @@
+import { getAppStage } from "./globals.js";
+
 class ExplosionParticles {
-    constructor(app) {
-        this.app = app;
+    constructor() {
         this.particles = [];
         this.container = new PIXI.Container();
-        app.stage.addChild(this.container);
+        let stage = getAppStage();
+        stage.addChild(this.container);
     }
 
     createExplosion(x, y, color = 0xFFFFFF, size = 20) {  // Added size parameter

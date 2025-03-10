@@ -1,6 +1,7 @@
+import { getScreenWidth, getScreenHeight, getAppStage } from "./globals.js";
+
 class Starfield {
-    constructor(app) {
-        this.app = app;
+    constructor() {
         this.stars = new PIXI.Container();
         this.starCount = 100; // Number of stars
         
@@ -26,8 +27,8 @@ class Starfield {
             star.endFill();
             
             // Random position
-            star.x = Math.random() * this.app.screen.width;
-            star.y = Math.random() * this.app.screen.height;
+            star.x = Math.random() * getScreenWidth();
+            star.y = Math.random() * getScreenHeight();
             
             // Store original position for parallax effect
             star.originalX = star.x;
@@ -38,7 +39,8 @@ class Starfield {
             
             this.stars.addChild(star);
         }
-        this.app.stage.addChildAt(this.stars, 0); // Add at index 0 to be in background
+        let stage = getAppStage();
+        stage.addChildAt(this.stars, 0); // Add at index 0 to be in background
     }
 
     // Optional: Add subtle parallax effect based on ship movement
@@ -50,10 +52,10 @@ class Starfield {
             star.y -= shipVelocity.y * star.parallaxFactor;
 
             // Wrap stars around screen
-            if (star.x < 0) star.x = this.app.screen.width;
-            if (star.x > this.app.screen.width) star.x = 0;
-            if (star.y < 0) star.y = this.app.screen.height;
-            if (star.y > this.app.screen.height) star.y = 0;
+            if (star.x < 0) star.x = getScreenWidth();
+            if (star.x > getScreenWidth()) star.x = 0;
+            if (star.y < 0) star.y = getScreenHeight();
+            if (star.y > getScreenHeight()) star.y = 0;
         }
     }
 

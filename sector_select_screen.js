@@ -1,13 +1,12 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber, getCurrentSectorIndex } from './globals.js';
+import { STATE_BATTLE, setCurrentSectorIndex, getCurrentMissionNumber, setCurrentMissionNumber, getCurrentSectorIndex, getPixiApp, getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
 
 let sectorSelectContainer = null;
 let selectedSectorIndex = null;
 let currentWaveIndex = 0;
 
 export function showSectorSelect(waveIndex) {
-    let app = getPixiApp();
     currentWaveIndex = waveIndex;
     sectorSelectContainer = new PIXI.Container();
     
@@ -20,13 +19,13 @@ export function showSectorSelect(waveIndex) {
             fontWeight: 'bold'
         }
     });
-    titleText.x = app.screen.width / 2;
+    titleText.x = getScreenWidth() / 2;
     titleText.y = 50;
     titleText.anchor.set(0.5);
     
     // Create two sector options
-    const sector1 = createSectorFrame(app, waveIndex + 1, 0);
-    const sector2 = createSectorFrame(app, waveIndex + 2, 1);
+    const sector1 = createSectorFrame(waveIndex + 1, 0);
+    const sector2 = createSectorFrame(waveIndex + 2, 1);
     
     // Calculate positions to center the frames
     const frameWidth = 300; // Width of each frame
@@ -35,14 +34,14 @@ export function showSectorSelect(waveIndex) {
     const totalWidth = (frameWidth * 2) + spacing;
     
     // Calculate starting X position to center both frames
-    const startX = (app.screen.width - totalWidth) / 2;
+    const startX = (getScreenWidth() - totalWidth) / 2;
     
     // Position frames
     sector1.x = startX;
-    sector1.y = (app.screen.height - frameHeight) / 2;
+    sector1.y = (getScreenHeight() - frameHeight) / 2;
     
     sector2.x = startX + frameWidth + spacing;
-    sector2.y = (app.screen.height - frameHeight) / 2;
+    sector2.y = (getScreenHeight() - frameHeight) / 2;
     
     // Add elements to container
     sectorSelectContainer.addChild(titleText);
@@ -50,10 +49,11 @@ export function showSectorSelect(waveIndex) {
     sectorSelectContainer.addChild(sector2);
     
     // Add container to stage
-    app.stage.addChild(sectorSelectContainer);
+    let stage = getAppStage();
+    stage.addChild(sectorSelectContainer);
 }
 
-function createSectorFrame(app, targetSectorIndex) {
+function createSectorFrame(targetSectorIndex) {
     const frame = new PIXI.Container();
     
     // Create frame background
@@ -147,9 +147,9 @@ export function updateSectorSelect() {
 }
 
 export function hideSectorSelect() {
-    let app = getPixiApp();
     if (sectorSelectContainer) {
-        app.stage.removeChild(sectorSelectContainer);
+        let stage = getAppStage();
+        stage.removeChild(sectorSelectContainer);
         sectorSelectContainer = null;
     }
 }

@@ -1,21 +1,21 @@
 import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
-import { STATE_BATTLE, getPixiApp } from './globals.js';
+import { STATE_BATTLE,   getAppStage, getScreenHeight, getScreenWidth } from './globals.js';
 import { getMainFontStyleTitle } from './fonts.js';
 let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
 
-function createEarthGraphic(app) {
+function createEarthGraphic() {
     const container = new PIXI.Container();
     
     // Calculate dimensions for Earth
-    const earthDiameter = app.screen.height * 1.2; // Make Earth bigger than screen height
+    const earthDiameter = getScreenHeight() * 1.2; // Make Earth bigger than screen height
     const earthRadius = earthDiameter / 2;
     
     // Position Earth at bottom center, 80% below screen (showing only 20%)
-    const earthX = app.screen.width / 2;
-    const earthY = app.screen.height + earthRadius * 0.6; // Increased from 0.4 to 0.6 to show less
+    const earthX = getScreenWidth() / 2;
+    const earthY = getScreenHeight() + earthRadius * 0.6; // Increased from 0.4 to 0.6 to show less
 
     // Create atmospheric glow
     const glow = new PIXI.Graphics();
@@ -82,15 +82,15 @@ function createEarthGraphic(app) {
 }
 
 export function showTitleScreen() {
-    let app = getPixiApp();
+    
     // Create container for title screen elements
     titleContainer = new PIXI.Container();
     
     // Create starfield
-    starfield = new Starfield(app);
+    starfield = new Starfield();
     
     // Add Earth graphic
-    earthGraphic = createEarthGraphic(app);
+    earthGraphic = createEarthGraphic();
     titleContainer.addChild(earthGraphic);
     
 
@@ -101,8 +101,8 @@ export function showTitleScreen() {
         style: fontStyle,
         fill: palette10.white
     });
-    titleText.x = app.screen.width / 2;
-    titleText.y = app.screen.height * 0.3;
+    titleText.x = getScreenWidth() / 2;
+    titleText.y = getScreenHeight() * 0.3;
     titleText.anchor.set(0.5);
     
     // Press space text
@@ -113,8 +113,8 @@ export function showTitleScreen() {
             fontSize: 24
         }
     });
-    pressSpaceText.x = app.screen.width / 2;
-    pressSpaceText.y = app.screen.height * 0.45;
+    pressSpaceText.x = getScreenWidth()/ 2;
+    pressSpaceText.y = getScreenHeight() * 0.45;
     pressSpaceText.anchor.set(0.5);
     
     // Controls text
@@ -126,8 +126,8 @@ export function showTitleScreen() {
             align: 'center'
         }
     });
-    controlsText.x = app.screen.width / 2;
-    controlsText.y = app.screen.height * 0.6;
+    controlsText.x = getScreenWidth() / 2;
+    controlsText.y = getScreenHeight() * 0.6;
     controlsText.anchor.set(0.5);
     
     // Add elements to container
@@ -135,8 +135,10 @@ export function showTitleScreen() {
     titleContainer.addChild(pressSpaceText);
     titleContainer.addChild(controlsText);
     
+
+    let stage = getAppStage();
     // Add container to stage
-    app.stage.addChild(titleContainer);
+    stage.addChild(titleContainer);
     
     // Animate press space text
     const animate = () => {
@@ -158,9 +160,9 @@ export function updateTitleScreen(delta) {
 }
 
 export function hideTitleScreen() {
-    let app = getPixiApp();
+    let stage = getAppStage();
     if (titleContainer) {
-        app.stage.removeChild(titleContainer);
+        stage.removeChild(titleContainer);
         titleContainer = null;
         earthGraphic = null;
     }

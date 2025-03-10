@@ -1,6 +1,7 @@
+import { getAppStage } from "./globals.js";
+
 class EngineParticles {
-    constructor(app) {
-        this.app = app;
+    constructor() {
         this.particles = [];
         this.container = new PIXI.Container();
         this.particleCount = 20;
@@ -11,8 +12,9 @@ class EngineParticles {
             0xFFAA00,  // Yellow
             0xFF5555   // Light Red
         ];
-        
-        app.stage.addChild(this.container);
+
+        let stage = getAppStage();
+        stage.addChild(this.container);
     }
 
     emit(x, y, rotation) {

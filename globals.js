@@ -46,3 +46,17 @@ export function getPixiApp() {
 export function setPixiApp(app) {
     gPixiApp = app;
 }
+
+// TODO : add GetScreenWidth and GetScreenHeight
+export function getScreenWidth() {
+    return gPixiApp.screen.width;
+}
+
+export function getScreenHeight() {
+    return gPixiApp.screen.height;
+}
+
+
+export function getAppStage() {
+    return gPixiApp.stage;
+}

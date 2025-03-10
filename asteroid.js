@@ -1,10 +1,9 @@
 import { palette10 } from './palette.js';
 import { GetSectorAsteroidSize, GetSectorAsteroidSpeed, GetAsteroidToSpawnInfo } from './sectors.js';
-
+import { getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 class Asteroid {
     // spawnns asteroid based on sector description
-    constructor(app, desctorDesc, inSizeName, x, y) {
-        this.app = app;
+    constructor(desctorDesc, inSizeName, x, y) {
         this.sizeName = inSizeName;
         this.sectorDesc = desctorDesc; // on le garde pour les split
 
@@ -36,8 +35,8 @@ class Asteroid {
         this.sprite.endFill();
         
         // Position and velocity
-        this.sprite.x = x || Math.random() * app.screen.width;
-        this.sprite.y = y || Math.random() * app.screen.height;
+        this.sprite.x = x || Math.random() * getScreenWidth();
+        this.sprite.y = y || Math.random() * getScreenHeight();
 
         const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.sizeName);
 
@@ -53,7 +52,8 @@ class Asteroid {
         };
         
         this.radius = maxRadius;
-        app.stage.addChild(this.sprite);
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
     }
 
     getColorForSize() {
@@ -74,14 +74,15 @@ class Asteroid {
         this.sprite.y += this.velocity.y;
 
         // Screen wrapping
-        if (this.sprite.x < 0) this.sprite.x = this.app.screen.width;
-        if (this.sprite.x > this.app.screen.width) this.sprite.x = 0;
-        if (this.sprite.y < 0) this.sprite.y = this.app.screen.height;
-        if (this.sprite.y > this.app.screen.height) this.sprite.y = 0;
+        if (this.sprite.x < 0) this.sprite.x = getScreenWidth();
+        if (this.sprite.x > getScreenWidth()) this.sprite.x = 0;
+        if (this.sprite.y < 0) this.sprite.y = getScreenHeight();
+        if (this.sprite.y > getScreenHeight()) this.sprite.y = 0;
     }
 
     destroy() {
-        this.app.stage.removeChild(this.sprite);
+        let stage = getAppStage();
+        stage.removeChild(this.sprite);
     }
 
     split() {
@@ -98,7 +99,6 @@ class Asteroid {
         const newAsteroids = [];
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
-                this.app,
                 this.sectorDesc,
                 sizeName,
                 this.sprite.x,

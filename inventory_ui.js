@@ -1,6 +1,6 @@
 import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getCurrentSectorIndex, getPixiApp } from './globals.js';
+import { getPixiApp, getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 
 // Variables
 let score = 0;
@@ -9,8 +9,15 @@ let lives = 3;
 let scoreMultiplier = 1;
 let scoreMultiplierTimer = null;
 
+// Animation configuration
+const POWER_UP_ANIMATION = {
+    duration: 500, // milliseconds
+    easing: 'easeOutQuad' // easing function for smooth motion
+};
+
 // Power-up stack management
 let powerUpStack = [];
+let powerUpAnimations = new Map(); // Track ongoing animations
 
 // UI Elements
 let scoreText = null;
@@ -18,7 +25,15 @@ let multiplierText = null;
 let livesText = null;
 let powerUpText = null;
 
+
+let POWER_STACK_LEFT_X_POSITION = null;
+let POWER_STACK_BOTTOM_Y_POSITION = null;
+let POWER_UP_STACK_SPACING = 40;
+
+
 export function InitInventory() {
+    POWER_STACK_LEFT_X_POSITION = getPixiApp().screen.width *0.3;
+    POWER_STACK_BOTTOM_Y_POSITION = getPixiApp().screen.height *0.9;
     setScore(0)
     setLives(3);
     clearScoreMultiplier();
@@ -108,7 +123,7 @@ export function updateLivesUI(lives) {
 }
 
 export function addInventoryUI() {
-    let app = getPixiApp();
+    let stage = getAppStage();
     // Score text
     scoreText = new PIXI.Text({
         text: 'Score: 0',
@@ -119,7 +134,7 @@ export function addInventoryUI() {
     });
     scoreText.x = 10;
     scoreText.y = 10;
-    app.stage.addChild(scoreText);
+    stage.addChild(scoreText);
 
     // Multiplier text
     multiplierText = new PIXI.Text({
@@ -129,9 +144,9 @@ export function addInventoryUI() {
             fontSize: 24
         }
     });
-    multiplierText.x = app.screen.width - 50;
+    multiplierText.x = getScreenWidth - 50;
     multiplierText.y = 10;
-    app.stage.addChild(multiplierText);
+    stage.addChild(multiplierText);
 
   
     // Lives text
@@ -143,8 +158,8 @@ export function addInventoryUI() {
         }
     });
     livesText.x = 10;
-    livesText.y = app.screen.height - 34;
-    app.stage.addChild(livesText);
+    livesText.y = getScreenHeight - 34;
+    stage.addChild(livesText);
 
     // Power-up text
     powerUpText = new PIXI.Text({
@@ -155,12 +170,11 @@ export function addInventoryUI() {
         }
     });
     powerUpText.x = 10;
-    powerUpText.y = app.screen.height - 64;
-    app.stage.addChild(powerUpText);
+    powerUpText.y = getScreenHeight - 64;
+    stage.addChild(powerUpText);
 }
 
 export function removeInventoryUI() {
-    let app = getPixiApp();
     if (scoreText && scoreText.parent) {
         scoreText.parent.removeChild(scoreText);
     }
@@ -179,45 +193,89 @@ export function removeInventoryUI() {
     livesText = null;
     powerUpText = null;
     
+    // Clear all animations
+    powerUpAnimations.clear();
+    
     // Remove power-up graphics
-    powerUpStack.forEach(graphic => {
-        if (graphic && graphic.parent) {
-            graphic.parent.removeChild(graphic);
+    powerUpStack.forEach(powerUp => {
+        if (powerUp.sprite && powerUp.sprite.parent) {
+            powerUp.sprite.parent.removeChild(powerUp.sprite);
         }
     });
     powerUpStack = [];
 }
 
+function easeOutQuad(t) {
+    return t * (2 - t);
+}
+
+function animatePowerUp(powerUp, startX, startY, endX, endY, duration) {
+    const startTime = Date.now();
+    const sprite = powerUp.sprite;
+    
+    // Store animation data
+    powerUpAnimations.set(powerUp, {
+        startTime,
+        startX,
+        startY,
+        endX,
+        endY,
+        duration
+    });
+    
+    // Animation function
+    const animate = () => {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Apply easing
+        const easedProgress = easeOutQuad(progress);
+        
+        // Update position
+        sprite.x = startX + (endX - startX) * easedProgress;
+        sprite.y = startY + (endY - startY) * easedProgress;
+        
+        // Continue animation if not complete
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            // Animation complete
+            powerUpAnimations.delete(powerUp);
+        }
+    };
+    
+    animate();
+}
+
+
 export function addPowerUpToStack(powerUp) {
-    // add the powerUp to the stage (app.stage)
-    const app = getPixiApp();
-    app.stage.addChild(powerUp.sprite);
+    let stage = getAppStage();
+    stage.addChild(powerUp.sprite);
+    
+    // Calculate destination  position
+    const startX = powerUp.sprite.x;
+    const startY = powerUp.sprite.y;
+
+
+    const finalX = POWER_STACK_LEFT_X_POSITION + (powerUpStack.length * POWER_UP_STACK_SPACING);
+    const finalY = POWER_STACK_BOTTOM_Y_POSITION;
+    
+    // Start animation from current position to final position
+    animatePowerUp(
+        powerUp,
+        startX,
+        startY,
+        finalX,
+        finalY,
+        POWER_UP_ANIMATION.duration
+    );
+    
     powerUpStack.push(powerUp);
-    updatePowerUpUI();
+    updatePowerUpStackUI();
 }
 
-export function getAndRemovePowerUpFromTopOfStack() {
-    if (powerUpStack.length === 0) return null;
-    const powerUp = powerUpStack.pop();
-    updatePowerUpUI();
-    return powerUp;
-}
-
-
-function getPowerUpColor(type) {
-    switch(type) {
-        case 'shield':
-            return 0x00FF00; // Green
-        case 'rapid_fire':
-            return 0xFF0000; // Red
-        case 'double_shot':
-            return 0x0000FF; // Blue
-        default:
-            return 0xFFFFFF; // White
-    }
-}
-
-function updatePowerUpUI() {
+function updatePowerUpStackUI() {
     if (powerUpStack.length === 0) {
         if (powerUpText) {
             powerUpText.text = 'No Power-ups';
@@ -229,14 +287,21 @@ function updatePowerUpUI() {
     // Calculate spacing and starting position
     const app = getPixiApp();
     const spacing = 40;
-    const startX = (app.screen.width - (powerUpStack.length * spacing)) / 2;
     const y = app.screen.height - 64;
     
-    // Create and position new graphics
+    // Calculate starting position
+    let target
+    const targetY = POWER_STACK_BOTTOM_Y_POSITION;
+    
+    // Update positions of all power-ups
     powerUpStack.forEach((powerUp, index) => {
-        const graphic = powerUp.sprite;
-        graphic.x = startX + (index * spacing);
-        graphic.y = y;
+        const targetX = POWER_STACK_LEFT_X_POSITION + (index * spacing);
+        
+        // If power-up is not currently being animated, update its position directly
+        if (!powerUpAnimations.has(powerUp)) {
+            powerUp.sprite.x = targetX;
+            powerUp.sprite.y = targetY;
+        }
     });
     
     // Update text
@@ -246,6 +311,14 @@ function updatePowerUpUI() {
         powerUpText.x = 10;
         powerUpText.y = y;
     }
+}
+
+
+export function getAndRemovePowerUpFromTopOfStack() {
+    if (powerUpStack.length === 0) return null;
+    const powerUp = powerUpStack.pop();
+    updatePowerUpStackUI();
+    return powerUp;
 }
 
 

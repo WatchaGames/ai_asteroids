@@ -1,8 +1,7 @@
-import { getPixiApp } from './globals.js';
+import { getPixiApp, getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
 let gameOverContainer = null;
 
 export function showGameOver(score) {
-    let app = getPixiApp();
 
     if(gameOverContainer !=null){
         console.error("Game over screen already exists");
@@ -14,14 +13,14 @@ export function showGameOver(score) {
     // Add semi-transparent black background
     const overlay = new PIXI.Graphics();
     overlay.beginFill(0x000000, 0.8);
-    overlay.drawRect(0, 0, app.screen.width, app.screen.height);
+    overlay.drawRect(0, 0, getScreenWidth(), getScreenHeight());
     overlay.endFill();
     gameOverContainer.addChild(overlay);
     
     // Create vectorized GAME OVER text
     const gameOverBorder = new PIXI.Graphics();
-    const centerX = app.screen.width / 2;
-    const centerY = app.screen.height / 2;
+    const centerX = getScreenWidth() / 2;
+    const centerY = getScreenHeight() / 2;
     
     // Draw main text box with white border
     const textBox = new PIXI.Graphics();
@@ -29,8 +28,8 @@ export function showGameOver(score) {
     textBox.beginFill(0x000000);
     textBox.drawRect(0, 0, 400, 200);
     textBox.endFill();
-    textBox.x = (app.screen.width - 400) / 2;
-    textBox.y = (app.screen.height - 200) / 2;
+    textBox.x = (getScreenWidth() - 400) / 2;
+    textBox.y = (getScreenHeight() - 200) / 2;
     gameOverContainer.addChild(textBox);
 
     // Add "GAME OVER" text in white
@@ -42,8 +41,8 @@ export function showGameOver(score) {
             fontWeight: 'bold'
         }
     });
-    gameOverText.x = (app.screen.width - gameOverText.width) / 2;
-    gameOverText.y = (app.screen.height - gameOverText.height) / 2;
+    gameOverText.x = (getScreenWidth() - gameOverText.width) / 2;
+    gameOverText.y = (getScreenHeight() - gameOverText.height) / 2;
     gameOverContainer.addChild(gameOverText);
 
     // Add final score text in cyan
@@ -55,17 +54,18 @@ export function showGameOver(score) {
             fontWeight: 'bold'
         }
     });
-    finalScoreText.x = (app.screen.width - finalScoreText.width) / 2;
-    finalScoreText.y = (app.screen.height - finalScoreText.height) / 2 + 60;
+    finalScoreText.x = (getScreenWidth() - finalScoreText.width) / 2;
+    finalScoreText.y = (getScreenHeight() - finalScoreText.height) / 2 + 60;
     gameOverContainer.addChild(finalScoreText);
     
-    app.stage.addChild(gameOverContainer);
+    let stage = getAppStage();
+    stage.addChild(gameOverContainer);
     return gameOverContainer;
 }
 
 export function hideGameOver() {
-    let app = getPixiApp();
     // Find and remove the game over container
-    app.stage.removeChild(gameOverContainer);
+    let stage = getAppStage();
+    stage.removeChild(gameOverContainer);
     gameOverContainer = null;
 } 

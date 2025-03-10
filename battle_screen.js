@@ -10,7 +10,7 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getPixiApp } from './globals.js';
+import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getScreenWidth, getScreenHeight } from './globals.js';
 import { removeOneLife, 
     getMultiplier, 
     setScore, 
@@ -52,22 +52,22 @@ const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 let gDebugMode = false;
 let gDebugText = null;
 
-export function addBattleObjects(app) {
+export function addBattleObjects() {
     // Create player
-    gPlayer = new Spaceship(app);
+    gPlayer = new Spaceship();
     
     // Create starfield
-    gStarfield = new Starfield(app);
+    gStarfield = new Starfield();
     
     // Create explosion particles system
-    gExplosionParticles = new ExplosionParticles(app);
+    gExplosionParticles = new ExplosionParticles();
     
 }
 
-export function removeBattleObjects(app) {
+export function removeBattleObjects() {
     
     // Remove all game objects
-    destroyAllGameObjects(app);
+    destroyAllGameObjects();
 }
 
 
@@ -139,41 +139,45 @@ export function stopAllPowerUps() {
     }
 }
 
-export function startSectorWave(app) {
+export function startSectorWave() {
 
-    removeWaveUI(app);
-    addWaveUI(app);
+    removeWaveUI();
+    addWaveUI();
     updateWaveUI(getCurrentSectorIndex());
 
-    const newAsteroids = spawnAsteroidsForWave(app, getCurrentSectorIndex());
+    const newAsteroids = spawnAsteroidsForWave(getCurrentSectorIndex());
     addAsteroids(newAsteroids);
     return getCurrentSectorIndex();
 }
 
-export function destroyAsteroids(app) {
+export function destroyAsteroids() {
+    let stage = getAppStage();
     asteroids.forEach(asteroid => {
-        app.stage.removeChild(asteroid.sprite);
+        stage.removeChild(asteroid.sprite);
     });
     asteroids = [];
 }
 
-export function destroyBullets(app) {
+export function destroyBullets() {
+    let stage = getAppStage();
     bullets.forEach(bullet => {
-        app.stage.removeChild(bullet.sprite);
+        stage.removeChild(bullet.sprite);
     });
     bullets = [];
 }
 
-export function destroyBonuses(app) {
+export function destroyBonuses() {
+    let stage = getAppStage();
     flyingBonuses.forEach(bonus => {
-        app.stage.removeChild(bonus.sprite);
+        stage.removeChild(bonus.sprite);
     });
     flyingBonuses = [];
 }
 
-export function destroyPowerUps(app) {
+export function destroyPowerUps() {
+    let stage = getAppStage();
     flyingPowerUps.forEach(powerUp => {
-        app.stage.removeChild(powerUp.sprite);
+        stage.removeChild(powerUp.sprite);
     });
     flyingPowerUps = [];
 }
@@ -182,23 +186,23 @@ export function addAsteroids(newAsteroids) {
     asteroids.push(...newAsteroids);
 }
 
-export function addBullet(app, x, y, angle) {
-    const bullet = new Bullet(app, x, y, angle);
+export function addBullet(x, y, angle) {
+    const bullet = new Bullet(x, y, angle);
     bullets.push(bullet);
 }
 
-export function addScoreBonusObject(app) {
-    const bonus = new Bonus(app);
+export function addScoreBonusObject() {
+    const bonus = new Bonus();
     flyingBonuses.push(bonus);
 }
 
-export function addPowerUpObject(app, type,posX,posY) {
-    const powerUp = new PowerUp(app, type,posX,posY);
+export function addPowerUpObject(type,posX,posY) {
+    const powerUp = new PowerUp(type,posX,posY);
     flyingPowerUps.push(powerUp);
 }
 
 // return the score to add
-export function destroyAsteroid(app, asteroid, index, explosionParticles) {
+export function destroyAsteroid(asteroid, index, explosionParticles) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -228,7 +232,7 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
         points = 20;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
-        CheckForChanceToDropPowerUpLoot(app,asteroid.sprite.x,asteroid.sprite.y);
+        CheckForChanceToDropPowerUpLoot(asteroid.sprite.x,asteroid.sprite.y);
         
     } else if (asteroid.sizeName === 'medium') {
         points = 50;
@@ -243,16 +247,16 @@ export function destroyAsteroid(app, asteroid, index, explosionParticles) {
     return scoreToAdd;
 }
 
-function CheckForChanceToDropPowerUpLoot(app,posX,posY) {
+function CheckForChanceToDropPowerUpLoot(posX,posY) {
     const sectorDescription = GetSectorDescriptionByIndex(getCurrentSectorIndex());
     const chanceToDropPowerUp = sectorDescription.bonuses;
     if (Math.random() < chanceToDropPowerUp) {
-        addRandomPowerUpObject(app,posX,posY);
+        addRandomPowerUpObject(posX,posY);
     }
 }
 
 // return true if player is dead
-export function checkPlayerCollisions(app, player, explosionParticles) {
+export function checkPlayerCollisions(player, explosionParticles) {
     
     for (let asteroid of asteroids) {
         const dx = player.sprite.x - asteroid.sprite.x;
@@ -276,8 +280,8 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
                 if (gSoundManager) {
                     gSoundManager.play('spaceshipExplode');
                 }
-                player.sprite.x = app.screen.width / 2;
-                player.sprite.y = app.screen.height / 2;
+                player.sprite.x = getScreenWidth()/ 2;
+                player.sprite.y = getScreenHeight() / 2;
                 player.velocity = { x: 0, y: 0 };
                 return false;
             }
@@ -288,7 +292,8 @@ export function checkPlayerCollisions(app, player, explosionParticles) {
 
 
 
-export function checkPowerUpCollisions(app, player) {
+export function checkPowerUpCollisions(player) {
+    let stage = getAppStage();
     for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
         const powerUp = flyingPowerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
@@ -297,7 +302,7 @@ export function checkPowerUpCollisions(app, player) {
         
         if (distance < player.radius + powerUp.radius) { // Use power-up's radius
             // remove the pooweUp from the container (stage)
-            app.stage.removeChild(powerUp.sprite);
+            stage.removeChild(powerUp.sprite);
 
             // done le a l'inventaire
             addPowerUpToStack(powerUp);
@@ -309,21 +314,20 @@ export function checkPowerUpCollisions(app, player) {
 }
 
 export function destroyAllGameObjects() {
-    let app = getPixiApp();
-    destroyAsteroids(app);
-    destroyBullets(app);
-    destroyBonuses(app);
-    destroyPowerUps(app);
+    destroyAsteroids();
+    destroyBullets();
+    destroyBonuses();
+    destroyPowerUps();
 }
 
-export function spawnAsteroidsForWave(app, sectorIndex) {
+export function spawnAsteroidsForWave(sectorIndex) {
     const sectorDescription = GetSectorDescriptionByIndex(sectorIndex);
     const numAsteroids = sectorDescription ? sectorDescription.nbAsteroids : 5; // Default to 5 if sector not found
     console.log(`spawnAsteroidsForWave:${sectorIndex} with:${numAsteroids} asteroids`);
     
-    const centerX = app.screen.width / 2;
-    const centerY = app.screen.height / 2;
-    const minDistanceFromCenter = Math.min(app.screen.width, app.screen.height) * 0.33; // 33% of screen size
+    const centerX = getScreenWidth() / 2;
+    const centerY = getScreenHeight() / 2;
+    const minDistanceFromCenter = Math.min(getScreenWidth(), getScreenHeight()) * 0.33; // 33% of screen size
     
     const newAsteroids = [];
     for (let i = 0; i < numAsteroids; i++) {
@@ -332,7 +336,7 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
         
         // Keep trying until we find a valid position
         while (!validPosition) {
-            asteroid = new Asteroid(app,sectorDescription, 'large');
+            asteroid = new Asteroid(sectorDescription, 'large');
             const dx = asteroid.sprite.x - centerX;
             const dy = asteroid.sprite.y - centerY;
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
@@ -341,7 +345,8 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
                 validPosition = true;
             } else {
                 // Remove the asteroid if position is invalid
-                app.stage.removeChild(asteroid.sprite);
+                let stage = getAppStage();
+                stage.removeChild(asteroid.sprite);
             }
         }
         
@@ -350,7 +355,8 @@ export function spawnAsteroidsForWave(app, sectorIndex) {
     return newAsteroids;
 }
 
-export function checkScorMultipliersCollisions(app) {
+export function checkScorMultipliersCollisions() {
+    let stage = getAppStage();
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = flyingBonuses.length - 1; j >= 0; j--) {
@@ -360,7 +366,7 @@ export function checkScorMultipliersCollisions(app) {
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < 15) { // Collision radius for bonus
                 // Remove bullet and bonus without adding points
-                app.stage.removeChild(bullet.sprite);
+                stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
                 
                 // Store bonus position before destroying
@@ -390,8 +396,9 @@ export function checkScorMultipliersCollisions(app) {
     }
 }
 
-export function checkCollisions(app, explosionParticles) {
+export function checkCollisions(explosionParticles) {
     let scoreToAdd = 0;
+    let stage = getAppStage();
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
         for (let j = asteroids.length - 1; j >= 0; j--) {
@@ -400,9 +407,9 @@ export function checkCollisions(app, explosionParticles) {
             const dy = bullet.sprite.y - asteroid.sprite.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < bullet.radius + asteroid.radius) {
-                app.stage.removeChild(bullet.sprite);
+                stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                scoreToAdd += destroyAsteroid(app, asteroid, j, explosionParticles);
+                scoreToAdd += destroyAsteroid(asteroid, j, explosionParticles);
                 break; // Bullet can only hit one asteroid
             }
         }
@@ -440,23 +447,23 @@ export function updatePowerUps() {
 
 
 
-export function checkForNewBonusesAndPowerUpsOverTime(app) {
+export function checkForNewBonusesAndPowerUpsOverTime() {
     const currentTime = Date.now();
     if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-        addScoreBonusObject(app);
+        addScoreBonusObject();
         lastBonusSpawn = currentTime;
     }
     
     if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
-        addRandomPowerUpObject(app);
+        addRandomPowerUpObject();
         lastPowerUpSpawn = currentTime;
     }
 }
 
-function addRandomPowerUpObject(app,posX,posY) {
+function addRandomPowerUpObject(posX,posY) {
     const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
     if(DEBUG_BATTLE)console.log('Spawning power-up:', powerUpType); // Debug log
-    addPowerUpObject(app, powerUpType,posX,posY);
+    addPowerUpObject(powerUpType,posX,posY);
 }   
 
 export function updateDebugText() {
@@ -470,8 +477,8 @@ export function updateDebugText() {
 
 export function startBattleInCurrentSelectedSector() {
     // Clear any existing game elements
-    let app = getPixiApp();
-    destroyAllGameObjects(app);
+//    let app = getPixiApp();
+    destroyAllGameObjects();
 
     // Destroy any existing battle objects
     if (gStarfield) {
@@ -488,11 +495,11 @@ export function startBattleInCurrentSelectedSector() {
     }
 
     // Create starfield before other game objects
-    gStarfield = new Starfield(app);
-    gExplosionParticles = new ExplosionParticles(app);
+    gStarfield = new Starfield();
+    gExplosionParticles = new ExplosionParticles();
 
     // Game State Variables
-    gPlayer = new Spaceship(app);
+    gPlayer = new Spaceship();
     gPlayer.sprite.visible = false; // Hide player initially
     
 
@@ -506,7 +513,7 @@ export function startBattleInCurrentSelectedSector() {
     gPlayer.resetLocation();
 
     // Start first wave
-    startSectorWave(app);
+    startSectorWave();
 }
 
 
@@ -517,13 +524,12 @@ export function updateBattleState() {
     const starfield = getStarfield();
     const explosionParticles = getExplosionParticles();
     
-    const app = getPixiApp();
 
     player.update();
     starfield.update(player.velocity);
     
     // Check for new bonuses and power-ups
-    checkForNewBonusesAndPowerUpsOverTime(app);
+    checkForNewBonusesAndPowerUpsOverTime();
     
     // Update debug display
     updateDebugText();
@@ -535,20 +541,20 @@ export function updateBattleState() {
     updateBullets();
     updateBonuses();
     updatePowerUps();
-    const scoreToAdd = checkCollisions(app, explosionParticles);
+    const scoreToAdd = checkCollisions(explosionParticles);
     addScore(scoreToAdd);
-    checkScorMultipliersCollisions(app);
-    let playerIsDead = checkPlayerCollisions(app, player, explosionParticles);
+    checkScorMultipliersCollisions();
+    let playerIsDead = checkPlayerCollisions(player, explosionParticles);
     if(playerIsDead) {
         nextState = STATE_GAME_OVER;
     }
     
-    checkPowerUpCollisions(app, player);
+    checkPowerUpCollisions(player);
 
 
 
     if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
-        removeWaveUI(app);
+        removeWaveUI();
 
         nextState = STATE_SECTOR_SELECT;
     }
@@ -590,7 +596,6 @@ export function destroyAnySpaceship() {
 }
 
 export function initBattleDebug() {
-    let app = getPixiApp();
     gDebugMode = false;
     gDebugText = new PIXI.Text({
         text: 'Debug Info',
@@ -602,11 +607,11 @@ export function initBattleDebug() {
     gDebugText.x = 10;
     gDebugText.y = 40;
     gDebugText.visible = gDebugMode;
-    app.stage.addChild(gDebugText);
+    let stage = getAppStage();
+    stage.addChild(gDebugText);
 }
 
 export function removeBattleDebug() {
-//    let app = getPixiApp();
     if(gDebugText !== null){
         gDebugText.destroy();
         gDebugText = null;
@@ -615,49 +620,48 @@ export function removeBattleDebug() {
 
 
 function activatePowerUp(powerUp) {
-
-            // Handle power-up collection
-             switch(powerUp.type) {
-                case 'rearBullet':
-                    // Clear any existing timer
-                    if (rearBulletTimer) {
-                        clearTimeout(rearBulletTimer);
-                    }
-                    // Activate rear bullet power-up
-                    rearBulletActive = true;
-                    // Set timer to deactivate after 10 seconds
-                    rearBulletTimer = setTimeout(() => {
-                        rearBulletActive = false;
-                    }, 10000);
-                    // Play rear bullet power-up sound
-                    if (gSoundManager) {
-                        gSoundManager.play('power_double');
-                    }
-                    break;
-                case 'quadFire':
-                    // Clear any existing timer
-                    if (quadFireTimer) {
-                        clearTimeout(quadFireTimer);
-                    }
-                    // Activate quad fire power-up
-                    quadFireActive = true;
-                    // Set timer to deactivate after 10 seconds
-                    quadFireTimer = setTimeout(() => {
-                        quadFireActive = false;
-                    }, 10000);
-                    // Play quad fire power-up sound
-                    if (gSoundManager) {
-                        gSoundManager.play('power_quad');
-                    }
-                    break;
+    // Handle power-up collection
+        switch(powerUp.type) {
+        case 'rearBullet':
+            // Clear any existing timer
+            if (rearBulletTimer) {
+                clearTimeout(rearBulletTimer);
             }
-        
-        }
+            // Activate rear bullet power-up
+            rearBulletActive = true;
+            // Set timer to deactivate after 10 seconds
+            rearBulletTimer = setTimeout(() => {
+                rearBulletActive = false;
+            }, 10000);
+            // Play rear bullet power-up sound
+            if (gSoundManager) {
+                gSoundManager.play('power_double');
+            }
+            break;
+        case 'quadFire':
+            // Clear any existing timer
+            if (quadFireTimer) {
+                clearTimeout(quadFireTimer);
+            }
+            // Activate quad fire power-up
+            quadFireActive = true;
+            // Set timer to deactivate after 10 seconds
+            quadFireTimer = setTimeout(() => {
+                quadFireActive = false;
+            }, 10000);
+            // Play quad fire power-up sound
+            if (gSoundManager) {
+                gSoundManager.play('power_quad');
+            }
+            break;
+    }
+
+}
 
 
 
 
-export function handleBattleKeyPress(event, app) {
+export function handleBattleKeyPress(event) {
     let nextState = null;
     // Don't process input if player is teleporting or game is over
     if (gPlayer.isTeleporting) return;
@@ -669,6 +673,11 @@ export function handleBattleKeyPress(event, app) {
 
             // activate the power up
             activatePowerUp(powerUp);
+
+            let stage = getAppStage();
+            // temp : remove from the stage and destroy
+            stage.removeChild(powerUp.sprite);
+            powerUp.destroy();
 
             return null;
         }
@@ -690,7 +699,7 @@ export function handleBattleKeyPress(event, app) {
             gPlayer.actionFire(gSoundManager);
             break;
         case 'Shift':
-            gPlayer.tryTeleport(app, gSoundManager);
+            gPlayer.tryTeleport(gSoundManager); //TODO remvoe sound manager parameter
             break;
         case 'd':
         case 'D':
@@ -711,7 +720,7 @@ export function handleBattleKeyPress(event, app) {
         case 'B':
             if (gDebugMode) {
                 console.log('CHEAT:Destroy all game objects');
-                destroyAllGameObjects(app);
+                destroyAllGameObjects();
             }
             break;
     }
@@ -736,7 +745,7 @@ export function handleBattleKeyRelease(event) {
 }
 
 
-function addWaveUI(app) {
+function addWaveUI() {
     // Wave text
     waveText = new PIXI.Text({
         text: 'TOFILL WAVE',
@@ -746,13 +755,14 @@ function addWaveUI(app) {
             fontWeight: 'bold'
         }
     });
-    waveText.x = app.screen.width / 2;
+    waveText.x = getScreenWidth()/ 2;
     waveText.y = 10;
     waveText.anchor.set(0.5, 0); // Center horizontally, align to top
-    app.stage.addChild(waveText);
+    let stage = getAppStage();
+    stage.addChild(waveText);
 }
 
-function removeWaveUI(app) {
+function removeWaveUI() {
     if (waveText && waveText.parent) {
         waveText.parent.removeChild(waveText);
     }

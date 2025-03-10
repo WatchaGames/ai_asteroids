@@ -1,5 +1,7 @@
+import { getScreenWidth, getScreenHeight, getAppStage } from "./globals.js";
+
 class Bullet {
-    constructor(app, x, y, rotation) {
+    constructor(x, y, rotation) {
         this.sprite = new PIXI.Graphics();
         this.sprite.beginFill(0xFFFFFF);
         this.sprite.drawCircle(0, 0, 2);
@@ -11,8 +13,8 @@ class Bullet {
             y: -Math.cos(rotation) * 5
         };
         this.radius = 2;
-        this.app = app;
-        app.stage.addChild(this.sprite);
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
     }
 
     update() {
@@ -20,9 +22,10 @@ class Bullet {
         this.sprite.y += this.velocity.y;
 
         // Remove bullet if off screen
-        if (this.sprite.x < 0 || this.sprite.x > this.app.screen.width ||
-            this.sprite.y < 0 || this.sprite.y > this.app.screen.height) {
-            this.app.stage.removeChild(this.sprite);
+        if (this.sprite.x < 0 || this.sprite.x > getScreenWidth()  ||
+            this.sprite.y < 0 || this.sprite.y > getScreenHeight()) {
+                let stage = getAppStage();
+                stage.removeChild(this.sprite);
             return true;
         }
         return false;

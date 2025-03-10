@@ -1,10 +1,10 @@
 import { palette10 } from './palette.js';
 import { addBullet, getQuadFireActive, getRearBulletActive } from './battle_screen.js';
 import EngineParticles from './engineParticles.js';
+import { getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
 
 class Spaceship {
-    constructor(app) {
-        this.app = app;
+    constructor() {
         this.sprite = new PIXI.Graphics();
         this.sprite.beginFill(palette10.white);
         this.sprite.moveTo(0, -10);
@@ -13,8 +13,8 @@ class Spaceship {
         this.sprite.lineTo(0, -10);
         this.sprite.endFill();
         
-        this.sprite.x = app.screen.width / 2;
-        this.sprite.y = app.screen.height / 2;
+        this.sprite.x = getScreenWidth() / 2;
+        this.sprite.y = getScreenHeight() / 2;
         
         this.velocity = { x: 0, y: 0 };
         this.rotationSpeed = 0.05;
@@ -35,9 +35,9 @@ class Spaceship {
         this.teleportTargetY = 0;
 
         // Initialize engine particles
-        this.engineParticles = new EngineParticles(app);
-        
-        app.stage.addChild(this.sprite);
+        this.engineParticles = new EngineParticles();
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
     }
 
     teleport(newX, newY) {
@@ -57,20 +57,20 @@ class Spaceship {
         this.velocity = { x: 0, y: 0 };
     }
 
-    tryTeleport(app, soundManager) {
+    tryTeleport(soundManager) {
         if (!this.isTeleporting) {
             // Get random position within screen bounds (with padding)
             const padding = 50;  // Keep away from edges
-            const newX = padding + Math.random() * (app.screen.width - 2 * padding);
-            const newY = padding + Math.random() * (app.screen.height - 2 * padding);
+            const newX = padding + Math.random() * (getScreenWidth() - 2 * padding);
+            const newY = padding + Math.random() * (getScreenHeight() - 2 * padding);
             this.teleport(newX, newY);
             soundManager.play('teleport');
         }
     }
 
     resetLocation() {
-        this.sprite.x = this.app.screen.width / 2;
-        this.sprite.y = this.app.screen.height / 2;
+        this.sprite.x = getScreenWidth() / 2;
+        this.sprite.y = getScreenHeight() / 2;
         this.velocity = { x: 0, y: 0 };
         this.sprite.rotation = 0;
     }
@@ -86,17 +86,17 @@ class Spaceship {
             ];
             
             angles.forEach(angle => {
-                addBullet(this.app, this.sprite.x, this.sprite.y, angle);
+                addBullet(this.sprite.x, this.sprite.y, angle);
             });
             soundManager.play('shoot');
         } else if (getRearBulletActive()) {
             // Shoot forward and backward
-            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation);
-            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation + Math.PI);
+            addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation);
+            addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation + Math.PI);
             soundManager.play('shoot');
         } else {
             // Normal forward shot
-            addBullet(this.app, this.sprite.x, this.sprite.y, this.sprite.rotation);
+            addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation);
             soundManager.play('shoot');
         }
     }
@@ -171,10 +171,10 @@ class Spaceship {
         this.sprite.y += this.velocity.y;
         
         // Screen wrapping
-        if (this.sprite.x < 0) this.sprite.x = this.app.screen.width;
-        if (this.sprite.x > this.app.screen.width) this.sprite.x = 0;
-        if (this.sprite.y < 0) this.sprite.y = this.app.screen.height;
-        if (this.sprite.y > this.app.screen.height) this.sprite.y = 0;
+        if (this.sprite.x < 0) this.sprite.x = getScreenWidth();
+        if (this.sprite.x > getScreenWidth()) this.sprite.x = 0;
+        if (this.sprite.y < 0) this.sprite.y = getScreenHeight();
+        if (this.sprite.y > getScreenHeight()) this.sprite.y = 0;
 
         // Update engine particles
         this.engineParticles.update();
