@@ -97,7 +97,7 @@ export function showTitleScreen() {
     const fontStyle = getMainFontStyleTitle();
     // Title text
     const titleText = new PIXI.Text({
-        text: 'Rog_Oids',
+        text: 'Astero FORCE',
         style: fontStyle,
         fill: palette10.white
     });
