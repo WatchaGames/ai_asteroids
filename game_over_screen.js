@@ -1,71 +1,164 @@
-import { getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
-import { getMainFontStyleBig, getMainFontStyleTitle} from './fonts.js';
+import { palette10 } from './palette.js';
+import { getScreenWidth, getScreenHeight, getAppStage, getCurrentMissionNumber, getCurrentSectorIndex } from './globals.js';
+import { getMainFontStyleBig, getMainFontStyleTitle, getMainFontStyleNormal} from './fonts.js';
+import { submitScore, getTopScores } from './supabase_api.js';
+
 let gameOverContainer = null;
+let leaderboardContainer = null;
+let inputElement = null;
+let submitButton = null;
 
-export function showGameOver(score) {
-
-    if(gameOverContainer !=null){
-        console.error("Game over screen already exists");
-        return;
-    }
-    // Create game over overlay
+export function showGameOver(finalScore) {
     gameOverContainer = new PIXI.Container();
     
-    // Add semi-transparent black background
-    const overlay = new PIXI.Graphics();
-    overlay.beginFill(0x000000, 0.8);
-    overlay.drawRect(0, 0, getScreenWidth(), getScreenHeight());
-    overlay.endFill();
-    gameOverContainer.addChild(overlay);
-    
-    // Create vectorized GAME OVER text
-    const gameOverBorder = new PIXI.Graphics();
-    const centerX = getScreenWidth() / 2;
-    const centerY = getScreenHeight() / 2;
-    
-    // Draw main text box with white border
-    const textBoxWidth = 600;
-    const textBoxHeight = 200;
-    const textBox = new PIXI.Graphics();
-    textBox.lineStyle(2, 0xFFFFFF);  // White border
-    textBox.beginFill(0x000000);
-    textBox.drawRect(0, 0, textBoxWidth, textBoxHeight);
-    textBox.endFill();
-    textBox.x = (getScreenWidth() - textBoxWidth) / 2;
-    textBox.y = (getScreenHeight() - textBoxHeight) / 2;
-    gameOverContainer.addChild(textBox);
-
-
-    const fontStyle = getMainFontStyleTitle();
-
-    // Add "GAME OVER" text in white
+    // Game Over text
+    const goTextStyle = getMainFontStyleTitle();
     const gameOverText = new PIXI.Text({
         text: 'GAME OVER',
-        style: fontStyle,
+        style: goTextStyle
     });
-    gameOverText.x = (getScreenWidth() - gameOverText.width) / 2;
-    gameOverText.y = (getScreenHeight() - gameOverText.height) / 2;
-    gameOverContainer.addChild(gameOverText);
-
-    // Add final score text in cyan
-    const scoreFontStyle = getMainFontStyleBig();
-
-    const finalScoreText = new PIXI.Text({
-        text: `Final Score: ${score}`,
-        style: scoreFontStyle,
-   });
-    finalScoreText.x = (getScreenWidth() - finalScoreText.width) / 2;
-    finalScoreText.y = (getScreenHeight() - finalScoreText.height) / 2 + 60;
-    gameOverContainer.addChild(finalScoreText);
+    gameOverText.x = getScreenWidth() / 2;
+    gameOverText.y = getScreenHeight() * 0.2;
+    gameOverText.anchor.set(0.5);
     
+    // Final Score text
+    const goScoreTextStyle = getMainFontStyleBig();
+    const scoreText = new PIXI.Text({
+        text: `Final Score: ${finalScore}`,
+        style: goScoreTextStyle
+    });
+    scoreText.x = getScreenWidth() / 2;
+    scoreText.y = getScreenHeight() * 0.3;
+    scoreText.anchor.set(0.5);
+    
+    // Create input field
+    const inputWidth = 200;
+    const inputHeight = 30;
+
+    const submitButtonWidth = 200;
+    const submitButtonHeight = 30;
+
+    inputElement = document.createElement('input');
+    inputElement.type = 'text';
+    inputElement.placeholder = 'Enter your name';
+    inputElement.style.position = 'absolute';
+
+    // Center the input element
+    inputElement.style.left = (getScreenWidth()/2 - inputWidth / 2) + 'px';
+    inputElement.style.top = (getScreenHeight()/2 - inputHeight - submitButtonHeight) + 'px';
+    inputElement.style.padding = '8px';
+    inputElement.style.fontSize = '16px';
+    inputElement.style.width = inputWidth + 'px';
+    inputElement.style.textAlign = 'center';
+
+    document.body.appendChild(inputElement);
+
+    // Create submit button
+    submitButton = document.createElement('button');
+    submitButton.textContent = 'Submit Score';
+    submitButton.style.position = 'absolute';
+    submitButton.style.left = (getScreenWidth()/2 - submitButtonWidth/ 2) + 'px';
+    submitButton.style.top = (getScreenHeight()/2) + 'px';
+    submitButton.style.width = submitButtonWidth + 'px';
+    submitButton.style.padding = '8px';
+    submitButton.style.fontSize = '16px';
+    submitButton.style.cursor = 'pointer';
+    submitButton.style.textAlign = 'center';
+    submitButton.style.align = 'center';
+    
+    submitButton.onclick = async () => {
+        const playerName = inputElement.value.trim();
+        if (playerName) {
+            submitButton.disabled = true;
+            const success = await submitScore(
+                playerName, 
+                finalScore,
+                getCurrentMissionNumber(),
+                getCurrentSectorIndex()
+            );
+            if (success) {
+                updateLeaderboardDisplay();
+            }
+            // Hide input elements after submission
+            inputElement.style.display = 'none';
+            submitButton.style.display = 'none';
+        }
+    };
+    
+    document.body.appendChild(submitButton);
+
+    // Create and add leaderboard display
+    leaderboardContainer = createLeaderboardDisplay();
+    
+    // Add all elements to container
+    gameOverContainer.addChild(gameOverText);
+    gameOverContainer.addChild(scoreText);
+    gameOverContainer.addChild(leaderboardContainer);
+    
+    // Add container to stage
     let stage = getAppStage();
     stage.addChild(gameOverContainer);
-    return gameOverContainer;
+    
+    // Load initial leaderboard data
+    updateLeaderboardDisplay();
+}
+
+function createLeaderboardDisplay() {
+    const container = new PIXI.Container();
+    
+    const titleText = new PIXI.Text({
+        text: 'HIGH SCORES',
+        style: {
+            fill: palette10.white,
+            fontSize: 24,
+            align: 'center'
+        }
+    });
+    titleText.anchor.set(0.5);
+    titleText.y = getScreenHeight() * 0.6;
+    titleText.x = getScreenWidth() / 2;
+    
+    container.addChild(titleText);
+    return container;
+}
+
+async function updateLeaderboardDisplay() {
+    const scores = await getTopScores();
+    
+    // Clear existing scores
+    while (leaderboardContainer.children.length > 1) { // Keep title
+        leaderboardContainer.removeChildAt(1);
+    }
+    
+    // Add new scores
+    const leaderboardTextStyle = getMainFontStyleNormal();
+    scores.forEach((score, index) => {
+        const scoreText = new PIXI.Text({
+            text: `${index + 1}. ${score.player_name} - ${score.score}`,
+            style: leaderboardTextStyle
+        });
+        scoreText.x = getScreenWidth() / 2;
+        scoreText.y = getScreenHeight() * 0.65 + (index * 30);
+        scoreText.anchor.set(0.5, 0);
+        leaderboardContainer.addChild(scoreText);
+    });
 }
 
 export function hideGameOver() {
-    // Find and remove the game over container
-    let stage = getAppStage();
-    stage.removeChild(gameOverContainer);
-    gameOverContainer = null;
+    if (gameOverContainer) {
+        let stage = getAppStage();
+        stage.removeChild(gameOverContainer);
+        gameOverContainer = null;
+        leaderboardContainer = null;
+    }
+    
+    // Remove HTML elements
+    if (inputElement) {
+        inputElement.remove();
+        inputElement = null;
+    }
+    if (submitButton) {
+        submitButton.remove();
+        submitButton = null;
+    }
 } 
