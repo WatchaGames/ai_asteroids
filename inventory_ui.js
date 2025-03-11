@@ -30,6 +30,7 @@ let POWER_STACK_LEFT_X_POSITION = null;
 let POWER_STACK_BOTTOM_Y_POSITION = null;
 let POWER_UP_STACK_SPACING = 24;
 
+const EMPTY_POWER_UP_TEXT = 'Cargo:No Power-ups\n(Q to use)';
 
 export function InitInventory() {
     setScore(0)
@@ -100,7 +101,6 @@ export function getLives() {
 
 
 export function setLives(newLives) {
-    console.log(`setLives:${newLives}`);
     lives = newLives;
     updateLivesUI(lives);
 }
@@ -116,7 +116,6 @@ export function removeOneLife() {
 
 
 export function updateLivesUI(lives) {
-    console.log(`updateLivesUI:${lives}`);
     if (livesText) {
         livesText.text = `Lives: ${lives}`;
     }
@@ -161,7 +160,7 @@ export function addInventoryUI() {
 
     // Power-up text
     powerUpText = new PIXI.Text({
-        text: 'Cargo:No Power-ups',
+        text: EMPTY_POWER_UP_TEXT,
         style: fontStyle,
     });
     powerUpText.x = 10;
@@ -207,7 +206,7 @@ function easeOutQuad(t) {
     return t * (2 - t);
 }
 
-function animatePowerUp(powerUp, startX, startY, endX, endY, duration) {
+function animatePowerUp(powerUp, startX, startY, endX, endY, duration, destroyPowerUpOnComplete = false) {
     const startTime = Date.now();
     const sprite = powerUp.sprite;
     
@@ -218,7 +217,8 @@ function animatePowerUp(powerUp, startX, startY, endX, endY, duration) {
         startY,
         endX,
         endY,
-        duration
+        duration,
+        destroyOnComplete: destroyPowerUpOnComplete
     });
     
     // Animation function
@@ -240,6 +240,10 @@ function animatePowerUp(powerUp, startX, startY, endX, endY, duration) {
         } else {
             // Animation complete
             powerUpAnimations.delete(powerUp);
+            if (destroyPowerUpOnComplete) {
+                powerUp.sprite.parent.removeChild(powerUp.sprite);
+                powerUp.destroy();
+            }
         }
     };
     
@@ -247,7 +251,7 @@ function animatePowerUp(powerUp, startX, startY, endX, endY, duration) {
 }
 
 
-export function addPowerUpToStack(powerUp) {
+export function addPowerUpToCargoStack(powerUp) {
     let stage = getAppStage();
     stage.addChild(powerUp.sprite);
     
@@ -268,17 +272,31 @@ export function addPowerUpToStack(powerUp) {
         startY,
         finalX,
         finalY,
-        POWER_UP_ANIMATION.duration
+        POWER_UP_ANIMATION.duration,
+        false
     );
     
     powerUpStack.push(powerUp);
     updatePowerUpStackUI();
 }
 
+// throw the power up to the player and destroy it at arrival
+// quick animation towards the player
+export function throwPowerUpPlayerAndDestroyAtArrival(powerUp,player) {
+    let stage = getAppStage();
+
+    const targetX = player.sprite.x;
+    const targetY = player.sprite.y;
+
+    stage.addChild(powerUp.sprite);
+    powerUp.sprite.scale.set(0.66);
+    animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
+}
+
 function updatePowerUpStackUI() {
     if (powerUpStack.length === 0) {
         if (powerUpText) {
-            powerUpText.text = 'Cargo:No Power-ups';
+            powerUpText.text = EMPTY_POWER_UP_TEXT,
             powerUpText.style.fill = palette10.gray;
         }
         return;
@@ -304,15 +322,18 @@ function updatePowerUpStackUI() {
     
     // Update text
     if (powerUpText) {
-        powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}`;
+        powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}\n(Q to use)`;
         powerUpText.style.fill = palette10.white;
     }
 }
 
 
+// also remove the power up from the stage
 export function getAndRemovePowerUpFromTopOfStack() {
     if (powerUpStack.length === 0) return null;
     const powerUp = powerUpStack.pop();
+    // remove the power up from the stage
+    powerUp.sprite.parent.removeChild(powerUp.sprite);
     updatePowerUpStackUI();
     return powerUp;
 }

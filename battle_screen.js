@@ -16,8 +16,9 @@ import { removeOneLife,
     addScore, 
     clearScoreMultiplier, 
     setNewScoreMultiplier, 
-    addPowerUpToStack,
-    getAndRemovePowerUpFromTopOfStack
+    addPowerUpToCargoStack,
+    getAndRemovePowerUpFromTopOfStack,
+    throwPowerUpPlayerAndDestroyAtArrival
     } from './inventory_ui.js';
 
 import { getMainFontStyleNormal } from './fonts.js';
@@ -310,7 +311,7 @@ export function checkPowerUpCollisions(player) {
                 gSoundManager.play('catch_power');
             }
             // done le a l'inventaire
-            addPowerUpToStack(powerUp);
+            addPowerUpToCargoStack(powerUp);
             // Remove power-up
 //            powerUp.destroy();
             flyingPowerUps.splice(i, 1);
@@ -679,11 +680,14 @@ export function handleBattleKeyPress(event) {
             // activate the power up
             activatePowerUp(powerUp);
 
-            let stage = getAppStage();
-            // temp : remove from the stage and destroy
+            // animate the power up to the player (geere pau inventory_ui.js)
+            throwPowerUpPlayerAndDestroyAtArrival(powerUp,gPlayer);
+            gSoundManager.play('throw_power');
+
+/*             // temp : remove from the stage and destroy
             stage.removeChild(powerUp.sprite);
             powerUp.destroy();
-
+ */
             return null;
         }
     }

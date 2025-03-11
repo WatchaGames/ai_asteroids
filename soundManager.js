@@ -21,7 +21,8 @@ class SoundManager {
             powerDouble: 0.5,
             powerQuad: 0.5,
             bonusDouble: 0.5,
-            catchPower: 0.1
+            catchPower: 0.1,
+            throwPower: 0.5
         };
 
         // Initialize all game sounds
@@ -74,6 +75,11 @@ class SoundManager {
             catch_power: new Howl({
                 src: ['sounds/catch_power.wav'],
                 volume: this.config.catchPower
+            }),
+            // add throw sound
+            throw_power: new Howl({
+                src: ['sounds/throw_power.wav'],
+                volume: this.config.throwPower
             })
         };
 
