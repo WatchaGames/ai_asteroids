@@ -45,7 +45,8 @@ import {
     handleBattleKeyRelease,
     initBattleDebug,
     updateBattleState,
-    removeBattleDebug
+    removeBattleDebug,
+    ResetBattleProgress
 } from './battle_screen.js';
 
 
@@ -279,6 +280,7 @@ function exitBootState() {
  */
 function enterTitleState() {
     showTitleScreen();
+    ResetBattleProgress();
 
 }
 function updateTitleState() {

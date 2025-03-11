@@ -9,7 +9,7 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getScreenWidth, getScreenHeight } from './globals.js';
+import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getScreenWidth, getScreenHeight, setCurrentSectorIndex, setCurrentMissionNumber } from './globals.js';
 import { removeOneLife, 
     getMultiplier, 
     addScore, 
@@ -522,6 +522,13 @@ export function updateDebugText() {
         const posY = gPlayer.sprite.y.toFixed(1);
         gDebugText.text = `Rotation: ${rotationDegrees}°\nPosition: (${posX}, ${posY})`;
     }
+}
+
+
+// used to reset battle progress when starting a complet new game
+export function ResetBattleProgress() {
+    setCurrentMissionNumber(1);
+    setCurrentSectorIndex(1);
 }
 
 export function startBattleInCurrentSelectedSector() {
