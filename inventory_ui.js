@@ -159,7 +159,7 @@ export function addInventoryUI() {
 
     // Power-up text
     powerUpText = new PIXI.Text({
-        text: 'No Power-ups',
+        text: 'Cargo:No Power-ups',
         style: fontStyle,
     });
     powerUpText.x = 10;
@@ -271,7 +271,7 @@ export function addPowerUpToStack(powerUp) {
 function updatePowerUpStackUI() {
     if (powerUpStack.length === 0) {
         if (powerUpText) {
-            powerUpText.text = 'No Power-ups';
+            powerUpText.text = 'Cargo:No Power-ups';
             powerUpText.style.fill = palette10.gray;
         }
         return;
@@ -299,7 +299,7 @@ function updatePowerUpStackUI() {
     
     // Update text
     if (powerUpText) {
-        powerUpText.text = `Power-ups: ${powerUpStack.length}`;
+        powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}`;
         powerUpText.style.fill = palette10.white;
         powerUpText.x = 10;
         powerUpText.y = y;

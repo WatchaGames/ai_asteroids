@@ -118,7 +118,7 @@ export function showTitleScreen() {
         fill: palette10.white
     });
     subtitleText.x = getScreenWidth() / 2;
-    subtitleText.y = getScreenHeight() * 0.37;
+    subtitleText.y = getScreenHeight() * 0.36;
     subtitleText.anchor.set(0.5);
 
         // Subtitle text
@@ -128,7 +128,7 @@ export function showTitleScreen() {
         fill: palette10.white
     });
     subtitleText2.x = getScreenWidth() / 2;
-    subtitleText2.y = getScreenHeight() * 0.42;
+    subtitleText2.y = getScreenHeight() * 0.40;
     subtitleText2.alpha = 0.5;
     subtitleText2.anchor.set(0.5);
     

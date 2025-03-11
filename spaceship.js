@@ -18,8 +18,8 @@ class Spaceship {
         
         this.velocity = { x: 0, y: 0 };
         this.rotationSpeed = 0.05;
-        this.thrust = 0.25;
-        this.maxSpeed = 3;
+        this.thrust = 0.2;
+        this.maxSpeed = 2.5;
         this.radius = 10; // For collision detection
         
         this.isRotatingLeft = false;
