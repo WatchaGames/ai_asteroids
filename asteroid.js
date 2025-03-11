@@ -4,10 +4,11 @@ import { getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 class Asteroid {
     // spawnns asteroid based on sector description
     constructor(desctorDesc, inSizeName, x, y) {
-        this.sizeName = inSizeName;
+        this.asteroidType = inSizeName;
         this.sectorDesc = desctorDesc; // on le garde pour les split
+        this.isIndestructible = inSizeName === 'indestructible';
 
-        this.size = GetSectorAsteroidSize(desctorDesc,inSizeName);
+        this.size =  GetSectorAsteroidSize(desctorDesc,inSizeName);
 
         // Create the sprite
         this.sprite = new PIXI.Graphics();
@@ -17,39 +18,47 @@ class Asteroid {
         this.sprite.beginFill(color);
         
         // Generate random polygon shape
-        const vertices = Math.floor(Math.random() * 5) + 5; // 5 to 10 vertices
+        const vertices = this.isIndestructible ? 8 : Math.floor(Math.random() * 5) + 5; // 8 vertices for indestructible
         const angleStep = (Math.PI * 2) / vertices;
         const points = [];
         let maxRadius = 0;
         
         for (let i = 0; i < vertices; i++) {
             const angle = i * angleStep;
-            const radius = this.size * (0.8 + Math.random() * 0.4);
+            const radius = this.size * (this.isIndestructible ? 1 : (0.8 + Math.random() * 0.4));
             if (radius > maxRadius) maxRadius = radius;
             const pointX = Math.cos(angle) * radius;
             const pointY = Math.sin(angle) * radius;
             points.push(pointX, pointY);
         }
         
-        this.sprite.drawPolygon(points);
-        this.sprite.endFill();
+        if (this.isIndestructible) {
+            // For indestructible asteroids, draw with both fill and stroke
+            this.sprite.lineStyle(2, palette10.grape_0);
+            this.sprite.beginFill(color);
+            this.sprite.drawPolygon(points);
+            this.sprite.endFill();
+        } else {
+            // For regular asteroids, just fill
+            this.sprite.beginFill(color);
+            this.sprite.drawPolygon(points);
+            this.sprite.endFill();
+        }
         
         // Position and velocity
         this.sprite.x = x || Math.random() * getScreenWidth();
         this.sprite.y = y || Math.random() * getScreenHeight();
 
-        const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.sizeName);
-
-        //const speed = GetSectorAsteroidSpeed(this.sectorDesc,this.sizeName);
-        const speed = asteroidInfo.speed;
-
-
-        // TODO : handle different movement types of asteroids
-
-        this.velocity = {
-            x: (Math.random() - 0.5) * speed,
-            y: (Math.random() - 0.5) * speed
-        };
+        if (this.isIndestructible) {
+            this.velocity = { x: 0, y: 0 }; // No movement for indestructible asteroids
+        } else {
+            const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.asteroidType);
+            const speed = asteroidInfo.speed;
+            this.velocity = {
+                x: (Math.random() - 0.5) * speed,
+                y: (Math.random() - 0.5) * speed
+            };
+        }
         
         this.radius = maxRadius;
         let stage = getAppStage();
@@ -57,7 +66,9 @@ class Asteroid {
     }
 
     getColorForSize() {
-        switch(this.sizeName) {
+        switch(this.asteroidType) {
+            case 'indestructible':
+                return palette10.grape_1;
             case 'large':
                 return palette10.blue_1;
             case 'medium':
@@ -86,25 +97,25 @@ class Asteroid {
     }
 
     split() {
-        if (this.sizeName === 'large') {
+        if (this.asteroidType === 'large') {
             // check for loot of score  
             return this.createSplitAsteroids('medium', 2);
-        } else if (this.sizeName === 'medium') {
+        } else if (this.asteroidType === 'medium') {
             return this.createSplitAsteroids('small', 2);
         }
         return [];
     }
 
-    createSplitAsteroids(sizeName, count) {
+    createSplitAsteroids(asteroidType, count) {
         const newAsteroids = [];
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
                 this.sectorDesc,
-                sizeName,
+                asteroidType,
                 this.sprite.x,
                 this.sprite.y
             );
-            const speed = GetSectorAsteroidSpeed(this.sectorDesc,sizeName);
+            const speed = GetSectorAsteroidSpeed(this.sectorDesc,asteroidType);
             asteroid.velocity.x = (Math.random() - 0.5) * speed;
             asteroid.velocity.y = (Math.random() - 0.5) * speed;
             newAsteroids.push(asteroid);

@@ -135,6 +135,7 @@ export function GetSectorAsteroidSize(sectorDescription,sizeName){
     if(sizeName == 'large') {return 30; }
     else if(sizeName == 'medium') {return 15; }
     else if(sizeName == 'small') {return 7.5; }
+    else if(sizeName == 'indestructible') {return 40; }
     return 30;
 }
 

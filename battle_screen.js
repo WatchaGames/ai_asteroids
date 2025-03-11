@@ -1,4 +1,3 @@
-
 const DEBUG_BATTLE = false;
 
 import Asteroid from './asteroid.js';
@@ -202,6 +201,21 @@ export function addPowerUpObject(type,posX,posY) {
 
 // return the score to add
 export function hitAsteroid(asteroid, index, explosionParticles) {
+    // Don't destroy indestructible asteroids
+    if (asteroid.isIndestructible) {
+        // Create a small spark effect but don't destroy the asteroid
+        explosionParticles.createExplosion(
+            asteroid.sprite.x,
+            asteroid.sprite.y,
+            0xFFFFFF, // White color for the spark
+            5 // Small explosion
+        );
+        if (gSoundManager) {
+            gSoundManager.play('impact_metal'); // Use hit sound instead of explosion
+        }
+        return 0; // No points for hitting indestructible asteroid
+    }
+
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -214,28 +228,27 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
         asteroid.sprite.x,
         asteroid.sprite.y,
         asteroid.getColorForSize(),
-        explosionSize[asteroid.sizeName]
+        explosionSize[asteroid.asteroidType]
     );
 
     // Play explosion sound
     if (gSoundManager) {
-        gSoundManager.playExplosion(asteroid.sizeName);
+        gSoundManager.playExplosion(asteroid.asteroidType);
     }
     
     // Remove asteroid and update score
-    
     let points = 0;
-    if (asteroid.sizeName === 'large') {
+    if (asteroid.asteroidType === 'large') {
         points = 20;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
         CheckForChanceToDropPowerUpLoot(asteroid.sprite.x,asteroid.sprite.y);
         
-    } else if (asteroid.sizeName === 'medium') {
+    } else if (asteroid.asteroidType === 'medium') {
         points = 50;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
-    } else if (asteroid.sizeName === 'small') {
+    } else if (asteroid.asteroidType === 'small') {
         points = 100;
     }
     asteroid.destroy();
@@ -336,11 +349,36 @@ export function spawnAsteroidsForWave(sectorIndex) {
     const minDistanceFromCenter = Math.min(getScreenWidth(), getScreenHeight()) * 0.33; // 33% of screen size
     
     const newAsteroids = [];
+
+    // Add 1-2 indestructible asteroids randomly positioned but not too close to center
+    const numIndestructible = Math.floor(Math.random() * 2) + 1;
+    for (let i = 0; i < numIndestructible; i++) {
+        let asteroid;
+        let validPosition = false;
+        
+        while (!validPosition) {
+            // Create indestructible asteroid at a random position
+            asteroid = new Asteroid(sectorDescription, 'indestructible');
+            const dx = asteroid.sprite.x - centerX;
+            const dy = asteroid.sprite.y - centerY;
+            const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distanceFromCenter >= minDistanceFromCenter) {
+                validPosition = true;
+            } else {
+                // Remove the asteroid if position is invalid
+                let stage = getAppStage();
+                stage.removeChild(asteroid.sprite);
+            }
+        }
+        newAsteroids.push(asteroid);
+    }
+
+    // Add regular asteroids
     for (let i = 0; i < numAsteroids; i++) {
         let asteroid;
         let validPosition = false;
         
-        // Keep trying until we find a valid position
         while (!validPosition) {
             asteroid = new Asteroid(sectorDescription, 'large');
             const dx = asteroid.sprite.x - centerX;
@@ -557,7 +595,12 @@ export function updateBattleState() {
     
     checkPowerUpCollisions(player);
 
-
+    // check if wave completed
+    // Check if wave is completed (all asteroids destroyed)
+    if (isWaveCompleted()) {
+        removeWaveUI();
+        nextState = STATE_SECTOR_SELECT;
+    }
 
     if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
         removeWaveUI();
@@ -565,6 +608,17 @@ export function updateBattleState() {
         nextState = STATE_SECTOR_SELECT;
     }
     return nextState;
+}
+
+function isWaveCompleted() {
+    // check if all non indestructible asteroids are destroyed
+    let count = 0;
+    for (let asteroid of asteroids) {
+        if (!asteroid.isIndestructible) {
+            count++;
+        }
+    }
+    return count === 0;
 }
 
 // Add getters for the battle objects
