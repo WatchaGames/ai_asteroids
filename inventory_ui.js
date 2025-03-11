@@ -28,12 +28,10 @@ let powerUpText = null;
 
 let POWER_STACK_LEFT_X_POSITION = null;
 let POWER_STACK_BOTTOM_Y_POSITION = null;
-let POWER_UP_STACK_SPACING = 40;
+let POWER_UP_STACK_SPACING = 24;
 
 
 export function InitInventory() {
-    POWER_STACK_LEFT_X_POSITION = getPixiApp().screen.width *0.3;
-    POWER_STACK_BOTTOM_Y_POSITION = getPixiApp().screen.height *0.9;
     setScore(0)
     setLives(3);
     clearScoreMultiplier();
@@ -127,6 +125,10 @@ export function updateLivesUI(lives) {
 export function addInventoryUI() {
     let stage = getAppStage();
 
+    POWER_STACK_LEFT_X_POSITION = getPixiApp().screen.width *0.22;
+    POWER_STACK_BOTTOM_Y_POSITION = getPixiApp().screen.height *0.9;
+
+
     const fontStyle = getMainFontStyleNormal();
 
     // Score text
@@ -163,9 +165,12 @@ export function addInventoryUI() {
         style: fontStyle,
     });
     powerUpText.x = 10;
-    powerUpText.y = getScreenHeight() - 64;
+    powerUpText.y = POWER_STACK_BOTTOM_Y_POSITION;
+    powerUpText.anchor.y = 0.5;
     stage.addChild(powerUpText);
 }
+
+
 
 export function removeInventoryUI() {
     if (scoreText && scoreText.parent) {
@@ -246,10 +251,12 @@ export function addPowerUpToStack(powerUp) {
     let stage = getAppStage();
     stage.addChild(powerUp.sprite);
     
+    // Scale down the power-up sprite to half its size
+    powerUp.sprite.scale.set(0.5);
+    
     // Calculate destination  position
     const startX = powerUp.sprite.x;
     const startY = powerUp.sprite.y;
-
 
     const finalX = POWER_STACK_LEFT_X_POSITION + (powerUpStack.length * POWER_UP_STACK_SPACING);
     const finalY = POWER_STACK_BOTTOM_Y_POSITION;
@@ -278,12 +285,10 @@ function updatePowerUpStackUI() {
     }
     
     // Calculate spacing and starting position
-    const app = getPixiApp();
-    const spacing = 40;
-    const y = app.screen.height - 64;
+    const spacing = POWER_UP_STACK_SPACING;
+//    const y = POWER_STACK_BOTTOM_Y_POSITION;
     
     // Calculate starting position
-    let target
     const targetY = POWER_STACK_BOTTOM_Y_POSITION;
     
     // Update positions of all power-ups
@@ -301,8 +306,6 @@ function updatePowerUpStackUI() {
     if (powerUpText) {
         powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}`;
         powerUpText.style.fill = palette10.white;
-        powerUpText.x = 10;
-        powerUpText.y = y;
     }
 }
 
