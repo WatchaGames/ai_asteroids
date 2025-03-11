@@ -1,14 +1,22 @@
 import { palette10 } from './palette.js';
 import { GetSectorAsteroidSize, GetSectorAsteroidSpeed, GetAsteroidToSpawnInfo } from './sectors.js';
 import { getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
+
+import { getPlayer } from './battle_screen.js';
+
 class Asteroid {
     // spawnns asteroid based on sector description
-    constructor(desctorDesc, inSizeName, x, y) {
+    // optX and optY are optional parameters for setting the initial position (used for splitted asteroids)
+    constructor(desctorDesc, inSizeName) {
         this.asteroidType = inSizeName;
         this.sectorDesc = desctorDesc; // on le garde pour les split
         this.isIndestructible = inSizeName === 'indestructible';
 
         this.size =  GetSectorAsteroidSize(desctorDesc,inSizeName);
+
+        const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.asteroidType);
+        this.speed = asteroidInfo.speed;
+
 
         // Create the sprite
         this.sprite = new PIXI.Graphics();
@@ -25,7 +33,8 @@ class Asteroid {
         
         for (let i = 0; i < vertices; i++) {
             const angle = i * angleStep;
-            const radius = this.size * (this.isIndestructible ? 1 : (0.8 + Math.random() * 0.4));
+            // const radius = this.size * (this.isIndestructible ? 1 : (0.8 + Math.random() * 0.4));
+            const radius = this.size * ((0.8 + Math.random() * 0.4));
             if (radius > maxRadius) maxRadius = radius;
             const pointX = Math.cos(angle) * radius;
             const pointY = Math.sin(angle) * radius;
@@ -34,7 +43,7 @@ class Asteroid {
         
         if (this.isIndestructible) {
             // For indestructible asteroids, draw with both fill and stroke
-            this.sprite.lineStyle(2, palette10.grape_0);
+            this.sprite.lineStyle(3, palette10.grape_0);
             this.sprite.beginFill(color);
             this.sprite.drawPolygon(points);
             this.sprite.endFill();
@@ -44,25 +53,49 @@ class Asteroid {
             this.sprite.drawPolygon(points);
             this.sprite.endFill();
         }
+
+        // default position is center of the screen
+        this.setPosition(getScreenWidth()/2, getScreenHeight()/2);
         
-        // Position and velocity
-        this.sprite.x = x || Math.random() * getScreenWidth();
-        this.sprite.y = y || Math.random() * getScreenHeight();
 
         if (this.isIndestructible) {
-            this.velocity = { x: 0, y: 0 }; // No movement for indestructible asteroids
+            this.setBehaviour('static');
         } else {
-            const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.asteroidType);
-            const speed = asteroidInfo.speed;
-            this.velocity = {
-                x: (Math.random() - 0.5) * speed,
-                y: (Math.random() - 0.5) * speed
-            };
+            this.setBehaviour('default');
         }
         
         this.radius = maxRadius;
         let stage = getAppStage();
         stage.addChild(this.sprite);
+    }
+
+    setBehaviour(behaviour,speed) {
+        if(behaviour == 'aiming') {
+
+            console.log('aiming asteroid');
+            const player = getPlayer();
+            const direction = {
+                x: player.sprite.x - this.sprite.x,
+                y: player.sprite.y - this.sprite.y
+            };
+            const length = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+            this.velocity = {
+                x: direction.x / length * this.speed,
+                y: direction.y / length * this.speed
+            };
+        } else if(behaviour == 'static') {
+            this.velocity = { x: 0, y: 0 }; // No movement for indestructible asteroids
+        } else {
+            this.velocity = {
+                x: (Math.random() - 0.5) * this.speed,
+                y: (Math.random() - 0.5) * this.speed
+            };
+        }
+    }
+
+    setPosition(x,y) {
+        this.sprite.x = x;
+        this.sprite.y = y;
     }
 
     getColorForSize() {
@@ -112,12 +145,14 @@ class Asteroid {
             const asteroid = new Asteroid(
                 this.sectorDesc,
                 asteroidType,
-                this.sprite.x,
-                this.sprite.y
             );
-            const speed = GetSectorAsteroidSpeed(this.sectorDesc,asteroidType);
-            asteroid.velocity.x = (Math.random() - 0.5) * speed;
-            asteroid.velocity.y = (Math.random() - 0.5) * speed;
+            // const speed = GetSectorAsteroidSpeed(this.sectorDesc,asteroidType);
+            const spawnInfo = GetAsteroidToSpawnInfo(this.sectorDesc,asteroidType);
+            asteroid.velocity.x = (Math.random() - 0.5) * spawnInfo.speed;
+            asteroid.velocity.y = (Math.random() - 0.5) * spawnInfo.speed;
+            // set position to the same as the parent asteroid
+            asteroid.setPosition(this.sprite.x, this.sprite.y);
+            asteroid.setBehaviour(spawnInfo.behaviour,spawnInfo.speed);
             newAsteroids.push(asteroid);
         }
         return newAsteroids;

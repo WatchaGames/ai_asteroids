@@ -355,20 +355,25 @@ export function spawnAsteroidsForWave(sectorIndex) {
     for (let i = 0; i < numIndestructible; i++) {
         let asteroid;
         let validPosition = false;
-        
+
+        asteroid = new Asteroid(sectorDescription, 'indestructible');
+
         while (!validPosition) {
+            // rnd pos till valid
+
+            const rndX = Math.random() * getScreenWidth();
+            const rndY = Math.random() * getScreenHeight();
+
+
             // Create indestructible asteroid at a random position
-            asteroid = new Asteroid(sectorDescription, 'indestructible');
-            const dx = asteroid.sprite.x - centerX;
-            const dy = asteroid.sprite.y - centerY;
+            const dx = rndX - centerX;
+            const dy = rndY - centerY;
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
             
             if (distanceFromCenter >= minDistanceFromCenter) {
                 validPosition = true;
-            } else {
-                // Remove the asteroid if position is invalid
-                let stage = getAppStage();
-                stage.removeChild(asteroid.sprite);
+                asteroid.setPosition(rndX, rndY);
+                asteroid.setBehaviour('static');
             }
         }
         newAsteroids.push(asteroid);
@@ -379,18 +384,18 @@ export function spawnAsteroidsForWave(sectorIndex) {
         let asteroid;
         let validPosition = false;
         
+        asteroid = new Asteroid(sectorDescription, 'large');
         while (!validPosition) {
-            asteroid = new Asteroid(sectorDescription, 'large');
-            const dx = asteroid.sprite.x - centerX;
-            const dy = asteroid.sprite.y - centerY;
+            const rndX = Math.random() * getScreenWidth();
+            const rndY = Math.random() * getScreenHeight();
+            const dx = rndX - centerX;
+            const dy = rndY - centerY;
             const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
             
             if (distanceFromCenter >= minDistanceFromCenter) {
                 validPosition = true;
-            } else {
-                // Remove the asteroid if position is invalid
-                let stage = getAppStage();
-                stage.removeChild(asteroid.sprite);
+                asteroid.setPosition(rndX, rndY);
+                asteroid.setBehaviour('default');
             }
         }
         
