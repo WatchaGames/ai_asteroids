@@ -200,7 +200,7 @@ export function addPowerUpObject(type,posX,posY) {
 }
 
 // return the score to add
-export function destroyAsteroid(asteroid, index, explosionParticles) {
+export function hitAsteroid(asteroid, index, explosionParticles) {
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -222,8 +222,6 @@ export function destroyAsteroid(asteroid, index, explosionParticles) {
     }
     
     // Remove asteroid and update score
-    asteroid.destroy();
-    asteroids.splice(index, 1);
     
     let points = 0;
     if (asteroid.sizeName === 'large') {
@@ -239,6 +237,8 @@ export function destroyAsteroid(asteroid, index, explosionParticles) {
     } else if (asteroid.sizeName === 'small') {
         points = 100;
     }
+    asteroid.destroy();
+    asteroids.splice(index, 1);
     
     // Apply score multiplier
     const scoreToAdd = (points * getMultiplier());
@@ -256,6 +256,7 @@ function CheckForChanceToDropPowerUpLoot(posX,posY) {
 // return true if player is dead
 export function checkPlayerCollisions(player, explosionParticles) {
     
+    let indexOfAsteroidHit = 0;
     for (let asteroid of asteroids) {
         const dx = player.sprite.x - asteroid.sprite.x;
         const dy = player.sprite.y - asteroid.sprite.y;
@@ -281,9 +282,13 @@ export function checkPlayerCollisions(player, explosionParticles) {
                 player.sprite.x = getScreenWidth()/ 2;
                 player.sprite.y = getScreenHeight() / 2;
                 player.velocity = { x: 0, y: 0 };
+
+                // Also hit the asteroid like a bullet hit it
+                hitAsteroid(asteroid, indexOfAsteroidHit, explosionParticles);
                 return false;
             }
         }
+        indexOfAsteroidHit++;
     }
     return false;
 }
@@ -396,7 +401,7 @@ export function checkScorMultipliersCollisions() {
     }
 }
 
-export function checkCollisions(explosionParticles) {
+export function checkCollisionsBetweenBulletsAndAsteroids(explosionParticles) {
     let scoreToAdd = 0;
     let stage = getAppStage();
     for (let i = bullets.length - 1; i >= 0; i--) {
@@ -409,7 +414,7 @@ export function checkCollisions(explosionParticles) {
             if (distance < bullet.radius + asteroid.radius) {
                 stage.removeChild(bullet.sprite);
                 bullets.splice(i, 1);
-                scoreToAdd += destroyAsteroid(asteroid, j, explosionParticles);
+                scoreToAdd += hitAsteroid(asteroid, j, explosionParticles);
                 break; // Bullet can only hit one asteroid
             }
         }
@@ -541,7 +546,7 @@ export function updateBattleState() {
     updateBullets();
     updateBonuses();
     updatePowerUps();
-    const scoreToAdd = checkCollisions(explosionParticles);
+    const scoreToAdd = checkCollisionsBetweenBulletsAndAsteroids(explosionParticles);
     addScore(scoreToAdd);
     checkScorMultipliersCollisions();
     let playerIsDead = checkPlayerCollisions(player, explosionParticles);
