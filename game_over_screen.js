@@ -43,9 +43,14 @@ export function showGameOver(finalScore) {
     inputElement.placeholder = 'Enter your name';
     inputElement.style.position = 'absolute';
 
+
+    // get html window width and height
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
     // Center the input element
-    inputElement.style.left = (getScreenWidth()/2 - inputWidth / 2) + 'px';
-    inputElement.style.top = (getScreenHeight()/2 - inputHeight - submitButtonHeight) + 'px';
+    inputElement.style.left = (windowWidth/2 - inputWidth / 2) + 'px';
+    inputElement.style.top = (windowHeight/2 - inputHeight - submitButtonHeight) + 'px';
     inputElement.style.padding = '8px';
     inputElement.style.fontSize = '16px';
     inputElement.style.width = inputWidth + 'px';
@@ -57,8 +62,8 @@ export function showGameOver(finalScore) {
     submitButton = document.createElement('button');
     submitButton.textContent = 'Submit Score';
     submitButton.style.position = 'absolute';
-    submitButton.style.left = (getScreenWidth()/2 - submitButtonWidth/ 2) + 'px';
-    submitButton.style.top = (getScreenHeight()/2) + 'px';
+    submitButton.style.left = (windowWidth/2 - submitButtonWidth/ 2) + 'px';
+    submitButton.style.top = (windowHeight/2) + 'px';
     submitButton.style.width = submitButtonWidth + 'px';
     submitButton.style.padding = '8px';
     submitButton.style.fontSize = '16px';
