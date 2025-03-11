@@ -1,4 +1,4 @@
-export const GAME_VERSION = '16';
+export const GAME_VERSION = '18';
 
 
 
