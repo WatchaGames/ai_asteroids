@@ -111,16 +111,13 @@ export function showGameOver(finalScore) {
 function createLeaderboardDisplay() {
     const container = new PIXI.Container();
     
+    const fontStyle = getMainFontStyleBig();
     const titleText = new PIXI.Text({
         text: 'HIGH SCORES',
-        style: {
-            fill: palette10.white,
-            fontSize: 24,
-            align: 'center'
-        }
+        style: fontStyle
     });
     titleText.anchor.set(0.5);
-    titleText.y = getScreenHeight() * 0.6;
+    titleText.y = getScreenHeight() * 0.62;
     titleText.x = getScreenWidth() / 2;
     
     container.addChild(titleText);
@@ -134,7 +131,7 @@ async function updateLeaderboardDisplay() {
     while (leaderboardContainer.children.length > 1) { // Keep title
         leaderboardContainer.removeChildAt(1);
     }
-    
+    const heightOfLeaderboardEntry = 20;
     // Add new scores
     const leaderboardTextStyle = getMainFontStyleNormal();
     scores.forEach((score, index) => {
@@ -143,7 +140,7 @@ async function updateLeaderboardDisplay() {
             style: leaderboardTextStyle
         });
         scoreText.x = getScreenWidth() / 2;
-        scoreText.y = getScreenHeight() * 0.65 + (index * 30);
+        scoreText.y = getScreenHeight() * 0.65 + (index * heightOfLeaderboardEntry);
         scoreText.anchor.set(0.5, 0);
         leaderboardContainer.addChild(scoreText);
     });
