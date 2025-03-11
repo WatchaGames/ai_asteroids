@@ -20,7 +20,8 @@ class SoundManager {
             spaceshipExplode: 0.5,
             powerDouble: 0.5,
             powerQuad: 0.5,
-            bonusDouble: 0.5
+            bonusDouble: 0.5,
+            catchPower: 0.1
         };
 
         // Initialize all game sounds
@@ -69,6 +70,10 @@ class SoundManager {
             bonus_double: new Howl({
                 src: ['sounds/bonus_double.wav'],
                 volume: this.config.bonusDouble
+            }),
+            catch_power: new Howl({
+                src: ['sounds/catch_power.wav'],
+                volume: this.config.catchPower
             })
         };
 

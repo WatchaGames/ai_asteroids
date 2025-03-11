@@ -13,8 +13,6 @@ import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getScreenWidth, getScreenHeight } from './globals.js';
 import { removeOneLife, 
     getMultiplier, 
-    setScore, 
-    setLives, 
     addScore, 
     clearScoreMultiplier, 
     setNewScoreMultiplier, 
@@ -303,7 +301,9 @@ export function checkPowerUpCollisions(player) {
         if (distance < player.radius + powerUp.radius) { // Use power-up's radius
             // remove the pooweUp from the container (stage)
             stage.removeChild(powerUp.sprite);
-
+            if (gSoundManager) {
+                gSoundManager.play('catch_power');
+            }
             // done le a l'inventaire
             addPowerUpToStack(powerUp);
             // Remove power-up

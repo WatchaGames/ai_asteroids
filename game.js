@@ -81,10 +81,16 @@ async function initGame() {
 
 
     // get the screen size from the window
-/*     const screenWidth = screen.width;
-    const screenHeight = (screenWidth*3)/4;
+     const screenWidth = screen.width;
+//    const screenHeight = (screenWidth*3)/4;
+
+    let canvasWidth = 800;
+
+/*     if(screenWidth < canvasWidth) {
+        console.log(`screenWidth < canvasWidth: ${screenWidth} < ${canvasWidth}`);
+        canvasWidth = screenWidth;
+    }
  */
-    const canvasWidth = 800;
     const canvasHeight = (canvasWidth*3)/4;
 
 //    console.log(`screenWidth: ${screenWidth}, screenHeight: ${screenHeight}`);
@@ -94,11 +100,12 @@ async function initGame() {
         width: canvasWidth,
         height: canvasHeight,
         background: 0x000000,
-        antialias: true,
-//        resolution: window.devicePixelRatio || 1,
-//        autoDensity: true,
+        //antialias: true,
+        // resolution: window.devicePixelRatio || 1,
+        // autoDensity: true,
         backgroundAlpha: 1,
         powerPreference: "high-performance",
+        scaleToWindow: true,
     });
 
     // Set the global PixiJS Application
