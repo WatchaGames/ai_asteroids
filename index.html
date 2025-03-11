@@ -2,10 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
     <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
-    <title>Game</title>
+    <title>RogOids</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #222222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none; /* Prevents default touch behaviors */
+        }
+
+
+        /* Prevent text selection */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Prevent pull-to-refresh on mobile */
+        html {
+            overscroll-behavior: none;
+        }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <script src="https://pixijs.download/release/pixi.min.js"></script>
     <script src="game.js" type="module"></script>

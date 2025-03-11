@@ -6,8 +6,10 @@ let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
 
-const gameName = 'Astero FORCE';
-const gameSubtitle = 'How far can you clean deep space ?';
+const gameName = 'Astero FORCE 2025';
+const gameSubtitle = 'How far will you clean deep space ?';
+const gameAuthor = 'by GlaudeSoft';
+const gameSubtitle2 = '(and maybe find alien relics)';
 
 function createEarthGraphic() {
     const container = new PIXI.Container();
@@ -118,6 +120,17 @@ export function showTitleScreen() {
     subtitleText.x = getScreenWidth() / 2;
     subtitleText.y = getScreenHeight() * 0.37;
     subtitleText.anchor.set(0.5);
+
+        // Subtitle text
+    const subtitleText2 = new PIXI.Text({
+        text: gameSubtitle2,
+        style: subtitleFontStyle,
+        fill: palette10.white
+    });
+    subtitleText2.x = getScreenWidth() / 2;
+    subtitleText2.y = getScreenHeight() * 0.42;
+    subtitleText2.alpha = 0.5;
+    subtitleText2.anchor.set(0.5);
     
 
 
@@ -160,6 +173,7 @@ export function showTitleScreen() {
     // Add elements to container
     titleContainer.addChild(titleText);
     titleContainer.addChild(subtitleText);
+    titleContainer.addChild(subtitleText2);
     titleContainer.addChild(pressSpaceText);
     titleContainer.addChild(controlsText);
     titleContainer.addChild(versionText);

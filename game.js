@@ -73,18 +73,32 @@ const SOUND_CONFIG = {
     powerQuad: 0.5     // Add quad fire power-up sound
 };
 
+
+
+
 async function initGame() {
     // Initialize PixiJS Application
+
+
+    // get the screen size from the window
+/*     const screenWidth = screen.width;
+    const screenHeight = (screenWidth*3)/4;
+ */
+    const canvasWidth = 800;
+    const canvasHeight = (canvasWidth*3)/4;
+
+//    console.log(`screenWidth: ${screenWidth}, screenHeight: ${screenHeight}`);
+
     const app = new PIXI.Application();
     await app.init({
-        width: 800,
-        height: 600,
+        width: canvasWidth,
+        height: canvasHeight,
         background: 0x000000,
         antialias: true,
-        resolution: window.devicePixelRatio || 1,
-        autoDensity: true,
+//        resolution: window.devicePixelRatio || 1,
+//        autoDensity: true,
         backgroundAlpha: 1,
-        powerPreference: "high-performance"
+        powerPreference: "high-performance",
     });
 
     // Set the global PixiJS Application

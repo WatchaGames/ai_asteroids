@@ -34,7 +34,7 @@ export async function LoadFonts() {
 
     gMainFontStyleTitle = new PIXI.TextStyle({
         fontFamily: gMainFont.family,
-        fontSize: 128,
+        fontSize: 96,
         fill: '#ffffff'
     });
 }
