@@ -17,9 +17,9 @@ class Spaceship {
         this.sprite.y = getScreenHeight() / 2;
         
         this.velocity = { x: 0, y: 0 };
-        this.rotationSpeed = 0.05;
+        this.rotationSpeed = 0.04;
         this.thrust = 0.2;
-        this.maxSpeed = 2.5;
+        this.maxSpeed = 2.3;
         this.radius = 10; // For collision detection
         
         this.isRotatingLeft = false;

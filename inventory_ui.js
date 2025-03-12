@@ -15,6 +15,8 @@ const POWER_UP_ANIMATION = {
     easing: 'easeOutQuad' // easing function for smooth motion
 };
 
+const INVENTORY_UI_Z_ORDER = 100;
+
 // Power-up stack management
 let powerUpStack = [];
 let powerUpAnimations = new Map(); // Track ongoing animations
@@ -37,7 +39,34 @@ export function InitInventory() {
     setLives(3);
     clearScoreMultiplier();
     setNewScoreMultiplier(1);
+    ResetScoreMultiplierTimer();
+
 }
+
+
+const SCORE_MULTIPLIER_TIMER_DURATION = 180;
+
+
+function ResetScoreMultiplierTimer() {
+    timeTillNextBonusMultiplierChange = SCORE_MULTIPLIER_TIMER_DURATION;
+}
+
+let timeTillNextBonusMultiplierChange = 0;
+
+// deltattim 
+export function updateInventory() {
+
+
+    if(timeTillNextBonusMultiplierChange > 0)
+    {
+        timeTillNextBonusMultiplierChange--;
+        if(timeTillNextBonusMultiplierChange <1){
+            ReduceScoreMultiplier();
+            ResetScoreMultiplierTimer();
+        }
+    }
+}
+
 
 // SCORE
 export function getScore() {
@@ -72,15 +101,28 @@ export function clearScoreMultiplier() {
     }
 }
 
-export function setNewScoreMultiplier(newMultiplier) {
-    scoreMultiplier = newMultiplier;
-    if (scoreMultiplierTimer) {
-        clearTimeout(scoreMultiplierTimer);
-        scoreMultiplierTimer = null;
+export function addToScoreMultiplier(multiplierToAdd) {
+    if(scoreMultiplier == 1 )
+    {
+        setNewScoreMultiplier(multiplierToAdd);
+    }else{
+        setNewScoreMultiplier(scoreMultiplier + multiplierToAdd);
     }
-    updateScoreMultiplierUI(scoreMultiplier);
-
 }
+
+function setNewScoreMultiplier(newMultiplier) {
+    scoreMultiplier = newMultiplier;
+    updateScoreMultiplierUI(scoreMultiplier);
+    ResetScoreMultiplierTimer();
+}
+
+function ReduceScoreMultiplier() {
+    if(scoreMultiplier < 2)return;
+    setNewScoreMultiplier(scoreMultiplier / 2);
+    
+}
+
+
 
 
 export function updateScoreMultiplierUI(multiplier) {
@@ -135,6 +177,8 @@ export function addInventoryUI() {
         text: 'Score: 0',
         style: fontStyle,
     });
+    // set z order in front of the main game    
+    scoreText.zIndex = INVENTORY_UI_Z_ORDER;
     scoreText.x = 10;
     scoreText.y = 10;
     stage.addChild(scoreText);
@@ -144,6 +188,9 @@ export function addInventoryUI() {
         text: '[MULT]',
         style: fontStyle,
     });
+
+    // set z order in front of the main game    
+    multiplierText.zIndex = INVENTORY_UI_Z_ORDER;
     multiplierText.x = scoreText.x;
     multiplierText.y = scoreText.y + scoreText.height;
     stage.addChild(multiplierText);
@@ -154,6 +201,8 @@ export function addInventoryUI() {
         text: 'Lives: 3',
         style: fontStyle,
     });
+    // set z order in front of the main game    
+    livesText.zIndex = INVENTORY_UI_Z_ORDER;
     livesText.x = getScreenWidth() - 100;
     livesText.y = 10;
     stage.addChild(livesText);
@@ -162,7 +211,9 @@ export function addInventoryUI() {
     powerUpText = new PIXI.Text({
         text: EMPTY_POWER_UP_TEXT,
         style: fontStyle,
-    });
+    }); 
+    // set z order in front of the main game    
+    powerUpText.zIndex = INVENTORY_UI_Z_ORDER;
     powerUpText.x = 10;
     powerUpText.y = POWER_STACK_BOTTOM_Y_POSITION;
     powerUpText.anchor.y = 0.5;
@@ -248,6 +299,19 @@ function animatePowerUp(powerUp, startX, startY, endX, endY, duration, destroyPo
     };
     
     animate();
+}
+
+
+export function flyScoreBonusToScoreBonus(powerUp) {
+    let stage = getAppStage();
+    stage.addChild(powerUp.sprite);
+    powerUp.sprite.scale.set(0.5);
+
+    // get pos of score bonus
+    const scoreBonusPosX = scoreText.x;
+    const scoreBonusPosY = scoreText.y;
+
+    animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, scoreBonusPosX, scoreBonusPosY, POWER_UP_ANIMATION.duration, true);
 }
 
 

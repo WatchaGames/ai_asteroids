@@ -12,11 +12,12 @@ import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME
 import { removeOneLife, 
     getMultiplier, 
     addScore, 
-    clearScoreMultiplier, 
-    setNewScoreMultiplier, 
     addPowerUpToCargoStack,
     getAndRemovePowerUpFromTopOfStack,
-    throwPowerUpPlayerAndDestroyAtArrival
+    throwPowerUpPlayerAndDestroyAtArrival,
+    flyScoreBonusToScoreBonus,
+    addToScoreMultiplier,
+    updateInventory
     } from './inventory_ui.js';
 
 import { getMainFontStyleNormal } from './fonts.js';
@@ -301,14 +302,16 @@ export function checkPowerUpCollisions(player) {
             // Handle different power-up types
             if (powerUp.type === 'scoreBonus') {
                 // Immediately activate score multiplier
-                clearScoreMultiplier();
-                setNewScoreMultiplier(2);
+//                clearScoreMultiplier();
+                addToScoreMultiplier(2);
                 if (gSoundManager) {
                     gSoundManager.play('bonus_double');
                 }
-                // Remove the power-up
+                // fly the score bonus to the score bonus
+                flyScoreBonusToScoreBonus(powerUp);
+/*                 // Remove the power-up
                 powerUp.destroy();
-                flyingPowerUps.splice(i, 1);
+ */                flyingPowerUps.splice(i, 1);
             } else {
                 // Add other power-ups to cargo stack
                 addPowerUpToCargoStack(powerUp);
@@ -390,46 +393,6 @@ export function spawnAsteroidsForWave(sectorIndex) {
     return newAsteroids;
 }
 
-export function checkScorMultipliersCollisions() {
-    let stage = getAppStage();
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        const bullet = bullets[i];
-        for (let j = flyingPowerUps.length - 1; j >= 0; j--) {
-            const bonus = flyingPowerUps[j];
-            const dx = bullet.sprite.x - bonus.sprite.x;
-            const dy = bullet.sprite.y - bonus.sprite.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 15) { // Collision radius for bonus
-                // Remove bullet and bonus without adding points
-                stage.removeChild(bullet.sprite);
-                bullets.splice(i, 1);
-                
-                // Store bonus position before destroying
-                const startX = bonus.sprite.x;
-                const startY = bonus.sprite.y;
-                const targetX = 10; // Score text X position
-                const targetY = 10; // Score text Y position
-                bonus.destroy();
-                flyingPowerUps.splice(j, 1);
-                
-                // Clear any existing multiplier timer
-                clearScoreMultiplier();
-                
-                // Activate score multiplier
-                setNewScoreMultiplier(2);
-                
-                // Play bonus sound
-                if (gSoundManager) {
-                    gSoundManager.play('bonus_double');
-                }
-                
-                // Show bonus text at bonus location
-                setNewScoreMultiplier(2);
-                
-            }
-        }
-    }
-}
 
 export function checkCollisionsBetweenBulletsAndAsteroids(explosionParticles) {
     let scoreToAdd = 0;
@@ -600,6 +563,9 @@ export function updateBattleState() {
     }
     
     checkPowerUpCollisions(player);
+
+    updateInventory();
+
 
     // Check if wave is completed (all asteroids destroyed)
     if (isWaveCompleted()) {
