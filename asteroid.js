@@ -1,5 +1,5 @@
 import { palette10 } from './palette.js';
-import { GetSectorAsteroidSize, GetSectorAsteroidSpeed, GetAsteroidToSpawnInfo } from './sectors.js';
+import { GetAsteroidToSpawnInfo } from './sectors.js';
 import { getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 
 import { getPlayer } from './battle_screen.js';
@@ -12,11 +12,9 @@ class Asteroid {
         this.sectorDesc = desctorDesc; // on le garde pour les split
         this.isIndestructible = inSizeName === 'indestructible';
 
-        this.size =  GetSectorAsteroidSize(desctorDesc,inSizeName);
-
+        // get specs of asteroid to spawn from its type and sector description
         const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.asteroidType);
-        this.speed = asteroidInfo.speed;
-
+        this.size = asteroidInfo.size;
 
         // Create the sprite
         this.sprite = new PIXI.Graphics();
@@ -26,6 +24,7 @@ class Asteroid {
         this.sprite.beginFill(color);
         
         // Generate random polygon shape
+        // indestructible asteroids have 8 vertices, other asteroids have a random number of vertices between 5 and 8
         const vertices = this.isIndestructible ? 8 : Math.floor(Math.random() * 5) + 5; // 8 vertices for indestructible
         const angleStep = (Math.PI * 2) / vertices;
         const points = [];
@@ -59,9 +58,9 @@ class Asteroid {
         
 
         if (this.isIndestructible) {
-            this.setBehaviour('static');
+            this.setBehaviour('static',asteroidInfo.speed);
         } else {
-            this.setBehaviour('default');
+            this.setBehaviour('default',asteroidInfo.speed);
         }
         
         this.radius = maxRadius;
@@ -70,6 +69,7 @@ class Asteroid {
     }
 
     setBehaviour(behaviour,speed) {
+        this.speed = speed;
         if(behaviour == 'aiming') {
 
             console.log('aiming asteroid');
@@ -129,33 +129,45 @@ class Asteroid {
         stage.removeChild(this.sprite);
     }
 
+    // large and medium asteroids can split into 2 smaller asteroids
     split() {
         if (this.asteroidType === 'large') {
             // check for loot of score  
-            return this.createSplitAsteroids('medium', 2);
+            return this.createSplitAsteroids('medium', 2, this.sprite.x, this.sprite.y);
         } else if (this.asteroidType === 'medium') {
-            return this.createSplitAsteroids('small', 2);
+            return this.createSplitAsteroids('small', 2, this.sprite.x, this.sprite.y);
         }
         return [];
     }
 
-    createSplitAsteroids(asteroidType, count) {
+    // create split asteroids at location
+    createSplitAsteroids(asteroidType, count, x, y) {
         const newAsteroids = [];
         for (let i = 0; i < count; i++) {
             const asteroid = new Asteroid(
                 this.sectorDesc,
                 asteroidType,
             );
-            // const speed = GetSectorAsteroidSpeed(this.sectorDesc,asteroidType);
             const spawnInfo = GetAsteroidToSpawnInfo(this.sectorDesc,asteroidType);
-            asteroid.velocity.x = (Math.random() - 0.5) * spawnInfo.speed;
+/*             asteroid.velocity.x = (Math.random() - 0.5) * spawnInfo.speed;
             asteroid.velocity.y = (Math.random() - 0.5) * spawnInfo.speed;
-            // set position to the same as the parent asteroid
-            asteroid.setPosition(this.sprite.x, this.sprite.y);
-            asteroid.setBehaviour(spawnInfo.behaviour,spawnInfo.speed);
+ */            asteroid.setPosition(x,y);
+
+            // if to close to player then cannot be aiming
+            if(this.isTooCloseToPlayer(x,y)) {
+                asteroid.setBehaviour('default',spawnInfo.speed);
+            }else{
+                asteroid.setBehaviour(spawnInfo.behaviour,spawnInfo.speed);
+            }
+
             newAsteroids.push(asteroid);
         }
         return newAsteroids;
+    }
+
+    isTooCloseToPlayer(x,y) {
+        const distance = Math.sqrt((x - this.sprite.x) ** 2 + (y - this.sprite.y) ** 2);
+        return distance < getScreenWidth()*0.1;
     }
 }
 

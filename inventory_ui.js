@@ -322,7 +322,7 @@ function updatePowerUpStackUI() {
     
     // Update text
     if (powerUpText) {
-        powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}\n(Q to use)`;
+        powerUpText.text = `Cargo Power-ups: ${powerUpStack.length}\n(CTRL to use)`;
         powerUpText.style.fill = palette10.white;
     }
 }

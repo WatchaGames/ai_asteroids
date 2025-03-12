@@ -133,7 +133,7 @@ export function GetSectorDescriptionByIndex(index){
     return null;
 }
 
-export function GetSectorAsteroidSize(sectorDescription,asteroidType){
+function GetSectorAsteroidSize(sectorDescription,asteroidType){
     if(asteroidType == 'large') {return 30; }
     else if(asteroidType == 'medium') {return 15; }
     else if(asteroidType == 'small') {return 7.5; }
@@ -162,18 +162,24 @@ function GetAsteroidsConfig(sectorDescription){
 export function GetAsteroidToSpawnInfo(sectorDescription,inAsteroidType){
     let ret = {
         asteroidType: inAsteroidType,
-        speed: 2,
-        behaviour: 'straight'
+        speed: 0,
+        behaviour: null,
+        size: 0
     }
+
+    ret.size = GetSectorAsteroidSize(sectorDescription,inAsteroidType);
+
     const config = GetAsteroidsConfig(sectorDescription);
     const probabilities = config.probabilities;
     
     
-    // behaviour
+    // behaviour random from probabilities
     const random = Math.random();
+
     if(random < probabilities.straight) {ret.behaviour = 'straight'; }
     else if(random < probabilities.orbiting) {ret.behaviour = 'orbiting'; }
     else {ret.behaviour = 'aiming'; }
+    
     ret.speed = GetSectorAsteroidSpeed(sectorDescription,ret.sizeName) * config.speedMultiplier;
     return ret;
 }

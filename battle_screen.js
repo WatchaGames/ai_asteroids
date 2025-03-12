@@ -373,7 +373,6 @@ export function spawnAsteroidsForWave(sectorIndex) {
             if (distanceFromCenter >= minDistanceFromCenter) {
                 validPosition = true;
                 asteroid.setPosition(rndX, rndY);
-                asteroid.setBehaviour('static');
             }
         }
         newAsteroids.push(asteroid);
@@ -395,7 +394,6 @@ export function spawnAsteroidsForWave(sectorIndex) {
             if (distanceFromCenter >= minDistanceFromCenter) {
                 validPosition = true;
                 asteroid.setPosition(rndX, rndY);
-                asteroid.setBehaviour('default');
             }
         }
         
