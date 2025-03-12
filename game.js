@@ -58,22 +58,6 @@ let GAME_DEBUG = false;
 
 // Game state variables
 
-// Sound configuration
-const SOUND_CONFIG = {
-    thrust: 0.2,        // Reduced from 0.5
-    shoot: 0.3,
-    explosionLarge: 0.4,
-    explosionMedium: 0.4,
-    explosionSmall: 0.4,
-    gameOver: 0.6,
-    teleport: 0.3,    // Add teleport sound
-    spaceshipExplode: 0.5,  // Add spaceship explosion sound
-    bonus: 0.5,  // Add bonus sound
-    powerUp: 0.5,  // Add power-up sound
-    powerDouble: 0.5,  // Add rear bullet power-up sound
-    powerQuad: 0.5     // Add quad fire power-up sound
-};
-
 
 
 
@@ -248,7 +232,7 @@ function updateGameState() {
 
 function enterBootState() {
     // Initialize game assets and settings
-    InitSoundManager(SOUND_CONFIG);
+    InitSoundManager();
     // Show loading screen
     showLoadingScreen();
     

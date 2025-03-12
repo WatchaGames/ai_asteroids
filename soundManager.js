@@ -1,5 +1,3 @@
-
-
 let gSoundManager = null;
 
 function InitSoundManager(config){
@@ -7,10 +5,10 @@ function InitSoundManager(config){
 }
 
 class SoundManager {
-    constructor(config) {
+    constructor() {
         // Use provided config or default values
-        this.config = config || {
-            thrust: 0.5,
+        this.config =  {
+            thrust: 0.1,
             shoot: 0.3,
             explosionLarge: 0.4,
             explosionMedium: 0.4,
@@ -18,12 +16,12 @@ class SoundManager {
             gameOver: 0.6,
             teleport: 0.3,
             spaceshipExplode: 0.5,
-            powerDouble: 0.5,
-            powerQuad: 0.5,
-            bonusDouble: 0.5,
-            catchPower: 0.1,
-            throwPower: 0.5,
-            impactMetal: 0.1
+            power_double: 0.5,
+            power_quad: 0.5,
+            bonus_double: 0.5,
+            catch_power: 0.5,
+            throw_power: 0.5,
+            impact_metal: 0.1
         };
 
         // Initialize all game sounds
@@ -63,29 +61,27 @@ class SoundManager {
             }),
             power_double: new Howl({
                 src: ['sounds/power_double.wav'],
-                volume: this.config.powerDouble
+                volume: this.config.power_double
             }),
             power_quad: new Howl({
                 src: ['sounds/power_quad.wav'],
-                volume: this.config.powerQuad
+                volume: this.config.power_quad
             }),
             bonus_double: new Howl({
                 src: ['sounds/bonus_double.wav'],
-                volume: this.config.bonusDouble
+                volume: this.config.bonus_double
             }),
             catch_power: new Howl({
                 src: ['sounds/catch_power.wav'],
-                volume: this.config.catchPower
+                volume: this.config.catch_power
             }),
-            // add throw sound
             throw_power: new Howl({
                 src: ['sounds/throw_power.wav'],
-                volume: this.config.throwPower
+                volume: this.config.throw_power
             }),
-            // add impact_metal sound
             impact_metal: new Howl({
                 src: ['sounds/impact_metal.wav'],
-                volume: this.config.impactMetal
+                volume: this.config.impact_metal
             })
         };
 
@@ -96,15 +92,19 @@ class SoundManager {
     updateVolumes(newConfig) {
         this.config = { ...this.config, ...newConfig };
         Object.keys(this.sounds).forEach(key => {
-            this.sounds[key].volume(this.config[key]);
+            if (this.sounds[key]) {
+                this.sounds[key].volume(this.config[key] || 0);
+            }
         });
     }
 
     // Generic play function for simple sounds
     play(soundId) {
         if (this.sounds[soundId]) {
-            this.sounds[soundId].play();
-        }else{
+            const sound = this.sounds[soundId];
+            sound.volume(this.config[soundId] || 0);
+            sound.play();
+        } else {
             console.error('Sound not found:', soundId);
         }
     }
@@ -112,6 +112,7 @@ class SoundManager {
     // Engine sound methods
     startThrust() {
         if (!this.isThrustPlaying) {
+            this.sounds.thrust.volume(this.config.thrust);
             this.sounds.thrust.play();
             this.isThrustPlaying = true;
         }
@@ -126,16 +127,10 @@ class SoundManager {
 
     // Explosion sounds based on asteroid size (special case)
     playExplosion(asteroidSize) {
-        switch (asteroidSize) {
-            case 'large':
-                this.sounds.explosionLarge.play();
-                break;
-            case 'medium':
-                this.sounds.explosionMedium.play();
-                break;
-            case 'small':
-                this.sounds.explosionSmall.play();
-                break;
+        const soundKey = 'explosion' + asteroidSize.charAt(0).toUpperCase() + asteroidSize.slice(1);
+        if (this.sounds[soundKey]) {
+            this.sounds[soundKey].volume(this.config[soundKey]);
+            this.sounds[soundKey].play();
         }
     }
 
