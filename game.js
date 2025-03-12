@@ -33,7 +33,6 @@ import {
     destroyAllGameObjects, 
     updateAsteroids,
     updateBullets,
-    updateBonuses,
     updatePowerUps,
     startBattleInCurrentSelectedSector,
     getStarfield,
@@ -346,7 +345,6 @@ function updateGameOverState() {
     gExplosionParticles.update();
         
     updateAsteroids();
-    updateBonuses();
     updatePowerUps();
     return nextState;
 }

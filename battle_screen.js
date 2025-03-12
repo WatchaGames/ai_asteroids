@@ -2,7 +2,6 @@ const DEBUG_BATTLE = false;
 
 import Asteroid from './asteroid.js';
 import Bullet from './bullet.js';
-import Bonus from './bonus.js';
 import PowerUp from './powerUp.js';
 import { gSoundManager } from './soundManager.js';
 import Starfield from './starfield.js';
@@ -29,7 +28,6 @@ let gExplosionParticles = null;
 // Battle state
 let asteroids = [];
 let bullets = [];
-let flyingBonuses = [];
 let flyingPowerUps = [];
  
 let rearBulletActive = false;
@@ -40,10 +38,8 @@ let quadFireTimer = null;
 // Wave UI
 let waveText = null;
 
-// Game state for bonus and power-up spawning
-let lastBonusSpawn = 0;
+// Game state for power-up spawning
 let lastPowerUpSpawn = 0;
-const BONUS_SPAWN_INTERVAL = 10000; // Spawn bonus every 10 seconds
 const POWER_UP_SPAWN_INTERVAL = 15000; // Spawn power-up every 15 seconds
 
 // Debug state
@@ -80,10 +76,6 @@ export function getAsteroids() {
 
 export function getBullets() {
     return bullets;
-}
-
-export function getBonuses() {
-    return flyingBonuses;
 }
 
 export function getPowerUps() {
@@ -164,18 +156,11 @@ export function destroyBullets() {
     bullets = [];
 }
 
-export function destroyBonuses() {
-    let stage = getAppStage();
-    flyingBonuses.forEach(bonus => {
-        stage.removeChild(bonus.sprite);
-    });
-    flyingBonuses = [];
-}
-
 export function destroyPowerUps() {
     let stage = getAppStage();
     flyingPowerUps.forEach(powerUp => {
         stage.removeChild(powerUp.sprite);
+        powerUp.destroy();
     });
     flyingPowerUps = [];
 }
@@ -187,11 +172,6 @@ export function addAsteroids(newAsteroids) {
 export function addBullet(x, y, angle) {
     const bullet = new Bullet(x, y, angle);
     bullets.push(bullet);
-}
-
-export function addScoreBonusObject() {
-    const bonus = new Bonus();
-    flyingBonuses.push(bonus);
 }
 
 export function addPowerUpObject(type,posX,posY) {
@@ -317,17 +297,26 @@ export function checkPowerUpCollisions(player) {
         const dy = player.sprite.y - powerUp.sprite.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        if (distance < player.radius + powerUp.radius) { // Use power-up's radius
-            // remove the pooweUp from the container (stage)
-            stage.removeChild(powerUp.sprite);
-            if (gSoundManager) {
-                gSoundManager.play('catch_power');
+        if (distance < player.radius + powerUp.radius) {
+            // Handle different power-up types
+            if (powerUp.type === 'scoreBonus') {
+                // Immediately activate score multiplier
+                clearScoreMultiplier();
+                setNewScoreMultiplier(2);
+                if (gSoundManager) {
+                    gSoundManager.play('bonus_double');
+                }
+                // Remove the power-up
+                powerUp.destroy();
+                flyingPowerUps.splice(i, 1);
+            } else {
+                // Add other power-ups to cargo stack
+                addPowerUpToCargoStack(powerUp);
+                flyingPowerUps.splice(i, 1);
+                if (gSoundManager) {
+                    gSoundManager.play('catch_power');
+                }
             }
-            // done le a l'inventaire
-            addPowerUpToCargoStack(powerUp);
-            // Remove power-up
-//            powerUp.destroy();
-            flyingPowerUps.splice(i, 1);
         }
     }
 }
@@ -335,7 +324,6 @@ export function checkPowerUpCollisions(player) {
 export function destroyAllGameObjects() {
     destroyAsteroids();
     destroyBullets();
-    destroyBonuses();
     destroyPowerUps();
 }
 
@@ -406,8 +394,8 @@ export function checkScorMultipliersCollisions() {
     let stage = getAppStage();
     for (let i = bullets.length - 1; i >= 0; i--) {
         const bullet = bullets[i];
-        for (let j = flyingBonuses.length - 1; j >= 0; j--) {
-            const bonus = flyingBonuses[j];
+        for (let j = flyingPowerUps.length - 1; j >= 0; j--) {
+            const bonus = flyingPowerUps[j];
             const dx = bullet.sprite.x - bonus.sprite.x;
             const dy = bullet.sprite.y - bonus.sprite.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -422,7 +410,7 @@ export function checkScorMultipliersCollisions() {
                 const targetX = 10; // Score text X position
                 const targetY = 10; // Score text Y position
                 bonus.destroy();
-                flyingBonuses.splice(j, 1);
+                flyingPowerUps.splice(j, 1);
                 
                 // Clear any existing multiplier timer
                 clearScoreMultiplier();
@@ -476,14 +464,6 @@ export function updateBullets() {
     }
 }
 
-export function updateBonuses() {
-    for (let i = flyingBonuses.length - 1; i >= 0; i--) {
-        if (flyingBonuses[i].update()) {
-            flyingBonuses.splice(i, 1);
-        }
-    }
-}
-
 export function updatePowerUps() {
     for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
         if (flyingPowerUps[i].update()) {
@@ -494,23 +474,41 @@ export function updatePowerUps() {
 
 
 
-export function checkForNewBonusesAndPowerUpsOverTime() {
+export function checkForNewPowerUpsOverTime() {
     const currentTime = Date.now();
-    if (currentTime - lastBonusSpawn > BONUS_SPAWN_INTERVAL) {
-        addScoreBonusObject();
-        lastBonusSpawn = currentTime;
-    }
-    
     if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
         addRandomPowerUpObject();
         lastPowerUpSpawn = currentTime;
     }
 }
 
-function addRandomPowerUpObject(posX,posY) {
-    const powerUpType = Math.random() < 0.5 ? 'rearBullet' : 'quadFire';
-    if(DEBUG_BATTLE)console.log('Spawning power-up:', powerUpType); // Debug log
-    addPowerUpObject(powerUpType,posX,posY);
+export function addRandomPowerUpObject(posX, posY) {
+    // List of available power-up types with their weights
+    const powerUpTypes = [
+        { type: 'rearBullet', weight: 0.4 },
+        { type: 'quadFire', weight: 0.3 },
+        { type: 'scoreBonus', weight: 0.3 }
+    ];
+
+    // Calculate total weight
+    const totalWeight = powerUpTypes.reduce((sum, powerUp) => sum + powerUp.weight, 0);
+    
+    // Generate random number between 0 and total weight
+    let random = Math.random() * totalWeight;
+    
+    // Find the selected power-up type
+    let selectedType;
+    for (const powerUp of powerUpTypes) {
+        if (random < powerUp.weight) {
+            selectedType = powerUp.type;
+            break;
+        }
+        random -= powerUp.weight;
+    }
+    
+    // Create and add the power-up
+    const powerUp = new PowerUp(selectedType, posX, posY);
+    flyingPowerUps.push(powerUp);
 }   
 
 export function updateDebugText() {
@@ -582,8 +580,8 @@ export function updateBattleState() {
     player.update();
     starfield.update(player.velocity);
     
-    // Check for new bonuses and power-ups
-    checkForNewBonusesAndPowerUpsOverTime();
+    // Check for new power-ups
+    checkForNewPowerUpsOverTime();
     
     // Update debug display
     updateDebugText();
@@ -593,11 +591,9 @@ export function updateBattleState() {
     
     updateAsteroids();
     updateBullets();
-    updateBonuses();
     updatePowerUps();
     const scoreToAdd = checkCollisionsBetweenBulletsAndAsteroids(explosionParticles);
     addScore(scoreToAdd);
-    checkScorMultipliersCollisions();
     let playerIsDead = checkPlayerCollisions(player, explosionParticles);
     if(playerIsDead) {
         nextState = STATE_GAME_OVER;
@@ -605,18 +601,12 @@ export function updateBattleState() {
     
     checkPowerUpCollisions(player);
 
-    // check if wave completed
     // Check if wave is completed (all asteroids destroyed)
     if (isWaveCompleted()) {
         removeWaveUI();
         nextState = STATE_SECTOR_SELECT;
     }
 
-    if(getAsteroids().length === 0) { // Wave is over when no asteroids remain
-        removeWaveUI();
-
-        nextState = STATE_SECTOR_SELECT;
-    }
     return nextState;
 }
 
