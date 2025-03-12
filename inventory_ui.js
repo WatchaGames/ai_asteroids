@@ -30,7 +30,7 @@ let POWER_STACK_LEFT_X_POSITION = null;
 let POWER_STACK_BOTTOM_Y_POSITION = null;
 let POWER_UP_STACK_SPACING = 24;
 
-const EMPTY_POWER_UP_TEXT = 'Cargo:No Power-ups\n(Q to use)';
+const EMPTY_POWER_UP_TEXT = 'Cargo:No Power-ups\n(CTRL to use)';
 
 export function InitInventory() {
     setScore(0)

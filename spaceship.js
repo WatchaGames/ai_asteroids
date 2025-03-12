@@ -2,7 +2,7 @@ import { palette10 } from './palette.js';
 import { addBullet, getQuadFireActive, getRearBulletActive } from './battle_screen.js';
 import EngineParticles from './engineParticles.js';
 import { getScreenWidth, getScreenHeight, getAppStage } from './globals.js';
-
+import { gSoundManager } from './soundManager.js';
 class Spaceship {
     constructor() {
         this.sprite = new PIXI.Graphics();
@@ -75,7 +75,7 @@ class Spaceship {
         this.sprite.rotation = 0;
     }
 
-    actionFire(soundManager) {
+    actionFire() {
         if (getQuadFireActive()) {
             // Shoot in all four directions
             const angles = [
@@ -88,16 +88,16 @@ class Spaceship {
             angles.forEach(angle => {
                 addBullet(this.sprite.x, this.sprite.y, angle);
             });
-            soundManager.play('shoot');
+            gSoundManager.play('shoot');
         } else if (getRearBulletActive()) {
             // Shoot forward and backward
             addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation);
             addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation + Math.PI);
-            soundManager.play('shoot');
+            gSoundManager.play('shoot');
         } else {
             // Normal forward shot
             addBullet(this.sprite.x, this.sprite.y, this.sprite.rotation);
-            soundManager.play('shoot');
+            gSoundManager.play('shoot');
         }
     }
     update() {

@@ -739,7 +739,8 @@ export function handleBattleKeyPress(event) {
     if (gPlayer.isTeleporting) return;
 
 
-    if (event.key === 'q' || event.key === 'Q') {
+    // test if shift key is presse
+    if (event.ctrlKey == true) {
         const powerUp = getAndRemovePowerUpFromTopOfStack();
         if (powerUp) {
 
@@ -750,14 +751,14 @@ export function handleBattleKeyPress(event) {
             throwPowerUpPlayerAndDestroyAtArrival(powerUp,gPlayer);
             gSoundManager.play('throw_power');
 
-/*             // temp : remove from the stage and destroy
-            stage.removeChild(powerUp.sprite);
-            powerUp.destroy();
- */
             return null;
         }
     }
 
+    // if ctrl key is pressed, fire all bullets
+    if (event.shiftKey == true) {
+        gPlayer.actionFire(gSoundManager);
+    }
 
     switch (event.key) {
         case 'ArrowLeft':
@@ -769,9 +770,6 @@ export function handleBattleKeyPress(event) {
         case 'ArrowUp':
             gPlayer.isMovingForward = true;
             gSoundManager.startThrust();  // Start engine sound
-            break;
-        case ' ':
-            gPlayer.actionFire(gSoundManager);
             break;
         case 'ArrowDown':
             gPlayer.tryTeleport(gSoundManager); //TODO remvoe sound manager parameter

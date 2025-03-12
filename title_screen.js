@@ -140,7 +140,7 @@ export function showTitleScreen() {
     
     // Controls text
     const controlsText = new PIXI.Text({
-        text: 'Controls:\n↑ Thrust\n← → Rotate\nSPACE Fire\n↓ Teleport\nQ Use Power-up',
+        text: 'Controls:\nThrust ↑\nTurn ← →\nFire SHIFT\nTeleport ↓\nUse PowerUp CTRL',
         style: restFontStyle
     });
     controlsText.x = getScreenWidth() / 2;
