@@ -72,7 +72,7 @@ class Asteroid {
             this.sprite.drawPolygon(points);
             this.sprite.endFill();
         } else {
-            // For regular asteroids, just fill
+            // For regular and golden asteroids, just fill
             this.sprite.beginFill(color);
             this.sprite.drawPolygon(points);
             this.sprite.endFill();

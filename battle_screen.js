@@ -214,7 +214,11 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
     
             return 50;
         }
-        // if destroyed continues with normal asteroid hit
+        // if destroyed, check for power-up spawn (30% chance)
+        if (Math.random() < 0.3) {
+            addRandomPowerUpObject(asteroid.sprite.x, asteroid.sprite.y);
+        }
+        // continues with normal asteroid hit
     }
 
     // Create explosion with size-dependent parameters

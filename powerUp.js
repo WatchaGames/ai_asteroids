@@ -69,19 +69,20 @@ export default class PowerUp {
                 break;
         }
         
+        const powerBaseSpeed = 0.7;
 
         if(type === 'scoreBonus') {
             // randomly choose left or right spawn
             const spawnFromLeft = Math.random() < 0.5;
             // set velocity to the left or right
-            this.velocity.x = spawnFromLeft ? 1 : -1;
+            this.velocity.x = spawnFromLeft ? powerBaseSpeed : -powerBaseSpeed;
             this.velocity.y = 0;
         }else{
             // Randomly choose top or bottom spawn
             const spawnFromTop = Math.random() < 0.5;
             // set velocity to the top or bottom
             this.velocity.x = 0;
-            this.velocity.y = spawnFromTop ? 1 : -1;
+            this.velocity.y = spawnFromTop ? powerBaseSpeed : -powerBaseSpeed;
         }
 
 
