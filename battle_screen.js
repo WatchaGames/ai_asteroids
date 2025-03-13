@@ -30,7 +30,8 @@ import { removeOneLife,
     } from './inventory_ui.js';
 
 import { getMainFontStyleNormal } from './fonts.js';
-import { RELIC_TYPES } from './relics.js';
+import { gRelicsUI } from './relics_ui.js';
+import gRelicsCollection from './relics.js';
 
 // Battle objects
 let gPlayer = null;
@@ -71,9 +72,9 @@ export function addBattleObjects() {
 }
 
 export function removeBattleObjects() {
-    
     // Remove all game objects
     destroyAllGameObjects();
+    
 }
 
 
@@ -332,7 +333,6 @@ export function checkPlayerCollisions(player, explosionParticles) {
 
 
 export function checkPowerUpCollisions(player) {
-    let stage = getAppStage();
     for (let i = flyingPowerUps.length - 1; i >= 0; i--) {
         const powerUp = flyingPowerUps[i];
         const dx = player.sprite.x - powerUp.sprite.x;
@@ -342,18 +342,25 @@ export function checkPowerUpCollisions(player) {
         if (distance < player.radius + powerUp.radius) {
             // Handle different power-up types
             if (powerUp.type === 'scoreBonus') {
-                // Immediately activate score multiplier
-//                clearScoreMultiplier();
                 addToScoreMultiplier(2);
                 if (gSoundManager) {
                     gSoundManager.play('bonus_double');
                 }
                 // fly the score bonus to the score bonus
                 flyScoreBonusToScoreBonus(powerUp);
-/*                 // Remove the power-up
-                powerUp.destroy();
- */                flyingPowerUps.splice(i, 1);
-            } else {
+                flyingPowerUps.splice(i, 1);
+            } else if (powerUp.type === 'relic') {
+                // add relict to RelicsCollection
+                flyingPowerUps.splice(i, 1);
+                gRelicsCollection.addRelic(powerUp.relicType);
+                // update relics UI
+                gRelicsUI.updateDisplay();
+                if (gSoundManager) {
+                    gSoundManager.play('catch_power');
+                }
+
+
+            }else{
                 // Add other power-ups to cargo stack
                 addPowerUpToCargoStack(powerUp);
                 flyingPowerUps.splice(i, 1);

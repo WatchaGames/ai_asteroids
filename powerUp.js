@@ -1,5 +1,5 @@
 import { getScreenHeight, getScreenWidth, getAppStage } from "./globals.js";
-import { RELIC_TYPES } from './relics.js';
+import { RELIC_TYPES, createRelicSprite } from './relics.js';
 
 const DEBUG_POWERUP = false;
 
@@ -13,7 +13,7 @@ export default class PowerUp {
 
         // If it's a relic, assign a random relic type
         if (type === 'relic') {
-            const relicTypes = Object.values(RELIC_TYPES);
+            const relicTypes = Object.keys(RELIC_TYPES);
             this.relicType = relicTypes[Math.floor(Math.random() * relicTypes.length)];
         }
 
@@ -72,22 +72,8 @@ export default class PowerUp {
                 this.sprite.endFill();
                 break;
             case 'relic':
-                // Draw a special relic symbol
-                this.sprite.beginFill(0x9b59b6); // Purple color for relics
-                this.sprite.drawCircle(0, 0, this.radius);
-                this.sprite.endFill();
-                
-                // Add a special symbol
-                this.sprite.beginFill(0xFFFFFF);
-                // Draw a cross shape
-                this.sprite.drawRect(-this.radius * 0.3, -this.radius * 0.8, this.radius * 0.6, this.radius * 1.6);
-                this.sprite.drawRect(-this.radius * 0.8, -this.radius * 0.3, this.radius * 1.6, this.radius * 0.6);
-                this.sprite.endFill();
-                
-                // Add a glow effect
-                this.sprite.beginFill(0x9b59b6, 0.3);
-                this.sprite.drawCircle(0, 0, this.radius * 1.2);
-                this.sprite.endFill();
+                // createRelicSprite from relics.js to create a sprite
+                this.sprite = createRelicSprite(this.relicType, 0, 0);
                 break;
             default:
                 console.error('Unknown power-up type:', type); // Debug log

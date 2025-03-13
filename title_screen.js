@@ -2,6 +2,8 @@ import { palette10 } from './palette.js';
 import Starfield from './starfield.js';
 import { STATE_BATTLE,   getAppStage, getScreenHeight, getScreenWidth, getGameVersion } from './globals.js';
 import { getMainFontStyleTitle, getMainFontStyleBig, getMainFontStyleNormal } from './fonts.js';
+import { InitRelicsUI, gRelicsUI } from './relics_ui.js';
+
 let titleContainer = null;
 let starfield = null;
 let earthGraphic = null;
@@ -191,6 +193,13 @@ export function showTitleScreen() {
         requestAnimationFrame(animate);
     };
     animate();
+
+    // if no  relicsUI exists, create it
+    if (!gRelicsUI) {
+        InitRelicsUI();
+    }
+
+
 }
 
 export function updateTitleScreen(delta) {
