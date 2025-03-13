@@ -197,6 +197,26 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
         return 0; // No points for hitting indestructible asteroid
     }
 
+    // Handle golden asteroids
+    if (asteroid.isGolden) {
+        // Check if asteroid should be destroyed
+        const isDestroyed = asteroid.hit();
+        if (!isDestroyed) {
+            explosionParticles.createExplosion(
+                asteroid.sprite.x,
+                asteroid.sprite.y,
+                0xFFD700, // Gold color
+                10 // Medium explosion
+            );
+            if (gSoundManager) {
+                gSoundManager.play('impact_metal');
+            }
+    
+            return 50;
+        }
+        // if destroyed continues with normal asteroid hit
+    }
+
     // Create explosion with size-dependent parameters
     const explosionSize = {
         large: 30,    // Larger explosion for big asteroids
@@ -208,7 +228,7 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
     explosionParticles.createExplosion(
         asteroid.sprite.x,
         asteroid.sprite.y,
-        asteroid.getColorForSize(),
+        asteroid.getColorForType(),
         explosionSize[asteroid.asteroidType]
     );
 
@@ -219,6 +239,11 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
     
     // Remove asteroid and update score
     let points = 0;
+
+    if(asteroid.isGolden)
+    {
+        points = 200;
+    }
     if (asteroid.asteroidType === 'large') {
         points = 20;
         const newAsteroids = asteroid.split();
@@ -351,7 +376,6 @@ export function spawnAsteroidsForWave(sectorIndex) {
 
         while (!validPosition) {
             // rnd pos till valid
-
             const rndX = Math.random() * getScreenWidth();
             const rndY = Math.random() * getScreenHeight();
 
@@ -368,6 +392,27 @@ export function spawnAsteroidsForWave(sectorIndex) {
         }
         newAsteroids.push(asteroid);
     }
+
+    // Add 1 golden asteroid with random position
+    let goldenAsteroid;
+    let validPosition = false;
+    
+    goldenAsteroid = new Asteroid(sectorDescription, 'golden');
+    while (!validPosition) {
+        const rndX = Math.random() * getScreenWidth();
+        const rndY = Math.random() * getScreenHeight();
+
+        const dx = rndX  - centerX;
+        const dy = rndY - centerY;
+        const distanceFromCenter = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distanceFromCenter >= minDistanceFromCenter) {
+            validPosition = true;
+            goldenAsteroid.setPosition(rndX, rndY);
+        } 
+    }
+    newAsteroids.push(goldenAsteroid);
+
 
     // Add regular asteroids
     for (let i = 0; i < numAsteroids; i++) {
@@ -576,11 +621,12 @@ export function updateBattleState() {
     return nextState;
 }
 
+// TODO: check rule: do we count golden asteroids ?
 function isWaveCompleted() {
-    // check if all non indestructible asteroids are destroyed
+    // check if all non-special asteroids are destroyed
     let count = 0;
     for (let asteroid of asteroids) {
-        if (!asteroid.isIndestructible) {
+        if (!asteroid.isIndestructible && !asteroid.isGolden) {
             count++;
         }
     }

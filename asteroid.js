@@ -11,16 +11,41 @@ class Asteroid {
         this.asteroidType = inSizeName;
         this.sectorDesc = desctorDesc; // on le garde pour les split
         this.isIndestructible = inSizeName === 'indestructible';
-
+        this.isGolden = inSizeName === 'golden';
+        
         // get specs of asteroid to spawn from its type and sector description
         const asteroidInfo = GetAsteroidToSpawnInfo(this.sectorDesc,this.asteroidType);
         this.size = asteroidInfo.size;
 
+        // Golden asteroid properties
+        if (this.isGolden) {
+            this.maxHitPoints = 10;
+            this.currentHitPoints = this.maxHitPoints;
+            this.originalSize = this.size; // Fixed size for golden asteroids
+        } 
         // Create the sprite
         this.sprite = new PIXI.Graphics();
+        this.drawAsteroidShape(); // draw the asteroid depending on its type
+
+        let stage = getAppStage();
+        stage.addChild(this.sprite);
+
+
+        // default position is center of the screen
+        this.setPosition(getScreenWidth()/2, getScreenHeight()/2);
+        if (this.isIndestructible) {
+            this.setBehaviour('static',asteroidInfo.speed);
+        } else {
+            this.setBehaviour('default',asteroidInfo.speed);
+        }
         
-        // Set color based on size
-        const color = this.getColorForSize();
+    }
+
+    drawAsteroidShape() {
+        this.sprite.clear();
+        
+        // Set color based on type
+        const color = this.getColorForType();
         this.sprite.beginFill(color);
         
         // Generate random polygon shape
@@ -52,20 +77,7 @@ class Asteroid {
             this.sprite.drawPolygon(points);
             this.sprite.endFill();
         }
-
-        // default position is center of the screen
-        this.setPosition(getScreenWidth()/2, getScreenHeight()/2);
-        
-
-        if (this.isIndestructible) {
-            this.setBehaviour('static',asteroidInfo.speed);
-        } else {
-            this.setBehaviour('default',asteroidInfo.speed);
-        }
-        
         this.radius = maxRadius;
-        let stage = getAppStage();
-        stage.addChild(this.sprite);
     }
 
     setBehaviour(behaviour,speed) {
@@ -93,12 +105,10 @@ class Asteroid {
         }
     }
 
-    setPosition(x,y) {
-        this.sprite.x = x;
-        this.sprite.y = y;
-    }
-
-    getColorForSize() {
+    getColorForType() {
+        if (this.isGolden) {
+            return 0xFFD700; // Gold color
+        }
         switch(this.asteroidType) {
             case 'indestructible':
                 return palette10.grape_1;
@@ -111,6 +121,32 @@ class Asteroid {
             default:
                 return palette10.white;
         }
+    }
+
+    setPosition(x,y) {
+        this.sprite.x = x;
+        this.sprite.y = y;
+    }
+
+
+    // New method to handle golden asteroid hits
+    hit() {
+        if (!this.isGolden) return false;
+        
+        this.currentHitPoints--;
+        // Calculate new size based on remaining hitpoints
+        const sizePercentage = 0.33 + (0.67 * (this.currentHitPoints / this.maxHitPoints));
+
+        // scale the sprite
+        this.sprite.scale.x = sizePercentage;
+        this.sprite.scale.y = sizePercentage;
+
+        this.radius = this.size *sizePercentage;
+        
+        // Redraw the asteroid with new size
+        this.drawAsteroidShape();
+        
+        return this.currentHitPoints <= 0;
     }
 
     update() {
