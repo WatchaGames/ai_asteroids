@@ -1,4 +1,5 @@
 import { getScreenHeight, getScreenWidth, getAppStage } from "./globals.js";
+import { RELIC_TYPES } from './relics.js';
 
 const DEBUG_POWERUP = false;
 
@@ -9,6 +10,12 @@ export default class PowerUp {
         if(DEBUG_POWERUP)console.log('Creating power-up of type:', type); // Debug log
         this.sprite = new PIXI.Graphics();
         this.velocity = {x:0,y:0};
+
+        // If it's a relic, assign a random relic type
+        if (type === 'relic') {
+            const relicTypes = Object.values(RELIC_TYPES);
+            this.relicType = relicTypes[Math.floor(Math.random() * relicTypes.length)];
+        }
 
         // Create power-up appearance based on type
         switch(type) {
@@ -62,6 +69,24 @@ export default class PowerUp {
                 // Add collision circle (semi-transparent)
                 this.sprite.beginFill(0x00FF00, 0.2);
                 this.sprite.drawCircle(0, 0, this.radius);
+                this.sprite.endFill();
+                break;
+            case 'relic':
+                // Draw a special relic symbol
+                this.sprite.beginFill(0x9b59b6); // Purple color for relics
+                this.sprite.drawCircle(0, 0, this.radius);
+                this.sprite.endFill();
+                
+                // Add a special symbol
+                this.sprite.beginFill(0xFFFFFF);
+                // Draw a cross shape
+                this.sprite.drawRect(-this.radius * 0.3, -this.radius * 0.8, this.radius * 0.6, this.radius * 1.6);
+                this.sprite.drawRect(-this.radius * 0.8, -this.radius * 0.3, this.radius * 1.6, this.radius * 0.6);
+                this.sprite.endFill();
+                
+                // Add a glow effect
+                this.sprite.beginFill(0x9b59b6, 0.3);
+                this.sprite.drawCircle(0, 0, this.radius * 1.2);
                 this.sprite.endFill();
                 break;
             default:

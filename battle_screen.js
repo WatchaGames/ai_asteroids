@@ -30,6 +30,8 @@ import { removeOneLife,
     } from './inventory_ui.js';
 
 import { getMainFontStyleNormal } from './fonts.js';
+import { RELIC_TYPES } from './relics.js';
+
 // Battle objects
 let gPlayer = null;
 let gStarfield = null;
@@ -226,7 +228,7 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
         // if destroyed, check for power-up spawn (30% chance)
 //        if (Math.random() < 0.3) {
         if (Math.random() <CHANCES_OF_LOOT_RELIC) {
-            addRandomPowerUpObject(asteroid.sprite.x, asteroid.sprite.y);
+            spawnRandomPowerUpObject(asteroid.sprite.x, asteroid.sprite.y);
         }
         // continues with normal asteroid hit
     }
@@ -283,7 +285,7 @@ function CheckForChanceToDropPowerUpLoot(posX,posY) {
     const sectorDescription = GetSectorDescriptionByIndex(getCurrentSectorIndex());
     const chanceToDropPowerUp = sectorDescription.bonuses;
     if (Math.random() < chanceToDropPowerUp) {
-        addRandomPowerUpObject(posX,posY);
+        spawnRandomPowerUpObject(posX,posY);
     }
 }
 
@@ -499,37 +501,30 @@ export function updatePowerUps() {
 export function checkForNewPowerUpsOverTime() {
     const currentTime = Date.now();
     if (currentTime - lastPowerUpSpawn > POWER_UP_SPAWN_INTERVAL) {
-        addRandomPowerUpObject();
+        spawnRandomPowerUpObject();
         lastPowerUpSpawn = currentTime;
     }
 }
 
-export function addRandomPowerUpObject(posX, posY) {
-    // List of available power-up types with their weights
-    const powerUpTypes = [
-        { type: 'rearBullet', weight: 0.4 },
-        { type: 'quadFire', weight: 0.3 },
-        { type: 'scoreBonus', weight: 0.3 }
-    ];
 
-    // Calculate total weight
-    const totalWeight = powerUpTypes.reduce((sum, powerUp) => sum + powerUp.weight, 0);
+export function spawnRandomPowerUpObject(posX, posY) {
+    const powerUpTypes = ['rearBullet', 'quadFire', 'scoreBonus', 'relic'];
+    const weights = [0.0, 0.0, 0.0, 1.0]; // 80% chance for relic
     
-    // Generate random number between 0 and total weight
-    let random = Math.random() * totalWeight;
+    const random = Math.random();
+    let sum = 0;
+    let selectedType = powerUpTypes[0];
     
-    // Find the selected power-up type
-    let selectedType;
-    for (const powerUp of powerUpTypes) {
-        if (random < powerUp.weight) {
-            selectedType = powerUp.type;
+    for (let i = 0; i < weights.length; i++) {
+        sum += weights[i];
+        if (random < sum) {
+            selectedType = powerUpTypes[i];
             break;
         }
-        random -= powerUp.weight;
     }
     
-    // Create and add the power-up
     const powerUp = new PowerUp(selectedType, posX, posY);
+    
     flyingPowerUps.push(powerUp);
 }   
 
@@ -864,6 +859,42 @@ function updateWaveUI(sectorIndex) {
         const sectorName = sectorDescription ? sectorDescription.name : "Unknown";
         waveText.text = `Mission ${getCurrentMissionNumber()} - ${sectorName} Sector`;
     }
+}
+
+function createRelicCollectEffect(x, y) {
+    const effect = new PIXI.Container();
+    const graphics = new PIXI.Graphics();
+    
+    // Create a pulsing circle effect
+    graphics.beginFill(0x9b59b6, 0.5);
+    graphics.drawCircle(0, 0, 30);
+    graphics.endFill();
+    
+    effect.addChild(graphics);
+    effect.x = x;
+    effect.y = y;
+    
+    getAppStage().addChild(effect);
+    
+    // Animate the effect
+    let scale = 1;
+    let alpha = 0.5;
+    
+    const animate = () => {
+        scale += 0.1;
+        alpha -= 0.02;
+        
+        effect.scale.set(scale);
+        effect.alpha = alpha;
+        
+        if (alpha > 0) {
+            requestAnimationFrame(animate);
+        } else {
+            getAppStage().removeChild(effect);
+        }
+    };
+    
+    animate();
 }
 
 
