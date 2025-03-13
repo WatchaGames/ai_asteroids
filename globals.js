@@ -64,3 +64,6 @@ export function getScreenHeight() {
 export function getAppStage() {
     return gPixiApp.stage;
 }
+
+
+export const CHANCES_OF_LOOT_RELIC = 0.9;

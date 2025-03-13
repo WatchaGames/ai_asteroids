@@ -130,7 +130,7 @@ class Asteroid {
 
 
     // New method to handle golden asteroid hits
-    hit() {
+    takeHit() {
         if (!this.isGolden) return false;
         
         this.currentHitPoints--;

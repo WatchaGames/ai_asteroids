@@ -8,7 +8,16 @@ import Starfield from './starfield.js';
 import ExplosionParticles from './explosionParticles.js';
 import Spaceship from './spaceship.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
-import { getAppStage, getCurrentSectorIndex, getCurrentMissionNumber, STATE_GAME_OVER, STATE_SECTOR_SELECT, getScreenWidth, getScreenHeight, setCurrentSectorIndex, setCurrentMissionNumber } from './globals.js';
+import { getAppStage, 
+    getCurrentSectorIndex, 
+    getCurrentMissionNumber, 
+    STATE_GAME_OVER, 
+    STATE_SECTOR_SELECT, 
+    getScreenWidth, 
+    getScreenHeight, 
+    setCurrentSectorIndex, 
+    setCurrentMissionNumber,
+    CHANCES_OF_LOOT_RELIC } from './globals.js';
 import { removeOneLife, 
     getMultiplier, 
     addScore, 
@@ -200,7 +209,7 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
     // Handle golden asteroids
     if (asteroid.isGolden) {
         // Check if asteroid should be destroyed
-        const isDestroyed = asteroid.hit();
+        const isDestroyed = asteroid.takeHit();
         if (!isDestroyed) {
             explosionParticles.createExplosion(
                 asteroid.sprite.x,
@@ -215,7 +224,8 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
             return 50;
         }
         // if destroyed, check for power-up spawn (30% chance)
-        if (Math.random() < 0.3) {
+//        if (Math.random() < 0.3) {
+        if (Math.random() <CHANCES_OF_LOOT_RELIC) {
             addRandomPowerUpObject(asteroid.sprite.x, asteroid.sprite.y);
         }
         // continues with normal asteroid hit
@@ -522,6 +532,9 @@ export function addRandomPowerUpObject(posX, posY) {
     const powerUp = new PowerUp(selectedType, posX, posY);
     flyingPowerUps.push(powerUp);
 }   
+
+
+// DEBUG TEXT 
 
 export function updateDebugText() {
     if (gDebugMode && gDebugText && gPlayer) {
