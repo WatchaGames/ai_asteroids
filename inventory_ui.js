@@ -3,6 +3,7 @@ import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getPixiApp, getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 import { getMainFontStyleNormal } from './fonts.js';
 import { animateTweenSpritePos, isTweenRunning, clearAllTweenAnimations } from './tween.js';
+import { createPowerUpSprite } from './powerUp.js';
 
 // Variables
 let score = 0;
@@ -319,30 +320,34 @@ export function flyScoreBonusToScoreBonus(powerUp) {
 
 
 export function flyPowerUpToCargoStack(powerUp) {
-    let stage = getAppStage();
-    stage.addChild(powerUp.sprite);
-    
-    // Scale down the power-up sprite to half its size
-    powerUp.sprite.scale.set(0.5);
+
+
+    // create a temporary sprit to fly to the stack
+    let tempSprite =  createPowerUpSprite(powerUp.type,powerUp.sprite.x,powerUp.sprite.y,powerUp.radius);
+    stage.addChild(tempSprite);
+
     
     // Calculate destination  position
-    const startX = powerUp.sprite.x;
-    const startY = powerUp.sprite.y;
+    const startX = tempSprite.x;
+    const startY = tempSprite.y;
 
     const finalX = POWER_STACK_LEFT_X_POSITION + (powerUpStack.length * POWER_UP_STACK_SPACING);
     const finalY = POWER_STACK_BOTTOM_Y_POSITION;
     
     // Start animation from current position to final position
     animateTweenSpritePos(
-        powerUp.sprite,
+        tempSprite,
         startX,
         startY,
         finalX,
         finalY,
         POWER_UP_ANIMATION.duration,
-        false
+        true
     );
     
+    // Scale down the power-up sprite to half its size
+    powerUp.sprite.scale.set(0.5);
+    // add it the the power up stack
     powerUpStack.push(powerUp);
     updatePowerUpStackUI();
 }

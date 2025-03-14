@@ -101,11 +101,6 @@ export default class PowerUp {
             this.velocity.y = spawnFromTop ? powerBaseSpeed : -powerBaseSpeed;
         }
 
-
-/*         this.sprite.x = posX;
-        this.sprite.y = posY;
- */        
-        
         this.speed = 1; // Movement speed (halved from 2)
         
         let stage = getAppStage();
