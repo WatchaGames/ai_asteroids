@@ -357,9 +357,6 @@ export function checkPowerUpCollisions(player) {
                 // add relict to RelicsCollection
                 flyRelicToCollection(powerUp);
 
-                gRelicsCollection.addRelic(powerUp.relicType);
-                // update relics UI
-                gRelicsUI.updateDisplay();
             
 
                 flyingPowerUps.splice(i, 1);

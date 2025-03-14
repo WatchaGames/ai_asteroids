@@ -321,7 +321,7 @@ export function flyScoreBonusToScoreBonus(powerUp) {
 
 export function flyPowerUpToCargoStack(powerUp) {
 
-
+    let stage = getAppStage();
     // create a temporary sprit to fly to the stack
     let tempSprite =  createPowerUpSprite(powerUp.type,powerUp.sprite.x,powerUp.sprite.y,powerUp.radius);
     stage.addChild(tempSprite);
@@ -358,13 +358,23 @@ export function flyPowerUpToCargoStack(powerUp) {
 export function throwPowerUpPlayerAndDestroyAtArrival(powerUp,player) {
     let stage = getAppStage();
 
+    // create a temporary sprit to fly to the player
+    let tempSprite =  createPowerUpSprite(powerUp.type,powerUp.sprite.x,powerUp.sprite.y,powerUp.radius);
+    stage.addChild(tempSprite);
+
+    
     const targetX = player.sprite.x;
     const targetY = player.sprite.y;
 
-    stage.addChild(powerUp.sprite);
     powerUp.sprite.scale.set(0.66);
     // animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
-    animateTweenSpritePos(powerUp.sprite, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
+    animateTweenSpritePos(tempSprite,
+         tempSprite.x,
+          tempSprite.y,
+           targetX,
+            targetY,
+             POWER_UP_ANIMATION.duration/2,
+              true);
    
 
 }

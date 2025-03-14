@@ -80,30 +80,42 @@ const RELIC_ANIMATION = {
 };
 
 
-export function flyRelicToCollection(powerUp) {
-    
-    // Scale down the power-up sprite to half its size
-    powerUp.sprite.scale.set(0.5);
+export function flyRelicToCollection(relicPowerUp) {
+
+    let stage = getAppStage();
+
+    // create a temporary sprit to fly to the stack
+    let tempSprite =  createRelicSprite(relicPowerUp.relicType,relicPowerUp.sprite.x,relicPowerUp.sprite.y);
+    stage.addChild(tempSprite);
+
     
     // Calculate destination  position
-    const startX = powerUp.sprite.x;
-    const startY = powerUp.sprite.y;
+    const startX = tempSprite.x;
+    const startY = tempSprite.y;
 
     const finalX = RELICS_STACK_LEFT_X_POSITION + (gRelicsCollection.getCount() * RELICS_STACK_SPACING);
     const finalY = RELICS_STACK_BOTTOM_Y_POSITION;
     
     // Start animation from current position to final position
     animateTweenSpritePos(
-        powerUp.sprite,
+        relicPowerUp.sprite,
         startX,
         startY,
         finalX,
         finalY,
         RELIC_ANIMATION.duration,
         // TODO voir comment faire pour ne pas detruire le sprite ou  mettre ca 
-        false
+        true
     );
     
+    // Scale down the power-up sprite to half its size
+    relicPowerUp.sprite.scale.set(0.5);
+
+    gRelicsCollection.addRelic(relicPowerUp.relicType);
+    // update relics UI
+    gRelicsUI.updateDisplay();
+
+
 
 }
 
