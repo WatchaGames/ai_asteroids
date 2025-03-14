@@ -13,6 +13,7 @@ const STORAGE_KEY = 'asteroids_relics';
 
 
 // TODO : different sprites for different relics    
+// returns a container with the relic sprite and text
 export function createRelicSprite(relicType, x, y) {
     const container = new PIXI.Container();
     

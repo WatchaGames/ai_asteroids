@@ -187,11 +187,11 @@ export function addBullet(x, y, angle) {
     bullets.push(bullet);
 }
 
-export function addPowerUpObject(type,posX,posY) {
+/* export function addPowerUpObject(type,posX,posY) {
     const powerUp = new PowerUp(type,posX,posY);
     flyingPowerUps.push(powerUp);
 }
-
+ */
 // return the score to add
 export function hitAsteroid(asteroid, index, explosionParticles) {
     // Don't destroy indestructible asteroids
@@ -265,7 +265,11 @@ export function hitAsteroid(asteroid, index, explosionParticles) {
         points = 20;
         const newAsteroids = asteroid.split();
         asteroids.push(...newAsteroids);
-        CheckForChanceToDropPowerUpLoot(asteroid.sprite.x,asteroid.sprite.y);
+
+        // WORK
+        spawnRandomPowerUpObject(asteroid.sprite.x,asteroid.sprite.y);
+
+//        CheckForChanceToDropPowerUpLoot(asteroid.sprite.x,asteroid.sprite.y);
         
     } else if (asteroid.asteroidType === 'medium') {
         points = 50;
@@ -291,7 +295,7 @@ function CheckForChanceToDropPowerUpLoot(posX,posY) {
 }
 
 // return true if player is dead
-export function checkPlayerCollisions(player, explosionParticles) {
+export function checkPlayerCollisionsWithAsteroids(player, explosionParticles) {
     
     let indexOfAsteroidHit = 0;
     for (let asteroid of asteroids) {
@@ -367,6 +371,7 @@ export function checkPowerUpCollisions(player) {
             }else{
                 // Add other power-ups to cargo stack
                 flyPowerUpToCargoStack(powerUp);
+                // remove from list of collectable power-ups
                 flyingPowerUps.splice(i, 1);
                 if (gSoundManager) {
                     gSoundManager.play('catch_power');
@@ -628,7 +633,7 @@ export function updateBattleState() {
     updatePowerUps();
     const scoreToAdd = checkCollisionsBetweenBulletsAndAsteroids(explosionParticles);
     addScore(scoreToAdd);
-    let playerIsDead = checkPlayerCollisions(player, explosionParticles);
+    let playerIsDead = checkPlayerCollisionsWithAsteroids(player, explosionParticles);
     if(playerIsDead) {
         nextState = STATE_GAME_OVER;
     }

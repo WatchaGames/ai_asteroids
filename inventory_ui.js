@@ -12,7 +12,7 @@ let scoreMultiplier = 1;
 let scoreMultiplierTimer = null;
 
 // Animation configuration
-const POWER_UP_ANIMATION = {
+const POWER_UP_ANIMATION = { 
     duration: 500, // milliseconds
     easing: 'easeOutQuad' // easing function for smooth motion
 };
