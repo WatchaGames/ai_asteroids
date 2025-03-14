@@ -21,7 +21,7 @@ import { getAppStage,
 import { removeOneLife, 
     getMultiplier, 
     addScore, 
-    addPowerUpToCargoStack,
+    flyPowerUpToCargoStack,
     getAndRemovePowerUpFromTopOfStack,
     throwPowerUpPlayerAndDestroyAtArrival,
     flyScoreBonusToScoreBonus,
@@ -30,7 +30,7 @@ import { removeOneLife,
     } from './inventory_ui.js';
 
 import { getMainFontStyleNormal } from './fonts.js';
-import { gRelicsUI } from './relics_ui.js';
+import { gRelicsUI, flyRelicToCollection } from './relics_ui.js';
 import gRelicsCollection from './relics.js';
 
 // Battle objects
@@ -351,10 +351,14 @@ export function checkPowerUpCollisions(player) {
                 flyingPowerUps.splice(i, 1);
             } else if (powerUp.type === 'relic') {
                 // add relict to RelicsCollection
-                flyingPowerUps.splice(i, 1);
+                flyRelicToCollection(powerUp);
+
                 gRelicsCollection.addRelic(powerUp.relicType);
                 // update relics UI
                 gRelicsUI.updateDisplay();
+            
+
+                flyingPowerUps.splice(i, 1);
                 if (gSoundManager) {
                     gSoundManager.play('catch_power');
                 }
@@ -362,7 +366,7 @@ export function checkPowerUpCollisions(player) {
 
             }else{
                 // Add other power-ups to cargo stack
-                addPowerUpToCargoStack(powerUp);
+                flyPowerUpToCargoStack(powerUp);
                 flyingPowerUps.splice(i, 1);
                 if (gSoundManager) {
                     gSoundManager.play('catch_power');
@@ -371,6 +375,9 @@ export function checkPowerUpCollisions(player) {
         }
     }
 }
+
+
+
 
 export function destroyAllGameObjects() {
     destroyAsteroids();
@@ -516,7 +523,7 @@ export function checkForNewPowerUpsOverTime() {
 
 export function spawnRandomPowerUpObject(posX, posY) {
     const powerUpTypes = ['rearBullet', 'quadFire', 'scoreBonus', 'relic'];
-    const weights = [0.0, 0.0, 0.0, 1.0]; // 80% chance for relic
+    const weights = [1.0, 0.0, 0.0, 0.0]; // 80% chance for relic
     
     const random = Math.random();
     let sum = 0;
@@ -748,9 +755,6 @@ function activatePowerUp(powerUp) {
     }
 
 }
-
-
-
 
 export function handleBattleKeyPress(event) {
     let nextState = null;

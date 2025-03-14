@@ -2,6 +2,8 @@ import { palette10 } from './palette.js';
 import { GetSectorDescriptionByIndex } from './sectors.js';
 import { getPixiApp, getAppStage, getScreenWidth, getScreenHeight } from './globals.js';
 import { getMainFontStyleNormal } from './fonts.js';
+import { animateTweenSpritePos, isTweenRunning, clearAllTweenAnimations } from './tween.js';
+
 // Variables
 let score = 0;
 let multiplier = 1;
@@ -19,7 +21,6 @@ const INVENTORY_UI_Z_ORDER = 100;
 
 // Power-up stack management
 let powerUpStack = [];
-let powerUpAnimations = new Map(); // Track ongoing animations
 
 // UI Elements
 let scoreText = null;
@@ -242,7 +243,8 @@ export function removeInventoryUI() {
     powerUpText = null;
     
     // Clear all animations
-    powerUpAnimations.clear();
+    clearAllTweenAnimations();
+//    powerUpAnimations.clear();
     
     // Remove power-up graphics
     powerUpStack.forEach(powerUp => {
@@ -253,11 +255,11 @@ export function removeInventoryUI() {
     powerUpStack = [];
 }
 
-function easeOutQuad(t) {
-    return t * (2 - t);
-}
 
-function animatePowerUp(powerUp, startX, startY, endX, endY, duration, destroyPowerUpOnComplete = false) {
+
+
+
+/* function animatePowerUp(powerUp, startX, startY, endX, endY, duration, destroyPowerUpOnComplete = false) {
     const startTime = Date.now();
     const sprite = powerUp.sprite;
     
@@ -300,7 +302,7 @@ function animatePowerUp(powerUp, startX, startY, endX, endY, duration, destroyPo
     
     animate();
 }
-
+ */
 
 export function flyScoreBonusToScoreBonus(powerUp) {
     let stage = getAppStage();
@@ -311,11 +313,12 @@ export function flyScoreBonusToScoreBonus(powerUp) {
     const scoreBonusPosX = scoreText.x;
     const scoreBonusPosY = scoreText.y;
 
-    animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, scoreBonusPosX, scoreBonusPosY, POWER_UP_ANIMATION.duration, true);
+    // animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, scoreBonusPosX, scoreBonusPosY, POWER_UP_ANIMATION.duration, true);
+    animateSpritePos(powerUp.sprite, powerUp.sprite.x, powerUp.sprite.y, scoreBonusPosX, scoreBonusPosY, POWER_UP_ANIMATION.duration, true);
 }
 
 
-export function addPowerUpToCargoStack(powerUp) {
+export function flyPowerUpToCargoStack(powerUp) {
     let stage = getAppStage();
     stage.addChild(powerUp.sprite);
     
@@ -330,8 +333,8 @@ export function addPowerUpToCargoStack(powerUp) {
     const finalY = POWER_STACK_BOTTOM_Y_POSITION;
     
     // Start animation from current position to final position
-    animatePowerUp(
-        powerUp,
+    animateTweenSpritePos(
+        powerUp.sprite,
         startX,
         startY,
         finalX,
@@ -344,7 +347,8 @@ export function addPowerUpToCargoStack(powerUp) {
     updatePowerUpStackUI();
 }
 
-// throw the power up to the player and destroy it at arrival
+
+// throw the power up to THE PLAYER and destroy it at arrival
 // quick animation towards the player
 export function throwPowerUpPlayerAndDestroyAtArrival(powerUp,player) {
     let stage = getAppStage();
@@ -354,7 +358,10 @@ export function throwPowerUpPlayerAndDestroyAtArrival(powerUp,player) {
 
     stage.addChild(powerUp.sprite);
     powerUp.sprite.scale.set(0.66);
-    animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
+    // animatePowerUp(powerUp, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
+    animateTweenSpritePos(powerUp.sprite, powerUp.sprite.x, powerUp.sprite.y, targetX, targetY, POWER_UP_ANIMATION.duration/2, true);
+   
+
 }
 
 function updatePowerUpStackUI() {
@@ -378,7 +385,7 @@ function updatePowerUpStackUI() {
         const targetX = POWER_STACK_LEFT_X_POSITION + (index * spacing);
         
         // If power-up is not currently being animated, update its position directly
-        if (!powerUpAnimations.has(powerUp)) {
+        if (!isTweenRunning(powerUp.sprite)) {
             powerUp.sprite.x = targetX;
             powerUp.sprite.y = targetY;
         }
